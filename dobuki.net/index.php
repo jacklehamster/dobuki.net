@@ -1,5 +1,5 @@
 <?php
-require_once 'common/php/page.php';
+require_once 'php/page.php';
 
 (new Page([
     'title' => 'DOBUKI is BACK',
@@ -14,3 +14,12 @@ require_once 'common/php/page.php';
 ]))->render();
 ?>
 
+<div style="height: 600px; overflow: scroll">
+    <pre>
+    <?php
+    echo "Hello world";
+    var_dump($_REQUEST);
+    var_dump($_SERVER);
+    ?>
+    </pre>
+</div>
