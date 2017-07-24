@@ -1,8 +1,15 @@
 RewriteEngine on
-RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteCond %{HTTP_HOST} ^\w+\.\w+$ [NC]
+RewriteRule ^(.*)$ https://www.dobuki.net/$1 [L,R=301]
+
+RewriteCond %{DOCUMENT_ROOT}/public/%{REQUEST_URI} -f
+RewriteRule ^ %{DOCUMENT_ROOT}/public/%{REQUEST_URI} [L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule . index.php [L]
+RewriteRule ^(.*)$ index.php [L]
 
 Options -Indexes
 
 ErrorDocument 403 /index.php
+

@@ -1,25 +1,34 @@
 <?php
+
+/**
+ * Class Page
+ */
 class Page {
     public $title = 'Dobuki';
     public $description = 'Art and Games on Dobuki Studio';
-    public $stylesheet = 'style.css';
+    public $stylesheet = './style.css';
+    public $page = null;
     /** @var Closure */
     public $render_body = null;
     public $theme_color = '#d5f97a;';
+    public $favicon = './favicon.ico';
 
-    public function __construct($options) {
+    public function __construct(array $options) {
         foreach($options as $key => $value) {
             $this->$key = $value;
         }
     }
 
     public function render() {
-        require 'template.php';
+        http_response_code(200);
+        require 'template.html.php';
     }
 
-    public function renderBody() {
-        if ($this->render_body) {
-            $this->render_body->call($this);
-        }
+    public function renderContent() {
+        ?>
+            <script>
+                <? include "pages/{$this->page}.js" ?>
+            </script>
+        <?
     }
 }
