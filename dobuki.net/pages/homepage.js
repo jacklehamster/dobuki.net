@@ -1,22 +1,18 @@
-class HomePage extends React.Component {
+class Homepage extends Page {
     render() {
         return React.createElement(
             "div",
             null,
-            React.createElement(HeaderTitle, { title: "DOBUKI.net", icon: "/dobuki.png" }),
-            React.createElement("hr", null),
+            React.createElement(HeaderTitle, {
+                title: "Dobuki.net",
+                icon: "/assets/dobuki.png" }),
+            React.createElement(Login, { url: location.pathname }),
             React.createElement(
                 "div",
-                null,
-                "Welcome to my world"
+                { style: { margin: 5, height: 300, display: 'flex' } },
+                React.createElement("div", { style: { flex: 1, backgroundColor: 'snow' } })
             )
         );
     }
-
-    static display() {
-        ReactDOM.render(React.createElement(HomePage, null), document.getElementById('root'));
-    }
 }
-
-HomePage.display();
 //# sourceMappingURL=homepage.js.map

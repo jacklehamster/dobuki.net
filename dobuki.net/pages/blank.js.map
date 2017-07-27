@@ -1,0 +1,1 @@
+{"version":3,"sources":["blank.jsx"],"names":["Blank","Page","render"],"mappings":"AAAA,MAAMA,KAAN,SAAoBC,IAApB,CAAyB;AACrBC,aAAS;AACL,eAAQ,gCAAR;AAEH;AAJoB","file":"blank.js","sourcesContent":["class Blank extends Page {\n    render() {\n        return (<div>\n        </div>);\n    }\n}"]}

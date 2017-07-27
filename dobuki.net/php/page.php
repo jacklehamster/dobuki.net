@@ -1,4 +1,5 @@
 <?php
+namespace Dobuki;
 
 /**
  * Class Page
@@ -6,7 +7,6 @@
 class Page {
     public $title = 'Dobuki';
     public $description = 'Art and Games on Dobuki Studio';
-    public $stylesheet = './style.css';
     public $page = null;
     /** @var Closure */
     public $render_body = null;
@@ -19,16 +19,24 @@ class Page {
         }
     }
 
-    public function render() {
+    private function renderPage() {
         http_response_code(200);
         require 'template.html.php';
     }
 
+    public function insertStylesheet() {
+        ?><link rel="stylesheet" type="text/css" href="/<?=$this->page?>.css"/><?
+    }
+
+    public function insertScript() {
+        ?><script src="/<?=$this->page?>.js"></script><?
+    }
+
     public function renderContent() {
-        ?>
-            <script>
-                <? include "pages/{$this->page}.js" ?>
-            </script>
-        <?
+        ?><script><?=ucfirst($this->page)?>.render();</script><?
+    }
+
+    static public function render(array $options) {
+        (new Page($options))->renderPage();
     }
 }

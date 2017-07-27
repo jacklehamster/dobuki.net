@@ -1,26 +1,50 @@
 <?php
+namespace Dobuki;
 
-class Server {
-    const DOMAIN = 'dobuki.net';
+require_once 'constants.inc';
 
-    private $hostname = self::DOMAIN;
-    private $subdomain = null;
-    private $paths = [];
+interface Server {
+    public function get_subdomain();
+    public function get_path();
+    public function get_method();
+}
 
-    public function __construct() {
-        $this->parse($_SERVER, $_REQUEST);
+class DokServer implements Server {
+    private $hostname;
+    private $subdomain;
+    private $extension;
+    private $method;
+    private $path;
+
+    public function __construct(array $server, array $request) {
+        $this->parse($server, $request);
     }
 
-    private function parse($server, $request) {
+    private function parse(array $server, array $request) {
         $this->hostname = $server['HTTP_HOST'];
-        if (preg_match('/^(?P<subdomain>\w+).'.self::DOMAIN.'$/',
+        $this->subdomain = null;
+        $this->extension = null;
+        if (preg_match('/^(?P<subdomain>\w+).'.BRAND.'.(?P<extension>\w+)$/',
                 $this->hostname, $matches)) {
             $this->subdomain = $matches['subdomain'];
+            $this->extension = $matches['extension'];
         }
-        if (preg_match('/^\/(\w*)\/?(\w*)\/?(\w*)\/?(\w*)\/?(\w*)\/?\?/',
-                $server['REQUEST_URI'], $matches)) {
-            $this->paths = array_slice($matches, 1);
+        $this->path = $server['REQUEST_URI'];
+        if (preg_match('/^(?P<path>\/[^?]*)\??/', $server['REQUEST_URI'], $matches)) {
+            $this->path = $matches['path'];
         }
+        $this->method = $server['REQUEST_METHOD'];
+    }
+
+    public function get_subdomain() {
+        return $this->subdomain;
+    }
+
+    public function get_path() {
+        return $this->path;
+    }
+
+    public function get_method() {
+        return $this->method;
     }
 }
-$server = new Server();
