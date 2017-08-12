@@ -7,6 +7,7 @@ interface Server {
     public function get_subdomain();
     public function get_path();
     public function get_method();
+    public function get_request();
 }
 
 class DokServer implements Server {
@@ -15,9 +16,11 @@ class DokServer implements Server {
     private $extension;
     private $method;
     private $path;
+    private $request;
 
     public function __construct(array $server, array $request) {
         $this->parse($server, $request);
+        $this->request = $request;
     }
 
     private function parse(array $server, array $request) {
@@ -46,5 +49,10 @@ class DokServer implements Server {
 
     public function get_method() {
         return $this->method;
+    }
+
+    public function get_request()
+    {
+        return $this->request;
     }
 }

@@ -13,8 +13,8 @@
     <link rel="prefetch"  href="/assets/dobuki.png" as "image"/>
     <link rel="prefetch"  href="/assets/signin.svg" as "image"/>
     <link rel="shortcut icon" href="<?= $this->favicon ?>" />
-    <script src="https://unpkg.com/react@latest/dist/react.min.js"></script>
-    <script src="https://unpkg.com/react-dom@latest/dist/react-dom.min.js"></script>
+    <script src="//cdn.jsdelivr.net/react/15.5.4/react.min.js"></script>
+    <script src="//cdn.jsdelivr.net/react/15.5.4/react-dom.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/components.css"/>
     <script src="/components.js"></script>
     <? $this->insertStyleSheet() ?>
@@ -24,6 +24,9 @@
 <body>
     <div id="root"></div>
     <? $this->renderContent() ?>
-    <? include_once "vendor/analyticstracking.php" ?>
+    <script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.8.0/js/md5.js"></script>
+    <script src="/login.js"></script>
+    <? include "vendor/analyticstracking.php" ?>
 </body>
 </html>

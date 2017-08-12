@@ -1,7 +1,5 @@
 RewriteEngine on
 
-RewriteRule ^(zend)($|/) - [L]
-
 RewriteCond %{HTTP_HOST} ^\w+\.\w+$ [NC]
 RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [L,R=301]
 

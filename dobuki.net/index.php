@@ -5,9 +5,8 @@ require_once 'php/globals.php';
 
 Globals::get_router()->handle();
 
-
-?>
-<div style="position: absolute; top: 0; height: 600px; width: 300px; overflow: scroll; display:none ">
+if (isset($_REQUEST['debug'])) {?>
+<div style="position: ; top: 0; height: 600px; overflow: scroll; display: ">
     <pre>
     <?php
     echo "Hello world";
@@ -21,5 +20,6 @@ Globals::get_router()->handle();
     //    var_dump($server);
     var_dump($_SESSION);
     ?>
-    </pre>
-</div>
+</pre>
+</div><?
+}
