@@ -7,10 +7,12 @@ interface Router {
 
 class DokRouter implements Router {
     private $server;
+    private $database;
     private $handled;
 
-    public function __construct(Server $server) {
+    public function __construct(Server $server, Database $database) {
         $this->server = $server;
+        $this->database = $database;
         $this->handled = false;
     }
 
@@ -32,7 +34,14 @@ class DokRouter implements Router {
 
     private function handle_login() {
         require_once 'login.php';
-        var_dump($this->server->get_request());
+        $request = $this->server->get_request();
+        $login = Globals::get_login();
+        $result = $login->login(
+            $request['username'],
+            $request['password'] ?? null,
+            $request['time'] ?? null
+        );
+        echo json_encode($result);
         $this->handled = true;
     }
 
@@ -40,11 +49,9 @@ class DokRouter implements Router {
         require_once 'login.php';
 
         $request = $this->server->get_request();
-        $login = new Login();
-        $login->sign_up($request['username'], $request['email'], $request['password']);
-        echo json_encode([
-            'success' => true,
-        ]);
+        $login = Globals::get_login();
+        $result = $login->sign_up($request['username'], $request['email'], $request['password']);
+        echo json_encode($result);
         $this->handled = true;
     }
 
@@ -57,8 +64,48 @@ class DokRouter implements Router {
         $this->handled = true;
     }
 
+    private function check_public($path) {
+        $full_path = "{$_SERVER['DOCUMENT_ROOT']}/public{$path}";
+        $index_file = "{$full_path}index.html";
+        if (file_exists($index_file)) {
+            echo file_get_contents($index_file);
+            $this->handled = true;
+        }
+    }
+
+    private function check_request($request) {
+        if (isset($request['confirm']) && isset($request['email'])) {
+            $result = $this->database->query(
+                'SELECT * FROM users WHERE email=:email AND lockcode=:lockcode',
+                [
+                    ':lockcode' => $request['confirm'],
+                    ':email' => $request['email'],
+                ],
+                false
+            );
+            if (count($result) === 1) {
+                $row = $result[0];
+                if (!$row['validated']) {
+                    $result = $this->database->query(
+                        'UPDATE users SET validated=NOW() WHERE email=:email AND validated IS NULL',
+                        [
+                            ':email' => $request['email'],
+                        ],
+                        true
+                    );
+                    $message = "Email {$request['email']} validated.";
+                } else {
+                    $message = "Email {$request['email']} already validated.";
+                }
+                echo "<script>page.showTip('$message');</script>";
+            }
+            echo "<script>page.clearQuery();</script>";
+        }
+    }
+
     private function handle_www() {
-        switch($this->server->get_path()) {
+        $path = $this->server->get_path();
+        switch($path) {
             case '/api/login':
                 $this->handle_login();
                 break;
@@ -75,12 +122,17 @@ class DokRouter implements Router {
                 break;
         }
         if (!$this->handled) {
-            $this->show_path();
+            $this->check_public($path);
         }
 
+        if (!$this->handled) {
+            $this->show_path();
+        }
 
         if (!$this->handled) {
             $this->show_homepage();
         }
+
+        $this->check_request($this->server->get_request());
     }
 }

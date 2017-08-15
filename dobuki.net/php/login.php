@@ -1,46 +1,74 @@
 <?php
 namespace Dobuki;
 
-class Login {
-    private $connection;
+interface Login {
+}
 
-    function __construct() {
-        $server_name = SERVER_NAME;
-        $database = DATABASE;
+class DokLogin implements Login {
+    private $database;
+    private $emailer;
 
-        $this->connection = new \PDO(
-            "mysql:host=$server_name;dbname=$database",
-            USERNAME, PASSWORD
-        );
-        $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    function __construct(Database $database, Email $emailer) {
+        $this->database = $database;
+        $this->emailer = $emailer;
     }
 
-    public function sign_up($username, $email, $password) {
-        $created = date("Y-m-d H:i:s");
+    public function sign_up($username, $email, $password): array {
+        $created = date('Y-m-d H:i:s');
 
-        $stmt = $this->connection->prepare('
+        $password = md5("$password $created $username");
+        $lockcode = md5("lockcode => $created $username");
+
+        $result = $this->database->query('
             INSERT INTO users
             (username, email, password, created, lockcode)
             VALUES (:username, :email, :password, :created, :lockcode)
-        ');
-        $password = md5("$password $created $username");
-        $lockcode = md5("lockcode => $created $username");
-        $stmt->bindParam(':username', $username, \PDO::PARAM_STR);
-        $stmt->bindParam(':email', $email, \PDO::PARAM_STR);
-        $stmt->bindParam(':password', $password, \PDO::PARAM_STR);
-        $stmt->bindParam(':created', $created, \PDO::PARAM_STR);
-        $stmt->bindParam(':lockcode', $lockcode, \PDO::PARAM_STR);
-        $stmt->execute();
+        ', [
+            ':username' => $username,
+            ':email' => $email,
+            ':password' => $password,
+            ':created' => $created,
+            ':lockcode' => $lockcode,
+        ], true);
+        if($result === 0) {
+            return [
+                'success' => false,
+                'message' => 'This user or email already exists',
+            ];
+        } else {
+            $this->emailer->send_welcome_email($email, $lockcode);
+            return [ 'success' => true ];
+        }
+    }
 
-        $to      = $email;
-        $from    = 'welcome@dobuki.net';
-        $subject = 'Welcome to Dobuki.net';
-        $message = "Hello. Click this link to confirm your email: https://www.dobuki.net/?confirm=$lockcode";
-        $headers = "From: $from\r\n" .
-            "Reply-To: $from\r\n" .
-            'X-Mailer: PHP/' . phpversion();
-        mail($to, $subject, $message, $headers);
+    /**
+     * @param string $username
+     * @param string|null $password
+     * @param string|null $time
+     * @return array
+     */
+    public function login(string $username, string $password=null, string $time=null): array {
+        $login_result = $this->database->query('
+            SELECT * FROM users
+            WHERE (username=:user OR email=:user)
+        ', [
+            ':user' => $username,
+        ], false);
+        if (count($login_result) === 1) {
+            $row = $login_result[0];
+            if ($row['validated']) {
+                return [ 'success' => true ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'This user has not yet been validated.',
+                ];
+            }
+        } else {
+            return [
+                'success' => false,
+                'message' => 'User not found',
+            ];
+        }
     }
 }
-
-?>

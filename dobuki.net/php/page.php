@@ -33,7 +33,7 @@ class Page {
     }
 
     public function renderContent() {
-        ?><script><?=ucfirst($this->page)?>.render();</script><?
+        ?><script>var page = <?=ucfirst($this->page)?>.render();</script><?
     }
 
     static public function render(array $options) {

@@ -1,7 +1,13 @@
 
 class Page extends React.Component {
+    showTip() {}
+
+    clearQuery() {
+        history.replaceState({}, 'Dobuki', location.href.split("?")[0]);
+    }
+
     static render() {
-        ReactDOM.render(React.createElement(this, null), document.getElementById('root'));
+        return ReactDOM.render(React.createElement(this, null), document.getElementById('root'));
     }
 }
 
@@ -88,19 +94,24 @@ class LoginDialog extends React.Component {
     }
 
     loginUsername() {
+        const self = this;
         if (!this.state.loggingIn) {
             this.setState({
                 loggingIn: true,
             });
-            api.login(this.state.login);
+            api.login(this.state.login, null, function(result) {
+                if(result.success) {
+                    self.props.onClickOut();
+                }
+            });
         }
     }
 
     signupSuccess() {
         this.setState({
             signupMessage: `
-            Thank you for signing up. Please check ${this.state.email}
-            for a confirmation email.
+                Thank you for signing up. Please check ${this.state.email}
+                for a confirmation email.
             `,
         });
     }
@@ -173,7 +184,8 @@ class LoginDialog extends React.Component {
             }}>
                 <div style={{ height: 20 }}/>
                 <input
-                    placeholder="Enter your username"
+                    type="text"
+                    placeholder="Enter your username or email"
                     className="input"
                     onChange={this.loginChange.bind(this)}
                     disabled={this.state.loggingIn}
@@ -181,8 +193,6 @@ class LoginDialog extends React.Component {
                     style={{
                         height: 40,
                         width: '100%',
-                        fontSize: 28,
-                        padding: 8,
                     }}/>
                 <div style={{ height: 20 }}/>
                 <div style={{
@@ -199,7 +209,7 @@ class LoginDialog extends React.Component {
                         background="linear-gradient(#59f79d, #2c6846)"
                         backgroundPressed="#a3e2bf"
                         pressed={this.state.loggingIn}
-                        disabled={!this.state.username}
+                        disabled={!this.state.login}
                     />
                 </div>
                 <div style={{
@@ -256,13 +266,12 @@ class LoginDialog extends React.Component {
                     style={{
                         height: 40,
                         width: '100%',
-                        fontSize: 28,
-                        padding: 8,
                         display: this.state.usernameConfirmed ? 'none' : '',
                     }}/>
-                <div style={{
+                <div
+                    className="confirmed-input"
+                    style={{
                         height: 40,
-                        fontSize: 28,
                         padding: 8,
                         display: this.state.usernameConfirmed ? '' : 'none',
                     }}
@@ -279,16 +288,15 @@ class LoginDialog extends React.Component {
                     style={{
                         height: 40,
                         width: '100%',
-                        fontSize: 28,
-                        padding: 8,
                         display: this.state.emailConfirmed ? 'none' : '',
                     }}/>
-                <div style={{
-                    height: 40,
-                    fontSize: 28,
-                    padding: 8,
-                    display: this.state.emailConfirmed ? '' : 'none',
-                }}
+                <div
+                    className="confirmed-input"
+                    style={{
+                        height: 40,
+                        padding: 8,
+                        display: this.state.emailConfirmed ? '' : 'none',
+                    }}
                      onClick={(() => { this.setState({ emailConfirmed: false }); }).bind(this)}
                 ><b>Email:</b> { this.state.email }</div>
                 <div style={{ height: 20 }}/>
@@ -303,14 +311,12 @@ class LoginDialog extends React.Component {
                        style={{
                            height: 40,
                            width: '100%',
-                           fontSize: 28,
-                           padding: 8,
                            color: this.state.passwordConfirmed && this.state.password !== this.state.password2 ?
                                'red' : 'black'
                        }}/>
                 <div style={{ height: 20 }}/>
                 <input type="password"
-                       placeholder="Retype the same password"
+                       placeholder="Retype password"
                        className="input"
                        onChange={this.password2Change.bind(this)}
                        disabled={this.state.loggingIn}
@@ -318,8 +324,6 @@ class LoginDialog extends React.Component {
                        style={{
                            height: 40,
                            width: '100%',
-                           fontSize: 28,
-                           padding: 8,
                        }}/>
                 {!this.state.loggingIn && [
                     <div style={{ height: 20 }}/>,
@@ -401,7 +405,7 @@ class Button extends React.Component {
             justifyContent: 'center',
             cursor: 'pointer',
             pointerEvents: this.props.pressed ? 'none' : '',
-        }} onClick={this.props.onClick}>
+        }} onClick={this.props.disabled?null:this.props.onClick}>
             <div style={{
                 fontSize: this.props.fontSize || 20,
                 color: this.props.pressed ? 'snow'
@@ -485,8 +489,8 @@ class Login extends React.Component {
     }
 
     static loginState(url) {
-        return url==='/login' ?'login'
-            :url==='/signup' ?'signup'
+        return url==='/login' ? 'login'
+            :url==='/signup' ? 'signup'
             :''
     }
 

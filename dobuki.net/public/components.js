@@ -1,7 +1,13 @@
 
 class Page extends React.Component {
+    showTip() {}
+
+    clearQuery() {
+        history.replaceState({}, 'Dobuki', location.href.split("?")[0]);
+    }
+
     static render() {
-        ReactDOM.render(React.createElement(this, null), document.getElementById('root'));
+        return ReactDOM.render(React.createElement(this, null), document.getElementById('root'));
     }
 }
 
@@ -93,19 +99,24 @@ class LoginDialog extends React.Component {
     }
 
     loginUsername() {
+        const self = this;
         if (!this.state.loggingIn) {
             this.setState({
                 loggingIn: true
             });
-            api.login(this.state.login);
+            api.login(this.state.login, null, function (result) {
+                if (result.success) {
+                    self.props.onClickOut();
+                }
+            });
         }
     }
 
     signupSuccess() {
         this.setState({
             signupMessage: `
-            Thank you for signing up. Please check ${this.state.email}
-            for a confirmation email.
+                Thank you for signing up. Please check ${this.state.email}
+                for a confirmation email.
             `
         });
     }
@@ -177,16 +188,15 @@ class LoginDialog extends React.Component {
                     } },
                 React.createElement('div', { style: { height: 20 } }),
                 React.createElement('input', {
-                    placeholder: 'Enter your username',
+                    type: 'text',
+                    placeholder: 'Enter your username or email',
                     className: 'input',
                     onChange: this.loginChange.bind(this),
                     disabled: this.state.loggingIn,
                     value: this.state.login,
                     style: {
                         height: 40,
-                        width: '100%',
-                        fontSize: 28,
-                        padding: 8
+                        width: '100%'
                     } }),
                 React.createElement('div', { style: { height: 20 } }),
                 React.createElement(
@@ -205,7 +215,7 @@ class LoginDialog extends React.Component {
                         background: 'linear-gradient(#59f79d, #2c6846)',
                         backgroundPressed: '#a3e2bf',
                         pressed: this.state.loggingIn,
-                        disabled: !this.state.username
+                        disabled: !this.state.login
                     })
                 ),
                 React.createElement(
@@ -271,15 +281,14 @@ class LoginDialog extends React.Component {
                     style: {
                         height: 40,
                         width: '100%',
-                        fontSize: 28,
-                        padding: 8,
                         display: this.state.usernameConfirmed ? 'none' : ''
                     } }),
                 React.createElement(
                     'div',
-                    { style: {
+                    {
+                        className: 'confirmed-input',
+                        style: {
                             height: 40,
-                            fontSize: 28,
                             padding: 8,
                             display: this.state.usernameConfirmed ? '' : 'none'
                         },
@@ -310,15 +319,14 @@ class LoginDialog extends React.Component {
                     style: {
                         height: 40,
                         width: '100%',
-                        fontSize: 28,
-                        padding: 8,
                         display: this.state.emailConfirmed ? 'none' : ''
                     } }),
                 React.createElement(
                     'div',
-                    { style: {
+                    {
+                        className: 'confirmed-input',
+                        style: {
                             height: 40,
-                            fontSize: 28,
                             padding: 8,
                             display: this.state.emailConfirmed ? '' : 'none'
                         },
@@ -350,22 +358,18 @@ class LoginDialog extends React.Component {
                     style: {
                         height: 40,
                         width: '100%',
-                        fontSize: 28,
-                        padding: 8,
                         color: this.state.passwordConfirmed && this.state.password !== this.state.password2 ? 'red' : 'black'
                     } }),
                 React.createElement('div', { style: { height: 20 } }),
                 React.createElement('input', { type: 'password',
-                    placeholder: 'Retype the same password',
+                    placeholder: 'Retype password',
                     className: 'input',
                     onChange: this.password2Change.bind(this),
                     disabled: this.state.loggingIn,
                     value: this.state.password2,
                     style: {
                         height: 40,
-                        width: '100%',
-                        fontSize: 28,
-                        padding: 8
+                        width: '100%'
                     } }),
                 !this.state.loggingIn && [React.createElement('div', { style: { height: 20 } }), React.createElement(
                     'div',
@@ -450,7 +454,7 @@ class Button extends React.Component {
                     justifyContent: 'center',
                     cursor: 'pointer',
                     pointerEvents: this.props.pressed ? 'none' : ''
-                }, onClick: this.props.onClick },
+                }, onClick: this.props.disabled ? null : this.props.onClick },
             React.createElement(
                 'div',
                 { style: {

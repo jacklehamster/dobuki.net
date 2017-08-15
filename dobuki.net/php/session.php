@@ -1,8 +1,6 @@
 <?php
 namespace Dobuki;
 
-require_once 'constants.inc';
-
 interface Session {
 }
 

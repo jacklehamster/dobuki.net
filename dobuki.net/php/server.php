@@ -1,8 +1,6 @@
 <?php
 namespace Dobuki;
 
-require_once 'constants.inc';
-
 interface Server {
     public function get_subdomain();
     public function get_path();
@@ -11,6 +9,7 @@ interface Server {
 }
 
 class DokServer implements Server {
+    private $brand;
     private $hostname;
     private $subdomain;
     private $extension;
@@ -18,7 +17,8 @@ class DokServer implements Server {
     private $path;
     private $request;
 
-    public function __construct(array $server, array $request) {
+    public function __construct(string $brand, array $server, array $request) {
+        $this->brand = $brand;
         $this->parse($server, $request);
         $this->request = $request;
     }
@@ -27,7 +27,7 @@ class DokServer implements Server {
         $this->hostname = $server['HTTP_HOST'];
         $this->subdomain = null;
         $this->extension = null;
-        if (preg_match('/^(?P<subdomain>\w+).'.BRAND.'.(?P<extension>\w+)$/',
+        if (preg_match("/^(?P<subdomain>\w+).{$this->brand}.(?P<extension>\w+)$/",
                 $this->hostname, $matches)) {
             $this->subdomain = $matches['subdomain'];
             $this->extension = $matches['extension'];
@@ -51,8 +51,7 @@ class DokServer implements Server {
         return $this->method;
     }
 
-    public function get_request()
-    {
+    public function get_request() {
         return $this->request;
     }
 }

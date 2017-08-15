@@ -3,15 +3,19 @@ namespace Dobuki;
 
 require_once 'router.php';
 require_once 'server.php';
+require_once 'database.php';
+require_once 'email.php';
 
 class Globals {
-    static private $vars = [];
+    static private $server;
+    static private $session;
+    static private $router;
+    static private $database;
+    static private $login;
+    static private $email;
 
-    static public function get($name) {
-        if (!self::$vars[$name]) {
-            self::$vars[$name] = call_user_func([__CLASS__, "get_$name"]);
-        }
-        return self::$vars[$name];
+    static private function get_brand(): string {
+        return BRAND;
     }
 
     static private function get_server_vars(): array {
@@ -27,14 +31,75 @@ class Globals {
     }
 
     static private function get_server(): Server {
-        return new DokServer(self::get_server_vars(), self::get_request_vars());
+        if (!self::$server) {
+            self::$server = new DokServer(
+                self::get_brand(),
+                self::get_server_vars(),
+                self::get_request_vars()
+            );
+        }
+        return self::$server;
     }
 
     static private function get_session(): Session {
-        return new DokSession(self::get_session_vars());
+        if (!self::$session) {
+            self::$session = new DokSession(self::get_session_vars());
+        }
+        return self::$session;
     }
 
     static public function get_router(): Router {
-        return new DokRouter(self::get_server());
+        if (!self::$router) {
+            self::$router = new DokRouter(
+                self::get_server(),
+                self::get_database()
+            );
+        }
+        return self::$router;
+    }
+
+    static private function get_database(): Database {
+        if (!self::$database) {
+            self::$database = new DokDatabase(
+                self::get_server_name(),
+                self::get_database_name(),
+                self::get_db_user(),
+                self::get_db_password()
+            );
+        }
+        return self::$database;
+    }
+
+    static public function get_login() {
+        if (!self::$login) {
+            self::$login = new DokLogin(
+                self::get_database(),
+                self::get_emailer()
+            );
+        }
+        return self::$login;
+    }
+
+    static public function get_emailer() {
+        if (!self::$email) {
+            self::$email = new DokEmail();
+        }
+        return self::$email;
+    }
+
+    static private function get_database_name(): string {
+        return DATABASE;
+    }
+
+    static private function get_server_name(): string {
+        return SERVER_NAME;
+    }
+
+    static private function get_db_user(): string {
+        return USERNAME;
+    }
+
+    static private function get_db_password(): string {
+        return PASSWORD;
     }
 }

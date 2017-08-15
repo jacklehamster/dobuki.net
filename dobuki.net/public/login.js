@@ -1,17 +1,21 @@
 class Api {
-    login(username, password) {
+    login(username, password, callback) {
+        var data = { username: username };
+        if (password) {
+            data.time = Date.now();
+            data.password = md5(md5(password) + data.time);
+        }
+
         $.ajax({
             type: 'POST',
             url: "/api/login",
             cache: false,
-            data: {
-                username: username,
-                password: password? md5(password) : null,
-            },
+            data: data,
             success: (result,xhr,status) => {
-                console.log(result);
+                callback(JSON.parse(result));
             },
             error: (xhr,status,error) => {
+                console.error(error);
             }
         });
     }
