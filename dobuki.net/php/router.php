@@ -64,6 +64,15 @@ class DokRouter implements Router {
         $this->handled = true;
     }
 
+    public function check_slash($path) {
+        $full_path = "{$_SERVER['DOCUMENT_ROOT']}/public{$path}";
+        if (is_dir($full_path) && $full_path[-1]!=='/') {
+            $query = $_SERVER['QUERY_STRING'] ? "?{$_SERVER['QUERY_STRING']}" : '';
+            header("Location: $path/$query");
+            die();
+        }
+    }
+
     private function check_public($path) {
         $full_path = "{$_SERVER['DOCUMENT_ROOT']}/public{$path}";
         $index_file = "{$full_path}index.html";
@@ -121,6 +130,10 @@ class DokRouter implements Router {
                 $this->show_homepage();
                 break;
         }
+        if (!$this->handled) {
+            $this->check_slash($path);
+        }
+
         if (!$this->handled) {
             $this->check_public($path);
         }
