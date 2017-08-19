@@ -67,7 +67,11 @@ class Homepage extends Page {
                 </div>
             </div>
             <div style={{ margin: 5, height: 300, display: 'flex' }}>
-                <div style={{ flex: 1, backgroundColor: 'snow' }}>
+                <div style={{
+                    flex: 1, backgroundColor: 'snow',
+                    backgroundSize: 'cover',
+                    backgroundImage: 'url("https://dobuki.net/wordpress/wp-content/themes/twentyseventeen/assets/images/header.jpg")',
+                }}>
                 </div>
             </div>
         </div>);

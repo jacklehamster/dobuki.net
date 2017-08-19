@@ -52,18 +52,17 @@ class Homepage extends Page {
                             backgroundColor: '#EFA',
                             borderStyle: 'solid',
                             borderColor: '#CD6',
+                            color: '#786',
                             borderLeftWidth: 2,
                             borderRightWidth: 2,
                             borderBottomWidth: 3,
                             borderTopWidth: 0,
                             borderBottomLeftRadius: 40,
                             borderBottomRightRadius: 40,
-                            opacity: .9,
                             alignItems: 'center',
                             justifyContent: 'center',
                             textAlign: 'center',
                             verticalAlign: 'middle',
-                            color: '#786',
                             fontFamily,
                             transition: 'margin 1s, opacity 1s',
                             marginTop: this.state.showTip ? 0 : -100,
@@ -75,7 +74,11 @@ class Homepage extends Page {
             React.createElement(
                 "div",
                 { style: { margin: 5, height: 300, display: 'flex' } },
-                React.createElement("div", { style: { flex: 1, backgroundColor: 'snow' } })
+                React.createElement("div", { style: {
+                        flex: 1, backgroundColor: 'snow',
+                        backgroundSize: 'cover',
+                        backgroundImage: 'url("https://dobuki.net/wordpress/wp-content/themes/twentyseventeen/assets/images/header.jpg")'
+                    } })
             )
         );
     }

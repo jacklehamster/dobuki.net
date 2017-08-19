@@ -55,16 +55,6 @@ class Overlay extends React.Component {
             width: '100%', height: '100%',
             pointerEvents: this.props.mode ? '' : 'none',
         }}>
-            <div style={{
-                width: '100%',
-                height: '100%',
-                transition: 'opacity .2s linear',
-                opacity: this.props.mode ? .8: 0,
-                backgroundColor: '#000022',
-                position: 'absolute',
-                cursor: 'pointer',
-            }} onClick={this.props.onClickOut}>
-            </div>
             { this.props.children }
         </div>
     }
@@ -365,19 +355,32 @@ class LoginDialog extends React.Component {
     render() {
         const borderRadius = 8;
         return (
-            <Overlay onClickOut={this.props.onClickOut} mode={this.props.mode}>
+            <div>
+                <Overlay mode={this.props.mode}>
                 { this.props.mode &&
-                <div className={'overlay'}>
-                    <div className={'popdialog'}>
-                        <LoginDialogHeader toggle={this.props.toggle} mode={this.props.mode} />
-                        <div style={{ width: '100%', overflow: 'hidden' }}>
-                            { this.props.mode==='login' && this.loginSection() }
-                            { this.props.mode==='signup' && this.signupSection() }
+                    <div className={'overlay'}>
+                        <div style={{
+                            position: 'fixed',
+                            top: 0, left: 0,
+                            width: '100%', height: '100%',
+                            transition: 'opacity .2s linear',
+                            opacity: this.props.mode ? .8: 0,
+                            backgroundColor: '#000022',
+                            cursor: 'pointer',
+                            display: this.props.mode ? '' : 'none',
+                        }} onClick={this.props.onClickOut}>
+                        </div>
+                        <div className={'popdialog'}>
+                            <LoginDialogHeader toggle={this.props.toggle} mode={this.props.mode} />
+                            <div style={{ width: '100%', overflow: 'hidden' }}>
+                                { this.props.mode==='login' && this.loginSection() }
+                                { this.props.mode==='signup' && this.signupSection() }
+                            </div>
                         </div>
                     </div>
-                </div>
                 }
-            </Overlay>
+                </Overlay>
+            </div>
         );
     }
 }

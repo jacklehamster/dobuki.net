@@ -61,15 +61,6 @@ class Overlay extends React.Component {
                     width: '100%', height: '100%',
                     pointerEvents: this.props.mode ? '' : 'none'
                 } },
-            React.createElement('div', { style: {
-                    width: '100%',
-                    height: '100%',
-                    transition: 'opacity .2s linear',
-                    opacity: this.props.mode ? .8 : 0,
-                    backgroundColor: '#000022',
-                    position: 'absolute',
-                    cursor: 'pointer'
-                }, onClick: this.props.onClickOut }),
             this.props.children
         );
     }
@@ -411,20 +402,34 @@ class LoginDialog extends React.Component {
     render() {
         const borderRadius = 8;
         return React.createElement(
-            Overlay,
-            { onClickOut: this.props.onClickOut, mode: this.props.mode },
-            this.props.mode && React.createElement(
-                'div',
-                { className: 'overlay' },
-                React.createElement(
+            'div',
+            null,
+            React.createElement(
+                Overlay,
+                { mode: this.props.mode },
+                this.props.mode && React.createElement(
                     'div',
-                    { className: 'popdialog' },
-                    React.createElement(LoginDialogHeader, { toggle: this.props.toggle, mode: this.props.mode }),
+                    { className: 'overlay' },
+                    React.createElement('div', { style: {
+                            position: 'fixed',
+                            top: 0, left: 0,
+                            width: '100%', height: '100%',
+                            transition: 'opacity .2s linear',
+                            opacity: this.props.mode ? .8 : 0,
+                            backgroundColor: '#000022',
+                            cursor: 'pointer',
+                            display: this.props.mode ? '' : 'none'
+                        }, onClick: this.props.onClickOut }),
                     React.createElement(
                         'div',
-                        { style: { width: '100%', overflow: 'hidden' } },
-                        this.props.mode === 'login' && this.loginSection(),
-                        this.props.mode === 'signup' && this.signupSection()
+                        { className: 'popdialog' },
+                        React.createElement(LoginDialogHeader, { toggle: this.props.toggle, mode: this.props.mode }),
+                        React.createElement(
+                            'div',
+                            { style: { width: '100%', overflow: 'hidden' } },
+                            this.props.mode === 'login' && this.loginSection(),
+                            this.props.mode === 'signup' && this.signupSection()
+                        )
                     )
                 )
             )
