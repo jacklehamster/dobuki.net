@@ -21,7 +21,7 @@ self.addEventListener('install', function(event) {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(function(cache) {
-                return cache.addAll(urlsToCache);
+                return cache.addAll(urlsToCache,  {credentials: 'same-origin', redirect: 'follow'});
             })
     );
 });
@@ -49,6 +49,10 @@ self.addEventListener('fetch', function(event) {
                         return response;
                     }
                 );
+
+                if (response.redirected) {
+                    return Response.redirect(response.url);
+                }
 
                 // Cache hit - return response
                 if (response) {
