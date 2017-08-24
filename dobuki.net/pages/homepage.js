@@ -73,12 +73,40 @@ class Homepage extends Page {
             ),
             React.createElement(
                 "div",
-                { style: { margin: 5, height: 300, display: 'flex' } },
+                { style: { margin: 0, height: 200, display: 'flex' } },
                 React.createElement("div", { style: {
-                        flex: 1, backgroundColor: 'snow',
-                        backgroundSize: 'cover',
-                        backgroundImage: 'url("https://dobuki.net/wordpress/wp-content/themes/twentyseventeen/assets/images/header.jpg")'
+                        flex: 1,
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        backgroundImage: 'url("/assets/dobukibanner.png")'
                     } })
+            ),
+            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/170227?bg_color=ecefe6&fg_color=222222&link_color=b0cc2e&border_color=c0ca9f", width: "100%", height: "167" }),
+            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/170228?bg_color=e1daf6&fg_color=222222&link_color=d2d079&border_color=a589c1", width: "100%", height: "167" }),
+            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/116068?bg_color=edf7f8&fg_color=222222&link_color=5c99fa&border_color=c1c5c5", width: "100%", height: "167" }),
+            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/136767?bg_color=ffffff&fg_color=222222&link_color=f0b214&border_color=ff2525", width: "100%", height: "167" }),
+            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/122302?bg_color=eeffff&fg_color=222222&link_color=49a2ac&border_color=bebebe", width: "100%", height: "167" }),
+            React.createElement(
+                "div",
+                { style: {
+                        display: 'flex',
+                        fontFamily,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        verticalAlign: 'middle'
+                    } },
+                React.createElement(
+                    "h2",
+                    null,
+                    "More games ",
+                    React.createElement(
+                        "a",
+                        { target: "_blank", href: "http://dobuki.weebly.com/" },
+                        "here"
+                    )
+                )
             )
         );
     }

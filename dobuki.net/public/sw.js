@@ -16,8 +16,8 @@ self.addEventListener('install', function(event) {
                     'scripts/sudoku.wasm',
                     'scripts/sudokucsolver.js',
                     'scripts/sudokusolver.js',
-                    'https://cdn.jsdelivr.net/react/15.5.4/react.min.js',
-                    'https://cdn.jsdelivr.net/react/15.5.4/react-dom.min.js',
+                    'https://unpkg.com/react@15/dist/react.min.js',
+                    'https://unpkg.com/react-dom@15/dist/react-dom.min.js',
                     'https://code.jquery.com/jquery-3.2.1.min.js',
                     'https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.8.0/js/md5.js',
                     'https://fonts.googleapis.com/css?family=Concert+One|Fredoka+One',
@@ -59,9 +59,6 @@ self.addEventListener('fetch', function(event) {
                 // Cache hit - return response
                 if (response) {
                     if (response.redirected) {
-                        for(var i in response) {
-                            console.log(i,response[i]);
-                        }
                         return Response.redirect(response.url);
                     }
                     return response;
