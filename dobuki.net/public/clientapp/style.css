@@ -1,0 +1,19 @@
+.text {
+    font-family: Verdana;
+}
+
+@media screen and (max-width: 420px) {
+    body {
+        margin: 0;
+    }
+}
+
+button {
+    border: 1px solid black;
+}
+
+@media screen and (max-width: 420px) {
+    button {
+        min-height: 40px;
+    }
+}

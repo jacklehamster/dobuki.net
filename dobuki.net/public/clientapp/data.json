@@ -1,0 +1,23 @@
+[
+  {
+    "Name":"test",
+    "Address": "310 Wall St",
+    "Phone": "123-123-1234",
+    "Machine": "T1000",
+    "Type": "rent",
+    "First Service": "01/06/2017",
+    "Extra": "",
+    "row": 3
+  },
+  {
+    "Name":"test2",
+    "Address": "310 Wall St",
+    "Phone": "123-123-1234",
+    "Machine": "T2000",
+    "Type": "purchase",
+    "First Service": "01/06/2016",
+    "Last Service": "07/07/2017",
+    "Extra": "Extra",
+    "row": 4
+  }
+]
