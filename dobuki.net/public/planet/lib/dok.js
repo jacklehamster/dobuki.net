@@ -1,8 +1,14 @@
+"use strict";
 
+var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol" ? function (obj) {
+    return typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+} : function (obj) {
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+};
 
-define('utils',[],function () {
+define('utils', [], function () {
     /**
      *  FUNCTION DEFINITIONS
      */
@@ -341,7 +347,7 @@ define('utils',[],function () {
 //# sourceMappingURL=utils.js.map;
 
 
-define('loop',['utils'], function (Utils) {
+define('loop', ['utils'], function (Utils) {
     'use strict';
 
     var coreLoops = null;
@@ -441,7 +447,7 @@ define('loop',['utils'], function (Utils) {
 //# sourceMappingURL=loop.js.map;
 
 
-define('IDGenerator',[],function () {
+define('IDGenerator', [], function () {
     function IDGenerator() {
         var array = [];
         var max = 1;
@@ -462,7 +468,7 @@ define('IDGenerator',[],function () {
 //# sourceMappingURL=IDGenerator.js.map;
 
 
-define('gifworker',['utils', 'loop', 'IDGenerator'], function (Utils, Loop, IDGenerator) {
+define('gifworker', ['utils', 'loop', 'IDGenerator'], function (Utils, Loop, IDGenerator) {
     var gifWorkerCallbacks = [];
     var generator = new IDGenerator();
 
@@ -546,7 +552,7 @@ define('gifworker',['utils', 'loop', 'IDGenerator'], function (Utils, Loop, IDGe
 //# sourceMappingURL=gifworker.js.map;
 
 
-define('jsgif/gif',[],function () {
+define('jsgif/gif', [], function () {
     // Generic functions
     var bitsToNum = function bitsToNum(ba) {
         return ba.reduce(function (s, n) {
@@ -909,7 +915,7 @@ define('jsgif/gif',[],function () {
 //# sourceMappingURL=gif.js.map;
 
 
-define('gifHandler',['utils', 'loop', 'gifworker', 'jsgif/gif'], function (Utils, Loop, gifWorker, JSGif) {
+define('gifHandler', ['utils', 'loop', 'gifworker', 'jsgif/gif'], function (Utils, Loop, gifWorker, JSGif) {
     'use strict';
 
     var gifs = {};
@@ -1074,7 +1080,7 @@ define('gifHandler',['utils', 'loop', 'gifworker', 'jsgif/gif'], function (Utils
 //# sourceMappingURL=gifhandler.js.map;
 
 
-define('camera',['threejs', 'loop'], function (THREE, Loop) {
+define('camera', ['threejs', 'loop'], function (THREE, Loop) {
     'use strict';
 
     var gameWidth = innerWidth,
@@ -1214,7 +1220,7 @@ define('camera',['threejs', 'loop'], function (THREE, Loop) {
 //# sourceMappingURL=camera.js.map;
 
 
-define('objectpool',['utils'], function (Utils) {
+define('objectpool', ['utils'], function (Utils) {
 
     /**
      *  CLASS DEFINITIONS
@@ -1251,7 +1257,7 @@ define('objectpool',['utils'], function (Utils) {
 //# sourceMappingURL=objectpool.js.map;
 
 
-define('spriteobject',['threejs', 'objectpool'], function (THREE, ObjectPool) {
+define('spriteobject', ['threejs', 'objectpool'], function (THREE, ObjectPool) {
     'use strict';
 
     function SpriteObject() {
@@ -1306,7 +1312,7 @@ define('spriteobject',['threejs', 'objectpool'], function (THREE, ObjectPool) {
 //# sourceMappingURL=spriteobject.js.map;
 
 
-define('packer',['utils'], function (Utils) {
+define('packer', ['utils'], function (Utils) {
 
     'use strict';
 
@@ -1403,7 +1409,7 @@ define('packer',['utils'], function (Utils) {
 //# sourceMappingURL=packer.js.map;
 
 
-define('gifhandler',['utils', 'loop', 'gifworker', 'jsgif/gif'], function (Utils, Loop, gifWorker, JSGif) {
+define('gifhandler', ['utils', 'loop', 'gifworker', 'jsgif/gif'], function (Utils, Loop, gifWorker, JSGif) {
     'use strict';
 
     var gifs = {};
@@ -1568,7 +1574,7 @@ define('gifhandler',['utils', 'loop', 'gifworker', 'jsgif/gif'], function (Utils
 //# sourceMappingURL=gifhandler.js.map;
 
 
-define('loader',['utils', 'loop'], function (Utils, Loop) {
+define('loader', ['utils', 'loop'], function (Utils, Loop) {
     'use strict';
 
     var index = 0;
@@ -1695,7 +1701,7 @@ define('loader',['utils', 'loop'], function (Utils, Loop) {
 //# sourceMappingURL=loader.js.map;
 
 
-define('spritesheet',['threejs', 'utils', 'gifhandler', 'loader', 'packer'], function (THREE, Utils, GifHandler, Loader, Packer) {
+define('spritesheet', ['threejs', 'utils', 'gifhandler', 'loader', 'packer'], function (THREE, Utils, GifHandler, Loader, Packer) {
     'use strict';
 
     var canvases = {};
@@ -2031,7 +2037,7 @@ define('spritesheet',['threejs', 'utils', 'gifhandler', 'loader', 'packer'], fun
 //# sourceMappingURL=spritesheet.js.map;
 
 
-define('turbosort',[],function () {
+define('turbosort', [], function () {
 
     var SIZE = 1000000;
     var buckets = new Uint32Array(SIZE + 1);
@@ -2151,25 +2157,25 @@ define('turbosort',[],function () {
 //# sourceMappingURL=turbosort.js.map;
 
 
-define('shaders/fragment-shader.glsl',[],function () {
+define('shaders/fragment-shader.glsl', [], function () {
     return "\n    \nuniform sampler2D texture[ 16 ];\nvarying vec2 vUv;\nvarying float vTex;\nvarying float vLight;\n\nvoid main() {\n    vec2 uv = vUv;\n\n    int iTex = int(vTex);\n\n    if(iTex==0) {\n        gl_FragColor = texture2D( texture[0],  uv);\n    } else if(iTex==1) {\n        gl_FragColor = texture2D( texture[1],  uv);\n    } else if(iTex==2) {\n        gl_FragColor = texture2D( texture[2],  uv);\n    } else if(iTex==3) {\n        gl_FragColor = texture2D( texture[3],  uv);\n    } else if(iTex==4) {\n        gl_FragColor = texture2D( texture[4],  uv);\n    } else if(iTex==5) {\n        gl_FragColor = texture2D( texture[5],  uv);\n    } else if(iTex==6) {\n        gl_FragColor = texture2D( texture[6],  uv);\n    } else if(iTex==7) {\n        gl_FragColor = texture2D( texture[7],  uv);\n    } else if(iTex==8) {\n        gl_FragColor = texture2D( texture[8],  uv);\n    } else if(iTex==9) {\n        gl_FragColor = texture2D( texture[9],  uv);\n    } else if(iTex==10) {\n        gl_FragColor = texture2D( texture[10],  uv);\n    } else if(iTex==11) {\n        gl_FragColor = texture2D( texture[11],  uv);\n    } else if(iTex==12) {\n        gl_FragColor = texture2D( texture[12],  uv);\n    } else if(iTex==13) {\n        gl_FragColor = texture2D( texture[13],  uv);\n    } else if(iTex==14) {\n        gl_FragColor = texture2D( texture[14],  uv);\n    } else if(iTex==15) {\n        gl_FragColor = texture2D( texture[15],  uv);\n    }\n\n    gl_FragColor.x *= vLight;\n    gl_FragColor.y *= vLight;\n    gl_FragColor.z *= vLight;\n//        gl_FragColor.w *= vLight;\n//    gl_FragColor.w = .5;\n}\n\n    ";
 });
 //# sourceMappingURL=fragment-shader.glsl.js.map;
 
 
-define('shaders/vertex-shader.glsl',[],function () {
+define('shaders/vertex-shader.glsl', [], function () {
     return "\n    \nvarying vec2 vUv;\nattribute float tex;\nattribute float light;\nattribute float wave;\nattribute vec3 spot;\nattribute vec4 quaternion;\nvarying float vTex;\nvarying float vLight;\nuniform vec3 vCam;\nuniform float curvature;\nuniform float time;\nuniform float bigwave;\n\nvoid main()  {\n    vTex = tex;\n    vUv = uv;\n\n    vec3 newPosition = rotateVectorByQuaternion( position - spot, quaternion ) + spot;\n    vLight = 1.0/ sqrt(500.0 / distance(newPosition, vCam)) * light;\n\n    float dist = distance(newPosition, vCam);\n    if (curvature > 0.0) {\n        newPosition.z = newPosition.z - curvature * (dist*dist)/20000.0;\n    }\n    if (wave > 0.0) {\n        newPosition.z = newPosition.z + wave * (sin(newPosition.x*15.0 + time/2.0) - cos(newPosition.y*7.0 + time/2.0));\n        if (bigwave > 0.0) {\n            newPosition.z = newPosition.z + wave * bigwave\n            * (sin(newPosition.x/500.0 + time/10.0) - sin(newPosition.y/700.0 + time/10.0));\n        }\n    }\n\n    vec4 mvPosition = modelViewMatrix * vec4(newPosition, 1.0 );\n    gl_Position = projectionMatrix * mvPosition;\n}    \n\n    ";
 });
 //# sourceMappingURL=vertex-shader.glsl.js.map;
 
 
-define('shaders/vertex-shader-common.glsl',[],function () {
+define('shaders/vertex-shader-common.glsl', [], function () {
     return "\n\nvec3 rotateVectorByQuaternion( in vec3 v, in vec4 q ) {\n\n    vec3 dest = vec3( 0.0 );\n\n    float x = v.x, y  = v.y, z  = v.z;\n    float qx = q.x, qy = q.y, qz = q.z, qw = q.w;\n\n    // calculate quaternion * vector\n\n    float ix =  qw * x + qy * z - qz * y,\n          iy =  qw * y + qz * x - qx * z,\n          iz =  qw * z + qx * y - qy * x,\n          iw = -qx * x - qy * y - qz * z;\n\n    // calculate result * inverse quaternion\n\n    dest.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;\n    dest.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;\n    dest.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;\n\n    return dest;\n\n}\n\nvec4 axisAngleToQuaternion( in vec3 axis, in float angle ) {\n\n    vec4 dest = vec4( 0.0 );\n\n    float halfAngle = angle / 2.0,\n          s = sin( halfAngle );\n\n    dest.x = axis.x * s;\n    dest.y = axis.y * s;\n    dest.z = axis.z * s;\n    dest.w = cos( halfAngle );\n\n    return dest;\n\n}    \n    \n    ";
 });
 //# sourceMappingURL=vertex-shader-common.glsl.js.map;
 
 
-define('shader',['shaders/fragment-shader.glsl', 'shaders/vertex-shader.glsl', 'shaders/vertex-shader-common.glsl'], function (fragmentShader, vertexShader, vertexShaderCommon) {
+define('shader', ['shaders/fragment-shader.glsl', 'shaders/vertex-shader.glsl', 'shaders/vertex-shader-common.glsl'], function (fragmentShader, vertexShader, vertexShaderCommon) {
     return {
         fragmentShader: fragmentShader,
         vertexShader: vertexShaderCommon + vertexShader
@@ -2178,7 +2184,7 @@ define('shader',['shaders/fragment-shader.glsl', 'shaders/vertex-shader.glsl', '
 //# sourceMappingURL=shader.js.map;
 
 
-define('spriterenderer',['threejs', 'utils', 'spriteobject', 'spritesheet', 'camera', 'turbosort', 'shader', 'loop'], function (THREE, Utils, SpriteObject, SpriteSheet, Camera, turboSort, Shader, Loop) {
+define('spriterenderer', ['threejs', 'utils', 'spriteobject', 'spritesheet', 'camera', 'turbosort', 'shader', 'loop'], function (THREE, Utils, SpriteObject, SpriteSheet, Camera, turboSort, Shader, Loop) {
     'use strict';
 
     var planeGeometry = new THREE.PlaneBufferGeometry(1, 1);
@@ -2596,7 +2602,7 @@ define('spriterenderer',['threejs', 'utils', 'spriteobject', 'spritesheet', 'cam
 //# sourceMappingURL=spriterenderer.js.map;
 
 
-define('collection',['utils', 'spritesheet', 'spriteobject', 'camera'], function (Utils, SpriteSheet, SpriteObject, Camera) {
+define('collection', ['utils', 'spritesheet', 'spriteobject', 'camera'], function (Utils, SpriteSheet, SpriteObject, Camera) {
 
     'use strict';
 
@@ -2806,7 +2812,7 @@ define('collection',['utils', 'spritesheet', 'spriteobject', 'camera'], function
 //# sourceMappingURL=collection.js.map;
 
 
-define('mouse',['utils'], function (Utils) {
+define('mouse', ['utils'], function (Utils) {
 
     'use strict';
 
@@ -3005,7 +3011,7 @@ define('mouse',['utils'], function (Utils) {
 //# sourceMappingURL=mouse.js.map;
 
 
-define('keyboard',['utils', 'loop'], function (Utils, Loop) {
+define('keyboard', ['utils', 'loop'], function (Utils, Loop) {
     'use strict';
 
     var keyboard = [];
@@ -3080,7 +3086,7 @@ define('keyboard',['utils', 'loop'], function (Utils, Loop) {
 //# sourceMappingURL=keyboard.js.map;
 
 
-define('engine',['threejs', 'loader', 'loop', 'camera'], function (THREE, Loader, Loop, Camera) {
+define('engine', ['threejs', 'loader', 'loop', 'camera'], function (THREE, Loader, Loop, Camera) {
     function Engine(options) {
         var self = this;
         options = options || {};
@@ -3131,7 +3137,7 @@ define('engine',['threejs', 'loader', 'loop', 'camera'], function (THREE, Loader
 //# sourceMappingURL=engine.js.map;
 
 
-define('dobuki',['utils', 'loop', 'gifHandler', 'camera', 'objectpool', 'spriteobject', 'packer', 'spritesheet', 'spriterenderer', 'collection', 'mouse', 'keyboard', 'loader', 'engine'], function (Utils, Loop, GifHandler, Camera, ObjectPool, SpriteObject, Packer, SpriteSheet, SpriteRenderer, Collection, Mouse, Keyboard, Loader, Engine) {
+define('dobuki', ['utils', 'loop', 'gifHandler', 'camera', 'objectpool', 'spriteobject', 'packer', 'spritesheet', 'spriterenderer', 'collection', 'mouse', 'keyboard', 'loader', 'engine'], function (Utils, Loop, GifHandler, Camera, ObjectPool, SpriteObject, Packer, SpriteSheet, SpriteRenderer, Collection, Mouse, Keyboard, Loader, Engine) {
 
     return {
         Utils: Utils,
@@ -3163,5 +3169,5 @@ requirejs.config({
 
 require(["dobuki"], function (DOK) {});
 //# sourceMappingURL=main.js.map;
-define("main", function(){});
-
+define("main", function () {});
+//# sourceMappingURL=dok.js.map
