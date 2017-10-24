@@ -82,12 +82,15 @@ function(THREE, DOK, $) {
             var light = 1;
 
             if(cellType === CellType.water) {
+//        x,y,z,width,height,quaternionArray,img,light,wave
+
                 cells.push(DOK.SpriteObject.create(
                     x*256,-64-20,y*256,
                     size,size,
                     DOK.Camera.quaternions.groundQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
+                    0
 //                    DOK.SpriteSheet.spritesheet.water.getFrame(cycle)
                 ));
             } else if(cellType === CellType.ice) {
@@ -95,8 +98,9 @@ function(THREE, DOK, $) {
                     x*256,-64,y*256,
                     size,size,
                     DOK.Camera.quaternions.groundQuaternionArray,
-                    light*2,
-                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
+                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle),
+                    light * 2,
+                    0
 //                    DOK.SpriteSheet.spritesheet.ice.getFrame(cycle)
                 ));
             } else if(cellType === CellType.ground) {
@@ -104,8 +108,9 @@ function(THREE, DOK, $) {
                     x*256,-64,y*256,
                     size,size,
                     DOK.Camera.quaternions.groundQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
+                    0
 //                    DOK.SpriteSheet.spritesheet.floor.getFrame(cycle)
                 ));
             } else {
@@ -115,38 +120,43 @@ function(THREE, DOK, $) {
                     x * 256, -64 + 128 - shiftDown, y * 256 + 128,
                     size, size,
                     DOK.Camera.quaternions.southQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
+                    0
 //                        DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x * 256, -64 + 128 - shiftDown, y * 256 - 128,
                     size, size,
                     DOK.Camera.quaternions.northQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
+                    0
 //                        DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x * 256 - 128, -64 + 128 - shiftDown, y * 256,
                     size, size,
                     DOK.Camera.quaternions.westQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
+                    0
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x * 256 + 128, -64 + 128 - shiftDown, y * 256,
                     size, size,
                     DOK.Camera.quaternions.eastQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
+                    0
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x * 256, -64 + 256 - shiftDown, y * 256,
                     size, size,
                     DOK.Camera.quaternions.groundQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.wall.getFrame(cycle)
+                    0
                 ));
             }
             window.c = cells;

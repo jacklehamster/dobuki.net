@@ -7,6 +7,8 @@ function(THREE, DOK) {
     window.THREE = THREE;
     window.DOK = DOK;
 
+    const engine = new DOK.Engine();
+
     var eggMove = new THREE.Vector3();
     var lastThrow = 0;
 
@@ -28,20 +30,6 @@ function(THREE, DOK) {
     };
 
     document.getElementById("fps").style.display = debug.fps ? "" : "none";
-
-    var renderer = new THREE.WebGLRenderer({ antialias: true });
-    var scene = new THREE.Scene();
-
-    renderer.render(scene,DOK.Camera.getCamera());
-    window.addEventListener("resize",function() {
-        renderer.setSize( innerWidth, innerHeight );
-    });
-    renderer.sortObjects = false;
-
-    renderer.setSize( innerWidth, innerHeight );
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor (0xffffff, 1);
-    document.body.appendChild( renderer.domElement );
 
     if(debug.control) {
 //        DOK.addControlBall();
@@ -307,11 +295,9 @@ function(THREE, DOK) {
     }
 
     var spriteRenderer = new DOK.SpriteRenderer();
-    scene.add(spriteRenderer.mesh);
 
 
     var range = 20;
-    renderer.setClearColor (0xffffff, 1);
 
     function random(x, y, n) {
         var r = Math.PI * ((x*13) ^ y*11 ^ n);
@@ -742,24 +728,27 @@ function(THREE, DOK) {
                     x*256,-64-20,y*256,
                     size,size,
                     DOK.Camera.quaternions.groundQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.water.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.water.getFrame(cycle)
+                    0
                 ));
             } else if(cellType === CellType.ice) {
                 cells.push(DOK.SpriteObject.create(
                     x*256,-64,y*256,
                     size,size,
                     DOK.Camera.quaternions.groundQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.ice.getFrame(cycle),
                     light*2,
-                    DOK.SpriteSheet.spritesheet.ice.getFrame(cycle)
+                    0
                 ));
             } else if(cellType === CellType.ground) {
                 cells.push(DOK.SpriteObject.create(
                     x*256,-64,y*256,
                     size,size,
                     DOK.Camera.quaternions.groundQuaternionArray,
+                    DOK.SpriteSheet.spritesheet.floor.getFrame(cycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.floor.getFrame(cycle)
+                    0
                 ));
             } else {
                 if(!unlocked[x+"_"+y] || DOK.Loop.time-unlocked[x+"_"+y] < unlockTime) {
@@ -832,29 +821,33 @@ function(THREE, DOK) {
                     x * 256, -64 + yOffset, y * 256 + 128 + 1,
                     sizeX, sizeY,
                     DOK.Camera.quaternions.southQuaternionArray,
+                    overlaySprite,
                     light,
-                    overlaySprite
+                    0
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x*256,-64+yOffset,y*256-128-1,
                     sizeX,sizeY,
                     DOK.Camera.quaternions.northQuaternionArray,
+                    overlaySprite,
                     light,
-                    overlaySprite
+                    0
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x*256-128-1,-64+yOffset,y*256,
                     sizeX,sizeY,
                     DOK.Camera.quaternions.westQuaternionArray,
+                    overlaySprite,
                     light,
-                    overlaySprite
+                    0
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x*256+128+1,-64+yOffset,y*256,
                     sizeX,sizeY,
                     DOK.Camera.quaternions.eastQuaternionArray,
+                    overlaySprite,
                     light,
-                    overlaySprite
+                    0
                 ));
             }
 
@@ -863,30 +856,34 @@ function(THREE, DOK) {
                     x * 256, -64 + 128, y * 256,
                     size, size,
                     null,
+                    DOK.SpriteSheet.spritesheet.squid.normal.getFrame(timeCycle),
                     light,
-                    DOK.SpriteSheet.spritesheet.squid.normal.getFrame(timeCycle)
+                    0
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x * 256, -64 + 1, y * 256,
                     size, size,
                     DOK.Camera.shadowQuatArray(x * 256, y * 256),
+                    DOK.SpriteSheet.spritesheet.squid.shadow.getFrame(timeCycle),
                     overallLight,
-                    DOK.SpriteSheet.spritesheet.squid.shadow.getFrame(timeCycle)
+                    0
                 ));
             } else if(objectType === ObjectType.elf) {
                 cells.push(DOK.SpriteObject.create(
                     x*256,-64+128-100,y*256,
                     size/4,size/4,
                     null,
-                    light*2,
-                    DOK.SpriteSheet.spritesheet.elf.normal.still.getFrame(timeCycle)
+                    DOK.SpriteSheet.spritesheet.elf.normal.still.getFrame(timeCycle),
+                    light * 2,
+                    0
                 ));
                 cells.push(DOK.SpriteObject.create(
                     x*256,-64+1,y*256,
                     size/4,size/4,
                     DOK.Camera.shadowQuatArray(x*256,y*256),
+                    DOK.SpriteSheet.spritesheet.elf.shadow.still.getFrame(timeCycle),
                     overallLight,
-                    DOK.SpriteSheet.spritesheet.elf.shadow.still.getFrame(timeCycle)
+                    0
                 ));
             } else if(objectType===ObjectType.item) {
                 if(hasItem(x,y)) {
@@ -895,8 +892,9 @@ function(THREE, DOK) {
                         x*256,-64+128-100,y*256,
                         50,50,
                         null,
+                        DOK.SpriteSheet.spritesheet.items[item].getFrame(timeCycle),
                         light,
-                        DOK.SpriteSheet.spritesheet.items[item].getFrame(timeCycle)
+                        0
                     ));
                 }
             }
@@ -918,8 +916,9 @@ function(THREE, DOK) {
                 this.position.x,this.position.y-35,this.position.z,
                 30,30,
                 null,
+                DOK.SpriteSheet.spritesheet.bunny.normal[this.state][this.direction].getFrame(this.cycle),
                 pLight,
-                DOK.SpriteSheet.spritesheet.bunny.normal[this.state][this.direction].getFrame(this.cycle)
+                0
             );
         },
         get shadow() {
@@ -927,8 +926,9 @@ function(THREE, DOK) {
                 this.position.x,this.position.y-40,this.position.z,
                 30,30,
                 DOK.Camera.shadowQuatArray(this.position.x,this.position.z),
+                DOK.SpriteSheet.spritesheet.bunny.shadow[this.state][this.direction].getFrame(this.cycle),
                 pLight,
-                DOK.SpriteSheet.spritesheet.bunny.shadow[this.state][this.direction].getFrame(this.cycle)
+                0
             );
         },
         loop: function() {
@@ -976,8 +976,9 @@ function(THREE, DOK) {
                 this.position.x,this.position.y-35,this.position.z,
                 70,70,
                 null,
+                DOK.SpriteSheet.spritesheet.bigface.normal[this.state].getFrame(this.cycle),
                 pLight,
-                DOK.SpriteSheet.spritesheet.bigface.normal[this.state].getFrame(this.cycle)
+                0
             );
         },
         get shadow() {
@@ -985,8 +986,9 @@ function(THREE, DOK) {
                 this.position.x,this.position.y-40,this.position.z,
                 70,70,
                 DOK.Camera.shadowQuatArray(this.position.x,this.position.z),
+                DOK.SpriteSheet.spritesheet.bigface.shadow[this.state].getFrame(this.cycle),
                 pLight,
-                DOK.SpriteSheet.spritesheet.bigface.shadow[this.state].getFrame(this.cycle)
+                0
             );
         },
         loop: function() {
@@ -1029,8 +1031,9 @@ function(THREE, DOK) {
                 this.position.x,this.position.y-35,this.position.z,
                 30,30,
                 null,
+                DOK.SpriteSheet.spritesheet.penguin[act][this.orientation].getFrame(this.cycle),
                 pLight,
-                DOK.SpriteSheet.spritesheet.penguin[act][this.orientation].getFrame(this.cycle)
+                0
             );
         },
         get shadow() {
@@ -1038,8 +1041,9 @@ function(THREE, DOK) {
                 this.position.x,this.position.y-40,this.position.z,
                 30,30,
                 DOK.Camera.shadowQuatArray(this.position.x,this.position.z),
+                DOK.SpriteSheet.spritesheet.penguin.shadow[this.orientation].getFrame(this.cycle),
                 pLight,
-                DOK.SpriteSheet.spritesheet.penguin.shadow[this.orientation].getFrame(this.cycle)
+                0
             );
         },
         loop: function() {
@@ -1136,14 +1140,14 @@ function(THREE, DOK) {
     }
 
     function initialize() {
+        document.body.appendChild(engine.renderer.domElement);
         DOK.Loader.getLoadingBar();
-        DOK.Loader.setOnLoad(gameLoaded);
+//        DOK.Loader.setOnLoad(gameLoaded);
+        setTimeout(gameLoaded, 1000);
     }
 
     function gameLoaded() {
         document.body.removeChild(DOK.Loader.getLoadingBar());
-        renderer.setClearColor (0xffffff, 1);
-        renderer.render(scene,DOK.Camera.getCamera());
         startGame();
     }
 
@@ -1318,12 +1322,12 @@ function(THREE, DOK) {
     var egg = new THREE.Mesh(geometry, material);
     egg.position.set(0,-50,0);
     egg.geometry.scale(3,3,3);
-    scene.add(egg);
+    engine.scene.add(egg);
     var light = new THREE.AmbientLight( 0xcccccc ); // soft white light
-    scene.add( light );
+    engine.scene.add( light );
     var light2 = new THREE.PointLight( 0xffffff, 1, 0, 5 );
     light2.position.set( -50, 250, 50 );
-    scene.add( light2 );
+    engine.scene.add( light2 );
     egg.visible = false;
 
 
@@ -1415,11 +1419,11 @@ function(THREE, DOK) {
             spriteRenderer.display(bigfaceOverlay.sprite);
             spriteRenderer.display(bigfaceOverlay.shadow);
             spriteRenderer.updateGraphics();
-            renderer.render(scene, camera);
         });
     }
 
 //    document.addEventListener("DOMContentLoaded",initialize);
     setTimeout(initialize,100);
+    window.col = collection;
 });
 

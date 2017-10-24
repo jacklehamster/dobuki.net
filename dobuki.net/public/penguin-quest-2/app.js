@@ -12,7 +12,10 @@ requirejs.config({
             'jquery-3.2.1.slim.min',
         ],
         threejs: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/85/three.min',
-        dobuki: 'https://jacklehamster.github.io/dok/out/dok',
+        dobuki: [
+            'https://jacklehamster.github.io/dok/out/dok',
+            'dok.min',
+        ],
         jsgif: 'jsgif/gif',
     },
 });
