@@ -82,11 +82,23 @@ class Homepage extends Page {
                         backgroundImage: 'url("/assets/dobukibanner.png")'
                     } })
             ),
-            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/170227?bg_color=ecefe6&fg_color=222222&link_color=b0cc2e&border_color=c0ca9f", width: "100%", height: "167" }),
-            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/170228?bg_color=e1daf6&fg_color=222222&link_color=d2d079&border_color=a589c1", width: "100%", height: "167" }),
-            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/116068?bg_color=edf7f8&fg_color=222222&link_color=5c99fa&border_color=c1c5c5", width: "100%", height: "167" }),
-            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/136767?bg_color=ffffff&fg_color=222222&link_color=f0b214&border_color=ff2525", width: "100%", height: "167" }),
-            React.createElement("iframe", { frameborder: "0", src: "https://itch.io/embed/122302?bg_color=eeffff&fg_color=222222&link_color=49a2ac&border_color=bebebe", width: "100%", height: "167" }),
+            React.createElement(
+                "div",
+                { style: {
+                        padding: '20px 100px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        flexWrap: 'wrap'
+                    } },
+                React.createElement("iframe", { frameBorder: "0", src: "https://itch.io/embed/198002?bg_color=cefafd&fg_color=222222&link_color=186ae7&border_color=bebebe", width: "800", height: "167" }),
+                React.createElement("iframe", { frameBorder: "0", src: "https://itch.io/embed/18395?bg_color=000000&fg_color=9899ae&link_color=5c5ffa&border_color=333333", width: "280", height: "167" }),
+                React.createElement("iframe", { frameBorder: "0", src: "https://itch.io/embed/170227?bg_color=ecefe6&fg_color=222222&link_color=b0cc2e&border_color=c0ca9f", width: "280", height: "167" }),
+                React.createElement("iframe", { frameBorder: "0", src: "https://itch.io/embed/170228?bg_color=e1daf6&fg_color=222222&link_color=d2d079&border_color=a589c1", width: "280", height: "167" }),
+                React.createElement("iframe", { frameBorder: "0", src: "https://itch.io/embed/116068?bg_color=edf7f8&fg_color=222222&link_color=5c99fa&border_color=c1c5c5", width: "280", height: "167" }),
+                React.createElement("iframe", { frameBorder: "0", src: "https://itch.io/embed/136767?bg_color=e79797&fg_color=222222&link_color=f0b214&border_color=ff2525", width: "280", height: "167" }),
+                React.createElement("iframe", { frameBorder: "0", src: "https://itch.io/embed/122302?bg_color=eeffff&fg_color=222222&link_color=49a2ac&border_color=bebebe", width: "280", height: "167" })
+            ),
             React.createElement(
                 "div",
                 { style: {

@@ -112,6 +112,25 @@ class DokRouter implements Router {
         }
     }
 
+    private function handle_redirect($path) {
+        if($path==='/dobuki-games') {
+            $dobuki_games_version = "1.02.09175";
+
+            $request = $this->server->get_request();
+            if (isset($request['version'])) {
+                header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+                header("Cache-Control: post-check=0, pre-check=0", false);
+                header("Pragma: no-cache");
+                echo json_encode([
+                    'version' => $dobuki_games_version,
+                ]);
+            } else {
+                header( 'Location: https://jacklehamster.itch.io/dobuki-game-collection' ) ;
+            }
+            $this->handled = true;
+        }
+    }
+
     private function handle_www() {
         $path = $this->server->get_path();
         switch($path) {
@@ -128,6 +147,9 @@ class DokRouter implements Router {
             case '/login':
             case '/signup':
                 $this->show_homepage();
+                break;
+            case '/dobuki-games':
+                $this->handle_redirect($path);
                 break;
         }
         if (!$this->handled) {
