@@ -66,13 +66,13 @@ class Homepage extends Page {
                     { this.state.tip }
                 </div>
             </div>
-            <div style={{ margin: 0, height: 200, display: 'flex' }}>
+            <div style={{ margin: 0, height: 247, display: 'flex' }}>
                 <div style={{
                     flex: 1,
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center',
-                    backgroundImage: 'url("/assets/dobukibanner.png")',
+                    backgroundImage: 'url("/assets/banner.png")',
                 }}>
                 </div>
             </div>

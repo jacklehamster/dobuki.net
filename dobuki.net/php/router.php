@@ -114,7 +114,7 @@ class DokRouter implements Router {
 
     private function handle_redirect($path) {
         if($path==='/dobuki-games') {
-            $dobuki_games_version = "1.02.09175";
+            $dobuki_games_version = "1.03.50258";
 
             $request = $this->server->get_request();
             if (isset($request['version'])) {

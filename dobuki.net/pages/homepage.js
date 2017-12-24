@@ -73,13 +73,13 @@ class Homepage extends Page {
             ),
             React.createElement(
                 "div",
-                { style: { margin: 0, height: 200, display: 'flex' } },
+                { style: { margin: 0, height: 247, display: 'flex' } },
                 React.createElement("div", { style: {
                         flex: 1,
                         backgroundSize: 'contain',
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'center',
-                        backgroundImage: 'url("/assets/dobukibanner.png")'
+                        backgroundImage: 'url("/assets/banner.png")'
                     } })
             ),
             React.createElement(
