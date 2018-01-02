@@ -1,3 +1,7 @@
+a:link {
+    text-decoration:  none;
+}
+
 .button {
     cursor: pointer;
     transition: background .2s, width .3s;
@@ -6,6 +10,21 @@
 .button:hover {
     background-color: #F4F6F7;
 }
+
+.menu {
+    cursor: pointer;
+    transition: background .2s;
+    border-radius: 5px;
+    margin: 1px;
+    padding: 4px 20px 4px 4px;
+    display: flex;
+    flex-direction: column;
+    background-color: #ccc;
+}
+.menu:hover {
+    background-color: #F4F6F7;
+}
+
 .header {
     display: flex;
     flex-direction: row;
@@ -96,6 +115,32 @@ i[down] {
     margin-top: 1px;
 }
 
+.loginsection {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: calc(100% - 40px);
+}
+
+.statetip {
+    padding: 2px;
+    width: calc(100vw - 50px);
+    min-height: 30px;
+    background-color: #EFA;
+    border-style: solid;
+    border-color: #CD6;
+    color: #786;
+    border-width: 0 2px 3px 2px;
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    vertical-align: middle;
+    transition: margin 1s, opacity 1s;
+}
+
 @media screen and (min-width: 500px) {
     .popdialog {
         margin-top: 10px;
@@ -106,5 +151,8 @@ i[down] {
     .input {
         font-size: 18px;
         padding: 8px;
+    }
+    .loginsection {
+        width: calc(100% - 120px);
     }
 }

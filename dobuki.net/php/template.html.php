@@ -27,7 +27,6 @@
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.8.0/js/md5.min.js"></script>
     <script src="/login.js"></script>
-    <script src="/registerworker.js"></script>
     <? include "vendor/analyticstracking.php" ?>
 </body>
 </html>

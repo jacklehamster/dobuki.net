@@ -22,6 +22,7 @@ class DokRouter implements Router {
                 $this->handle_www();
                 break;
         }
+        Globals::get_javascript()->inject_javascript();
     }
 
     private function show_homepage() {
@@ -38,8 +39,7 @@ class DokRouter implements Router {
         $login = Globals::get_login();
         $result = $login->login(
             $request['username'],
-            $request['password'] ?? null,
-            $request['time'] ?? null
+            $request['password'] ?? null
         );
         echo json_encode($result);
         $this->handled = true;
@@ -47,10 +47,21 @@ class DokRouter implements Router {
 
     private function handle_signup() {
         require_once 'login.php';
-
         $request = $this->server->get_request();
         $login = Globals::get_login();
         $result = $login->sign_up($request['username'], $request['email'], $request['password']);
+        echo json_encode($result);
+        $this->handled = true;
+    }
+
+    private function handle_logout() {
+        require_once 'login.php';
+        $request = $this->server->get_request();
+        $login = Globals::get_login();
+        $result = $login->logout(
+            $request['username'],
+            $request['token'] ?? null
+        );
         echo json_encode($result);
         $this->handled = true;
     }
@@ -84,31 +95,11 @@ class DokRouter implements Router {
 
     private function check_request($request) {
         if (isset($request['confirm']) && isset($request['email'])) {
-            $result = $this->database->query(
-                'SELECT * FROM users WHERE email=:email AND lockcode=:lockcode',
-                [
-                    ':lockcode' => $request['confirm'],
-                    ':email' => $request['email'],
-                ],
-                false
-            );
-            if (count($result) === 1) {
-                $row = $result[0];
-                if (!$row['validated']) {
-                    $result = $this->database->query(
-                        'UPDATE users SET validated=NOW() WHERE email=:email AND validated IS NULL',
-                        [
-                            ':email' => $request['email'],
-                        ],
-                        true
-                    );
-                    $message = "Email {$request['email']} validated.";
-                } else {
-                    $message = "Email {$request['email']} already validated.";
-                }
-                echo "<script>page.showTip('$message');</script>";
-            }
-            echo "<script>page.clearQuery();</script>";
+            $login = Globals::get_login();
+            $result = $login->validate($request['email'], $request['confirm']);
+            $javascript = Globals::get_javascript();
+            $javascript->set_tip($result['message']);
+            $javascript->clear_query();
         }
     }
 
@@ -131,6 +122,19 @@ class DokRouter implements Router {
         }
     }
 
+    private function get_image($username, $format) {
+        header('Location: /assets/defaultprofile.png');
+    }
+
+    private function check_split($paths) {
+        switch($paths[1]) {
+            case 'profile':
+                list(,,$username,$format) = $paths;
+                $this->get_image($username, $format);
+                break;
+        }
+    }
+
     private function handle_www() {
         $path = $this->server->get_path();
         switch($path) {
@@ -139,6 +143,9 @@ class DokRouter implements Router {
                 break;
             case '/api/signup':
                 $this->handle_signup();
+                break;
+            case '/api/logout':
+                $this->handle_logout();
                 break;
             case '/phpinfo':
                 $this->handle_phpinfo();
@@ -150,6 +157,9 @@ class DokRouter implements Router {
                 break;
             case '/dobuki-games':
                 $this->handle_redirect($path);
+                break;
+            default:
+                $this->check_split(explode('/',$path));
                 break;
         }
         if (!$this->handled) {

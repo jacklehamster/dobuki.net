@@ -1,9 +1,12 @@
-
 class Page extends React.Component {
     showTip() {}
 
-    clearQuery() {
+    static clearQuery() {
         history.replaceState({}, 'Dobuki', location.href.split("?")[0]);
+    }
+
+    static reloadPage() {
+        location.replace('');
     }
 
     static render() {
@@ -12,10 +15,6 @@ class Page extends React.Component {
 }
 
 class HeaderTitle extends React.Component {
-    reloadPage() {
-        location.replace('');
-    }
-
     render() {
         const divStyle = {
             background: 'linear-gradient(white, silver)',
@@ -41,10 +40,10 @@ class HeaderTitle extends React.Component {
         return React.createElement(
             'div',
             { style: divStyle, className: 'header' },
-            React.createElement('img', { style: imgStyle, src: this.props.icon, onClick: this.reloadPage }),
+            React.createElement('img', { style: imgStyle, src: this.props.icon, onClick: Page.reloadPage }),
             React.createElement(
                 'h1',
-                { style: h1Style, onClick: this.reloadPage },
+                { style: h1Style, onClick: Page.reloadPage },
                 this.props.title
             )
         );
@@ -78,26 +77,55 @@ class LoginDialog extends React.Component {
             password: null,
             password2: null,
             loggingIn: false,
-            signupMessage: null
+            signupMessage: null,
+            loginMessage: null
         };
         this.state = this.initialState;
-        this.loginUsername = this.loginUsername.bind(this);
+        this.performLogin = this.performLogin.bind(this);
         this.signUp = this.signUp.bind(this);
+        this.loginUsernameBox = this.loginUsernameBox.bind(this);
+        this.passwordChange = this.passwordChange.bind(this);
     }
 
     clear() {
         this.setState(this.initialState);
     }
 
-    loginUsername() {
+    performLogin() {
         const self = this;
         if (!this.state.loggingIn) {
             this.setState({
                 loggingIn: true
             });
-            api.login(this.state.login, null, function (result) {
+            api.login(this.state.login, this.state.password || '', function (result) {
                 if (result.success) {
-                    self.props.onClickOut();
+                    if (result.token) {
+                        const username = self.state.login;
+                        const token = result.token;
+                        const date = new Date();
+                        const days = 1;
+                        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+
+                        document.cookie = `username=${username}; expires=${date.toGMTString()}`;
+                        document.cookie = `token=${token}; expires=${date.toGMTString()}`;
+
+                        localStorage.setItem('username', username);
+                        localStorage.setItem('token', token);
+                        self.props.onLogin();
+                    } else {
+                        self.setState({
+                            login: result.username,
+                            username: result.username,
+                            usernameConfirmed: true,
+                            loggingIn: false,
+                            loginMessage: ''
+                        });
+                    }
+                } else {
+                    self.setState({
+                        loggingIn: false,
+                        loginMessage: result.message
+                    });
                 }
             });
         }
@@ -155,8 +183,88 @@ class LoginDialog extends React.Component {
         return !state.username || !state.email || !state.password || state.password2 !== state.password;
     }
 
+    loginPasswordBox() {
+        const fontFamily = "'Concert One', cursive";
+        return [React.createElement('div', { style: { height: 20 } }), React.createElement(
+            'div',
+            {
+                className: 'confirmed-input',
+                style: {
+                    fontFamily,
+                    fontSize: 20,
+                    height: 40,
+                    padding: 8,
+                    display: this.state.usernameConfirmed ? '' : 'none'
+                },
+                onClick: (() => {
+                    this.setState({ usernameConfirmed: false });
+                }).bind(this)
+            },
+            this.state.username
+        ), React.createElement('input', {
+            type: 'password',
+            placeholder: 'Enter your password',
+            className: 'input',
+            onChange: this.passwordChange.bind(this),
+            disabled: this.state.loggingIn,
+            value: this.state.password,
+            style: {
+                height: 40,
+                width: '100%'
+            } }), React.createElement('div', { style: { height: 20 } }), React.createElement(
+            'div',
+            { style: {
+                    display: 'flex',
+                    height: 50,
+                    width: '70%'
+                } },
+            React.createElement(Button, {
+                text: 'login',
+                leftMost: true, rightMost: true,
+                onClick: this.performLogin,
+                fontSize: '24',
+                fontColor: '#333',
+                background: 'linear-gradient(#59f79d, #2c6846)',
+                backgroundPressed: '#a3e2bf',
+                pressed: this.state.loggingIn,
+                disabled: !this.state.password
+            })
+        )];
+    }
+
+    loginUsernameBox() {
+        return [React.createElement('div', { style: { height: 20 } }), React.createElement('input', { type: 'text',
+            placeholder: 'Enter your username or email',
+            className: 'input',
+            onChange: this.loginChange.bind(this),
+            disabled: this.state.loggingIn,
+            value: this.state.login,
+            style: {
+                height: 40,
+                width: '100%'
+            } }), React.createElement('div', { style: { height: 20 } }), React.createElement(
+            'div',
+            { style: {
+                    display: 'flex',
+                    height: 50,
+                    width: '70%'
+                } },
+            React.createElement(Button, { text: 'next',
+                leftMost: true, rightMost: true,
+                onClick: this.performLogin,
+                fontSize: '24',
+                fontColor: '#333',
+                background: 'linear-gradient(#59f79d, #2c6846)',
+                backgroundPressed: '#a3e2bf',
+                pressed: this.state.loggingIn,
+                disabled: !this.state.login
+            })
+        )];
+    }
+
     loginSection() {
         const borderRadius = 8;
+        const fontFamily = "'Concert One', cursive";
         return React.createElement(
             'div',
             { style: {
@@ -170,45 +278,8 @@ class LoginDialog extends React.Component {
                 } },
             React.createElement(
                 'div',
-                { style: {
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        width: 'calc(100% - 120px)'
-                    } },
-                React.createElement('div', { style: { height: 20 } }),
-                React.createElement('input', {
-                    type: 'text',
-                    placeholder: 'Enter your username or email',
-                    className: 'input',
-                    onChange: this.loginChange.bind(this),
-                    disabled: this.state.loggingIn,
-                    value: this.state.login,
-                    style: {
-                        height: 40,
-                        width: '100%'
-                    } }),
-                React.createElement('div', { style: { height: 20 } }),
-                React.createElement(
-                    'div',
-                    { style: {
-                            display: 'flex',
-                            height: 50,
-                            width: '70%'
-                        } },
-                    React.createElement(Button, {
-                        text: 'login',
-                        leftMost: true, rightMost: true,
-                        onClick: this.loginUsername,
-                        fontSize: '24',
-                        fontColor: '#333',
-                        background: 'linear-gradient(#59f79d, #2c6846)',
-                        backgroundPressed: '#a3e2bf',
-                        pressed: this.state.loggingIn,
-                        disabled: !this.state.login
-                    })
-                ),
+                { className: 'loginsection' },
+                this.state.usernameConfirmed ? this.loginPasswordBox() : this.loginUsernameBox(),
                 React.createElement(
                     'div',
                     { style: {
@@ -218,6 +289,15 @@ class LoginDialog extends React.Component {
                             'width': 50, 'height': 50
                         } },
                     React.createElement('div', { className: `tux-loading-indicator ${this.state.loggingIn ? 'show' : ''}` })
+                ),
+                this.state.loginMessage && React.createElement(
+                    'div',
+                    { style: {
+                            fontFamily,
+                            fontSize: 20,
+                            padding: 20
+                        } },
+                    this.state.loginMessage
                 )
             )
         );
@@ -247,13 +327,7 @@ class LoginDialog extends React.Component {
                 } },
             React.createElement(
                 'div',
-                { style: {
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        width: 'calc(100% - 120px)'
-                    } },
+                { className: 'loginsection' },
                 React.createElement('div', { style: { height: 20 } }),
                 React.createElement('input', {
                     ref: input => {
@@ -416,7 +490,7 @@ class LoginDialog extends React.Component {
                             width: '100%', height: '100%',
                             transition: 'opacity .2s linear',
                             opacity: this.props.mode ? .8 : 0,
-                            backgroundColor: '#000022',
+                            backgroundColor: '#002',
                             cursor: 'pointer',
                             display: this.props.mode ? '' : 'none'
                         }, onClick: this.props.onClickOut }),
@@ -542,6 +616,7 @@ class Login extends React.Component {
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.toggle = this.toggle.bind(this);
+        this.onLogin = this.onLogin.bind(this);
         this.canUpdateHistory = true;
         window.addEventListener('popstate', this.onUrlChange.bind(this));
     }
@@ -550,18 +625,23 @@ class Login extends React.Component {
         return url === '/login' ? 'login' : url === '/signup' ? 'signup' : '';
     }
 
-    open(e) {
+    open() {
         this.setState(prevState => ({
             mode: prevState.initialMode
         }));
     }
 
-    close(e) {
+    close() {
         this.setState(prevState => ({
             initialMode: prevState.mode,
             mode: null
         }));
         this.refs.loginDialog.clear();
+    }
+
+    onLogin() {
+        this.close();
+        this.props.onLogin();
     }
 
     toggle() {
@@ -613,11 +693,113 @@ class Login extends React.Component {
             React.createElement(LoginDialog, { ref: 'loginDialog',
                 mode: this.state.mode,
                 onClickOut: this.close,
-                toggle: this.toggle
+                toggle: this.toggle,
+                onLogin: this.onLogin
             })
         );
     }
 }
 
-class Card extends React.Component {}
+class Profile extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            view: false
+        };
+        this.open = this.open.bind(this);
+        this.close = this.close.bind(this);
+        this.logout = this.logout.bind(this);
+        this.handleClickOutside = this.handleClickOutside.bind(this);
+    }
+
+    componentDidMount() {
+        document.addEventListener('mousedown', this.handleClickOutside);
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener('mousedown', this.handleClickOutside);
+    }
+
+    handleClickOutside(event) {
+        let node = event.target;
+        while (node) {
+            if (node === this.refs.wrapper) {
+                return;
+            }
+            node = node.parentNode;
+        }
+        this.close();
+    }
+    profile_pic() {
+        return `/profile/${this.props.username}/image.png`;
+    }
+
+    open() {
+        this.setState(prevState => ({
+            view: !prevState.view
+        }));
+    }
+
+    close() {
+        this.setState({
+            view: false
+        });
+    }
+
+    logout() {
+        const username = localStorage.getItem('username');
+        const token = localStorage.getItem('token');
+        console.log(username, token);
+        api.logout(username, token, function (result) {
+            console.log(result);
+        });
+    }
+
+    render() {
+        return React.createElement(
+            'div',
+            { ref: 'wrapper' },
+            React.createElement(
+                'div',
+                { className: 'button', onClick: this.open, style: {
+                        position: 'absolute',
+                        top: 0, right: 0,
+                        padding: '0 8px',
+                        height: 50,
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    } },
+                React.createElement(
+                    'div',
+                    { style: {
+                            fontFamily: "'Concert One', cursive",
+                            fontSize: 16
+                        } },
+                    this.props.username
+                ),
+                React.createElement('img', { style: { width: 40, height: 40, margin: '0 0 0 8px' }, src: this.profile_pic() })
+            ),
+            this.state.view && React.createElement(
+                'div',
+                { style: {
+                        position: 'absolute',
+                        backgroundColor: '#555',
+                        minWidth: 150,
+                        right: 0
+                    } },
+                React.createElement(
+                    'div',
+                    { className: 'menu', onMouseDown: this.logout },
+                    React.createElement(
+                        'div',
+                        { style: { fontFamily: "'Concert One', cursive" } },
+                        'Log out'
+                    )
+                )
+            )
+        );
+    }
+}
 //# sourceMappingURL=components.js.map

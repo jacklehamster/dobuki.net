@@ -19,7 +19,11 @@ class DokDatabase implements Database {
 
     public function query(string $query, array $parameters, bool $update) {
         $stmt = $this->connection->prepare($query);
-        $stmt->execute($parameters);
+        try {
+            $stmt->execute($parameters);
+        } catch(\PDOException $exception) {
+            return null;
+        }
         if ($update) {
             return $stmt->rowCount();
         } else {

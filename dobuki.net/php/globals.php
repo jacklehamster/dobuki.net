@@ -5,6 +5,8 @@ require_once 'router.php';
 require_once 'server.php';
 require_once 'database.php';
 require_once 'email.php';
+require_once 'login.php';
+require_once 'javascript.php';
 
 class Globals {
     static private $server;
@@ -13,6 +15,7 @@ class Globals {
     static private $database;
     static private $login;
     static private $email;
+    static private $javascript;
 
     static private function get_brand(): string {
         return BRAND;
@@ -85,6 +88,13 @@ class Globals {
             self::$email = new DokEmail();
         }
         return self::$email;
+    }
+
+    static public function get_javascript() {
+        if (!self::$javascript) {
+            self::$javascript = new DokJavascript();
+        }
+        return self::$javascript;
     }
 
     static private function get_database_name(): string {
