@@ -20,9 +20,9 @@ class DokRouter implements Router {
         switch($this->server->get_subdomain()) {
             case 'www':
                 $this->handle_www();
+                Globals::get_javascript()->inject_javascript();
                 break;
         }
-        Globals::get_javascript()->inject_javascript();
     }
 
     private function show_homepage() {
