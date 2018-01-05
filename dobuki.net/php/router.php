@@ -1,43 +1,57 @@
 <?php
 namespace Dobuki;
 
+require_once 'globals.php';
+
 interface Router {
     public function handle();
 }
 
 class DokRouter implements Router {
     private $server;
-    private $database;
+    private $session;
+    private $login;
+    private $emailer;
     private $handled;
+    private $javascript;
 
-    public function __construct(Server $server, Database $database) {
+    public function __construct(
+        Server $server, Session $session, Login $login, Email $emailer, Javascript $javascript
+    ) {
         $this->server = $server;
-        $this->database = $database;
+        $this->login = $login;
+        $this->emailer = $emailer;
+        $this->session = $session;
+        $this->javascript = $javascript;
         $this->handled = false;
+    }
+
+    private function share_session_variables() {
+        $this->javascript->inject_variables([
+            'session' => $this->session->get_vars(),
+        ]);
     }
 
     public function handle() {
         switch($this->server->get_subdomain()) {
             case 'www':
                 $this->handle_www();
-                Globals::get_javascript()->inject_javascript();
+                $this->javascript->inject_javascript();
                 break;
         }
     }
 
     private function show_homepage() {
         require_once 'page.php';
+        $this->share_session_variables();
         Page::render([
             'page' => 'homepage',
         ]);
         $this->handled = true;
     }
 
-    private function handle_login() {
-        require_once 'login.php';
-        $request = $this->server->get_request();
-        $login = Globals::get_login();
-        $result = $login->login(
+    private function handle_login(array $request) {
+        $result = $this->login->login(
             $request['username'],
             $request['password'] ?? null
         );
@@ -45,23 +59,41 @@ class DokRouter implements Router {
         $this->handled = true;
     }
 
-    private function handle_signup() {
-        require_once 'login.php';
-        $request = $this->server->get_request();
-        $login = Globals::get_login();
-        $result = $login->sign_up($request['username'], $request['email'], $request['password']);
+    private function handle_signup(array $request) {
+        $result = $this->login->sign_up($request['username'], $request['email'], $request['password']);
+        if ($result['success'] && $result['lockcode']) {
+            $this->emailer->send_welcome_email($request['email'], $result['lockcode']);
+            unset($result['lockcode']);
+        }
         echo json_encode($result);
         $this->handled = true;
     }
 
     private function handle_logout() {
-        require_once 'login.php';
-        $request = $this->server->get_request();
-        $login = Globals::get_login();
-        $result = $login->logout(
-            $request['username'],
-            $request['token'] ?? null
-        );
+        $result = $this->login->logout();
+        echo json_encode($result);
+        $this->handled = true;
+    }
+
+    private function handle_recovery(array $request) {
+        $result = $this->login->get_recovery_code($request['email']);
+        if ($result['success']) {
+            if ($result['validated']) {
+                $this->emailer->send_recovery_email($request['email'], $result['username'], $result['code']);
+            } else {
+                $this->emailer->send_welcome_email($request['email'], $result['lockcode']);
+            }
+            unset($result['username']);
+            unset($result['code']);
+            unset($result['lockcode']);
+            unset($result['validated']);
+        }
+        echo json_encode($result);
+        $this->handled = true;
+    }
+
+    private function handle_check(array $request) {
+        $result = $this->login->check_username_available($request['username']);
         echo json_encode($result);
         $this->handled = true;
     }
@@ -95,11 +127,14 @@ class DokRouter implements Router {
 
     private function check_request($request) {
         if (isset($request['confirm']) && isset($request['email'])) {
-            $login = Globals::get_login();
-            $result = $login->validate($request['email'], $request['confirm']);
-            $javascript = Globals::get_javascript();
-            $javascript->set_tip($result['message']);
-            $javascript->clear_query();
+            $result = $this->login->validate($request['email'], $request['confirm']);
+            $this->javascript->set_tip($result['message']);
+            $this->javascript->clear_query();
+        }
+        if (isset($request['recover']) && isset($request['email'])) {
+            $result = $this->login->recover($request['email'], $request['recover']);
+            $this->javascript->set_tip($result['message']);
+            $this->javascript->clear_query();
         }
     }
 
@@ -139,18 +174,25 @@ class DokRouter implements Router {
         $path = $this->server->get_path();
         switch($path) {
             case '/api/login':
-                $this->handle_login();
+                $this->handle_login($this->server->get_request());
                 break;
             case '/api/signup':
-                $this->handle_signup();
+                $this->handle_signup($this->server->get_request());
                 break;
             case '/api/logout':
                 $this->handle_logout();
+                break;
+            case '/api/recover':
+                $this->handle_recovery($this->server->get_request());
+                break;
+            case '/api/check':
+                $this->handle_check($this->server->get_request());
                 break;
             case '/phpinfo':
                 $this->handle_phpinfo();
                 break;
             case '/':
+            case '/recover':
             case '/login':
             case '/signup':
                 $this->show_homepage();

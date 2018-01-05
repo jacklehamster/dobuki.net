@@ -5,16 +5,16 @@ class Homepage extends Page {
         this.state = {
             tip: null,
             showTip: false,
-            username: localStorage.getItem('username'),
+            username: session.user,
         };
 
         this.hideTip = this.hideTip.bind(this);
-        this.onLogin = this.onLogin.bind(this);
+        this.handleLogin = this.handleLogin.bind(this);
     }
 
-    onLogin() {
+    handleLogin() {
         this.setState({
-            username: localStorage.getItem('username'),
+            username: session.user,
         });
     }
 
@@ -37,36 +37,15 @@ class Homepage extends Page {
         return (<div style={{
             backgroundColor: '#F0FCFF',
         }}>
-            <HeaderTitle title="Dobuki.net" icon="/assets/dobuki.png" />
-            { this.state.username
-                ? <Profile username={this.state.username} />
-                : <Login url={location.pathname} onLogin={this.onLogin} />
-            }
+            <HeaderTitle ref="header" title="Dobuki.net" icon="/assets/dobuki.png" />
             { this.state.tip &&
-                <div style={{
-                    position: 'absolute',
-                    width: '100%',
-                    height: 30,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                }}>
-                    <div className="statetip" style={{
-                        fontFamily,
-                        marginTop: this.state.showTip ? 0 : -100,
-                        opacity: this.state.showTip ? .9 : 0,
-                    }}>
-                        {this.state.tip}
-                    </div>
-                </div>
+                <Tip showTip={this.state.showTip} tip={this.state.tip} />
             }
-            <div style={{
-                margin: 0, height: 247, display: 'flex', backgroundColor: '#000',
-                borderWidth: '1px 0 1px 0',
-                borderColor: '#222',
-                borderStyle: 'solid',
-            }}>
+            { this.state.username
+                ? <Profile username={this.state.username} onLogout={this.handleLogin} />
+                : <Login url={location.pathname} onLogin={this.handleLogin} />
+            }
+            <div className="banner">
                 <div style={{
                     flex: 1,
                     backgroundSize: 'contain',
@@ -119,6 +98,18 @@ class Homepage extends Page {
                 verticalAlign: 'middle',
             }}>
                 <h2>More games <a target="_blank" href="https://dobuki.weebly.com/">here</a></h2>
+            </div>
+            <div style={{
+                width: '100%',
+                position: 'absolute',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                top: -193,
+            }}>
+                <img style={{
+                    height: 245,
+                }} src="/assets/upsidedown-penguin.png"/>
             </div>
         </div>);
     }

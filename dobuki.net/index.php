@@ -12,12 +12,7 @@ if (isset($_REQUEST['debug'])) {?>
     echo "Hello world";
     var_dump($_REQUEST);
     var_dump($_SERVER);
-    if (!isset($_SESSION['count'])) {
-        $_SESSION['count'] = 0;
-    } else {
-        $_SESSION['count']++;
-    }
-    //    var_dump($server);
+    Globals::get_session()->increment();
     var_dump($_SESSION);
     ?>
 </pre>

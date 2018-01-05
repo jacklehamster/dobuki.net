@@ -17,6 +17,23 @@ class Api {
         });
     }
 
+    check(username, callback) {
+        $.ajax({
+            type: 'GET',
+            url: "/api/check",
+            cache: false,
+            data: {
+                username: username,
+            },
+            success: (result,xhr,status) => {
+                callback(JSON.parse(result));
+            },
+            error: (xhr,status,error) => {
+                console.error(error);
+            }
+        });
+    }
+
     signup(username, email, password, callback) {
         $.ajax({
             type: 'POST',
@@ -36,14 +53,27 @@ class Api {
         });
     }
 
-    logout(username, token, callback) {
+    logout(callback) {
         $.ajax({
             type: 'POST',
             url: "/api/logout",
             cache: false,
+            success: (result,xhr,status) => {
+                callback(JSON.parse(result));
+            },
+            error: (xhr,status,error) => {
+                console.error(error);
+            }
+        });
+    }
+
+    recover(email, callback) {
+        $.ajax({
+            type: 'POST',
+            url: "/api/recover",
+            cache: false,
             data: {
-                username: username,
-                token: token,
+                email: email,
             },
             success: (result,xhr,status) => {
                 callback(JSON.parse(result));

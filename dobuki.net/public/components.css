@@ -11,6 +11,11 @@ a:link {
     background-color: #F4F6F7;
 }
 
+.link {
+    color: blue;
+    cursor: pointer;
+}
+
 .menu {
     cursor: pointer;
     transition: background .2s;
@@ -31,11 +36,6 @@ a:link {
     align-items: center;
     align-content: center;
 }
-@media screen and (min-width: 400px) {
-    .header {
-        justify-content: center;
-    }
-}
 .input {
     border-radius: 8px;
     box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08);
@@ -48,7 +48,12 @@ a:link {
 }
 .confirmed-input {
     font-size: 24px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+
 @keyframes tux-loading-indicator-spin {
     from {
         transform: rotate(0deg);
@@ -141,6 +146,16 @@ i[down] {
     transition: margin 1s, opacity 1s;
 }
 
+.banner {
+    margin: 0;
+    height: 120px;
+    display: flex;
+    background-color: #000;
+    border-width: 1px 0 1px 0;
+    border-color: #222;
+    border-style: solid;
+}
+
 @media screen and (min-width: 500px) {
     .popdialog {
         margin-top: 10px;
@@ -154,5 +169,11 @@ i[down] {
     }
     .loginsection {
         width: calc(100% - 120px);
+    }
+    .header {
+        justify-content: center;
+    }
+    .banner {
+        height: 247px;
     }
 }

@@ -1,12 +1,6 @@
 <?php
 namespace Dobuki;
 
-require_once 'router.php';
-require_once 'server.php';
-require_once 'database.php';
-require_once 'email.php';
-require_once 'login.php';
-require_once 'javascript.php';
 
 class Globals {
     static private $server;
@@ -18,6 +12,7 @@ class Globals {
     static private $javascript;
 
     static private function get_brand(): string {
+        require_once 'database.php';
         return BRAND;
     }
 
@@ -29,12 +24,9 @@ class Globals {
         return $_REQUEST;
     }
 
-    static private function get_session_vars(): array {
-        return $_SESSION;
-    }
-
     static private function get_server(): Server {
         if (!self::$server) {
+            require_once 'server.php';
             self::$server = new DokServer(
                 self::get_brand(),
                 self::get_server_vars(),
@@ -44,18 +36,23 @@ class Globals {
         return self::$server;
     }
 
-    static private function get_session(): Session {
+    static public function get_session(): Session {
         if (!self::$session) {
-            self::$session = new DokSession(self::get_session_vars());
+            require_once 'session.php';
+            self::$session = new DokSession();
         }
         return self::$session;
     }
 
     static public function get_router(): Router {
         if (!self::$router) {
+            require_once 'router.php';
             self::$router = new DokRouter(
                 self::get_server(),
-                self::get_database()
+                self::get_session(),
+                self::get_login(),
+                self::get_emailer(),
+                self::get_javascript()
             );
         }
         return self::$router;
@@ -63,6 +60,7 @@ class Globals {
 
     static private function get_database(): Database {
         if (!self::$database) {
+            require_once 'database.php';
             self::$database = new DokDatabase(
                 self::get_server_name(),
                 self::get_database_name(),
@@ -75,16 +73,15 @@ class Globals {
 
     static public function get_login() {
         if (!self::$login) {
-            self::$login = new DokLogin(
-                self::get_database(),
-                self::get_emailer()
-            );
+            require_once 'login.php';
+            self::$login = new DokLogin(self::get_database(), self::get_session());
         }
         return self::$login;
     }
 
     static public function get_emailer() {
         if (!self::$email) {
+            require_once 'email.php';
             self::$email = new DokEmail();
         }
         return self::$email;
@@ -92,6 +89,7 @@ class Globals {
 
     static public function get_javascript() {
         if (!self::$javascript) {
+            require_once 'javascript.php';
             self::$javascript = new DokJavascript();
         }
         return self::$javascript;

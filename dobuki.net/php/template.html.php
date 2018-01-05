@@ -11,7 +11,7 @@
     <meta name="theme-color" content="<?= $this->theme_color ?>" />
     <link href="https://fonts.googleapis.com/css?family=Concert+One|Fredoka+One" rel="stylesheet">
     <link rel="prefetch"  href="/assets/dobuki.png" as "image"/>
-    <link rel="prefetch"  href="/assets/signin.svg" as "image"/>
+    <link rel="prefetch" href="/assets/login.svg" as "image"/>
     <link rel="shortcut icon" href="<?= $this->favicon ?>" />
     <script src="https://unpkg.com/react@15/dist/react.min.js"></script>
     <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
