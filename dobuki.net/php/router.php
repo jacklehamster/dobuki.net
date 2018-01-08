@@ -14,15 +14,18 @@ class DokRouter implements Router {
     private $emailer;
     private $handled;
     private $javascript;
+    private $profile;
 
     public function __construct(
-        Server $server, Session $session, Login $login, Email $emailer, Javascript $javascript
+        Server $server, Session $session, Login $login,
+        Email $emailer, Javascript $javascript, Profile $profile
     ) {
         $this->server = $server;
         $this->login = $login;
         $this->emailer = $emailer;
         $this->session = $session;
         $this->javascript = $javascript;
+        $this->profile = $profile;
         $this->handled = false;
     }
 
@@ -30,6 +33,7 @@ class DokRouter implements Router {
         $this->javascript->inject_variables([
             'session' => $this->session->get_vars(),
         ]);
+        $this->javascript->inject_javascript();
     }
 
     public function handle() {
@@ -79,7 +83,9 @@ class DokRouter implements Router {
         $result = $this->login->get_recovery_code($request['email']);
         if ($result['success']) {
             if ($result['validated']) {
-                $this->emailer->send_recovery_email($request['email'], $result['username'], $result['code']);
+                $this->emailer->send_recovery_email(
+                    $request['email'], $result['username'], $result['code']
+                );
             } else {
                 $this->emailer->send_welcome_email($request['email'], $result['lockcode']);
             }
@@ -94,6 +100,12 @@ class DokRouter implements Router {
 
     private function handle_check(array $request) {
         $result = $this->login->check_username_available($request['username']);
+        echo json_encode($result);
+        $this->handled = true;
+    }
+
+    private function handle_change_password(array $request) {
+        $result = $this->login->change_password($request['username'], $request['password']);
         echo json_encode($result);
         $this->handled = true;
     }
@@ -131,8 +143,12 @@ class DokRouter implements Router {
             $this->javascript->set_tip($result['message']);
             $this->javascript->clear_query();
         }
-        if (isset($request['recover']) && isset($request['email'])) {
-            $result = $this->login->recover($request['email'], $request['recover']);
+        if (isset($request['recover']) && isset($request['username'])) {
+            $result = $this->login->recover($request['username'], $request['recover']);
+            if (!$result['success']) {
+                $this->javascript->go_to_homepage();
+                $this->javascript->inject_javascript();
+            }
             $this->javascript->set_tip($result['message']);
             $this->javascript->clear_query();
         }
@@ -157,37 +173,66 @@ class DokRouter implements Router {
         }
     }
 
+    private function handle_save_profile(array $request) {
+        $username = $this->session->get_username();
+        if ($request['profile_image']) {
+            $result = $this->profile->save($request['profile_image']);
+        }
+        if ($request['password'] && $request['old_password']) {
+            $result = $this->login->change_password($username, $request['password'], $request['old_password']);
+        }
+        echo json_encode($result);
+        $this->handled = true;
+    }
+
     private function get_image($username, $format) {
-        header('Location: /assets/defaultprofile.png');
+        $this->profile->show_picture($username, $format);
+        $this->handled = true;
     }
 
     private function check_split($paths) {
         switch($paths[1]) {
-            case 'profile':
+            case 'profile-picture':
                 list(,,$username,$format) = $paths;
                 $this->get_image($username, $format);
+                break;
+            case 'api':
+                list(,,$command) = $paths;
+                $this->api($command);
+                break;
+        }
+    }
+
+    private function api($command) {
+        switch($command) {
+            case 'login':
+                $this->handle_login($this->server->get_request());
+                break;
+            case 'signup':
+                $this->handle_signup($this->server->get_request());
+                break;
+            case 'logout':
+                $this->handle_logout();
+                break;
+            case 'recover':
+                $this->handle_recovery($this->server->get_request());
+                break;
+            case 'check':
+                $this->handle_check($this->server->get_request());
+                break;
+            case 'change-password':
+                $this->handle_change_password($this->server->get_request());
+                break;
+            case 'save-profile':
+                $this->handle_save_profile($this->server->get_request());
                 break;
         }
     }
 
     private function handle_www() {
+        $this->check_request($this->server->get_request());
         $path = $this->server->get_path();
         switch($path) {
-            case '/api/login':
-                $this->handle_login($this->server->get_request());
-                break;
-            case '/api/signup':
-                $this->handle_signup($this->server->get_request());
-                break;
-            case '/api/logout':
-                $this->handle_logout();
-                break;
-            case '/api/recover':
-                $this->handle_recovery($this->server->get_request());
-                break;
-            case '/api/check':
-                $this->handle_check($this->server->get_request());
-                break;
             case '/phpinfo':
                 $this->handle_phpinfo();
                 break;
@@ -195,6 +240,8 @@ class DokRouter implements Router {
             case '/recover':
             case '/login':
             case '/signup':
+            case '/reset-password':
+            case '/profile':
                 $this->show_homepage();
                 break;
             case '/dobuki-games':
@@ -207,19 +254,15 @@ class DokRouter implements Router {
         if (!$this->handled) {
             $this->check_slash($path);
         }
-
         if (!$this->handled) {
             $this->check_public($path);
         }
-
         if (!$this->handled) {
             $this->show_path();
         }
-
         if (!$this->handled) {
             $this->show_homepage();
         }
-
-        $this->check_request($this->server->get_request());
+        $this->session->commit();
     }
 }

@@ -1,8 +1,29 @@
 class Page extends React.Component {
+    constructor(props) {
+        super(props);
+        Page.consumeParams();
+    }
+
+    static consumeParams() {
+        Page.originalParams = location.search.substring(1).split("&").reduce(
+            (map, obj) => {
+                const [,key, value] = obj.match(/^(\w+)=([^?&]+|)$/) || [];
+                if(key) {
+                    map[key] = value;
+                }
+                return map;
+            }, {}
+        );
+    }
+
     showTip() {}
 
-    static clearQuery() {
-        history.replaceState({}, 'Dobuki', location.href.split("?")[0]);
+    static clearQuery(replacement) {
+        const search = replacement && replacement.length ? `?${replacement}` : '';
+        history.replaceState({},
+            'Dobuki',
+            `${location.href.split("?")[0]}${search}`
+        );
     }
 
     static reloadPage() {
@@ -52,7 +73,7 @@ class Overlay extends React.Component {
         return <div style={{
             position: 'absolute',
             top: 51, left: 0,
-            width: '100%', height: '100%',
+            width: '100%', height: 'auto',
             pointerEvents: this.props.mode ? '' : 'none',
         }}>
             { this.props.children }
@@ -75,16 +96,29 @@ class LoginDialog extends React.Component {
             signupMessage: null,
             loginMessage: null,
             recoverySent: false,
-            resetPassword: false,
-            signupWarning: null,
+            warning: null,
+            passwordWeak: null,
+            passwordMismatch: null,
+            usernameTaken: null,
+            emailExists: null,
         };
-        this.state = this.initialState;
+        this.state = {};
+        for (let k in this.initialState) {
+            this.state[k] = this.initialState[k];
+        }
+        if (this.props.mode === 'reset-password' && Page.originalParams.username) {
+            this.state.login = this.state.username = Page.originalParams.username;
+            this.state.usernameConfirmed = true;
+        }
+
         this.performLogin = this.performLogin.bind(this);
+        this.performResetPassword = this.performResetPassword.bind(this);
         this.signUp = this.signUp.bind(this);
         this.loginUsernameBox = this.loginUsernameBox.bind(this);
         this.resetPasswordBox = this.resetPasswordBox.bind(this);
         this.loginPasswordBox = this.loginPasswordBox.bind(this);
         this.passwordChange = this.passwordChange.bind(this);
+        this.password2Change = this.password2Change.bind(this);
         this.submitForm = this.submitForm.bind(this);
         this.sendRecoveryLink = this.sendRecoveryLink.bind(this);
         this.recover = this.recover.bind(this);
@@ -95,28 +129,30 @@ class LoginDialog extends React.Component {
         this.setState(this.initialState);
     }
 
-    componentDidMount() {
-        if(this.props.mode==='login' && this.refs.username_field) {
-            this.refs.username_field.focus();
+    componentWillReceiveProps(nextProps) {
+        if(this.props.mode !== nextProps.mode) {
+            this.setState({
+                password: null,
+                password2: null,
+            });
         }
     }
 
     sendRecoveryLink() {
-        const self = this;
         if (!this.state.loggingIn) {
             this.setState({
                 loggingIn: true,
                 loginMessage: null,
             });
-            api.recover(this.state.login, function(result) {
+            api.recover(this.state.login, (result) => {
                 if(result.success) {
-                    self.setState({
+                    this.setState({
                         loggingIn: false,
                         loginMessage: result.message,
                         recoverySent: true,
                     });
                 } else {
-                    self.setState({
+                    this.setState({
                         loggingIn: false,
                         loginMessage: result.message,
                     });
@@ -126,31 +162,53 @@ class LoginDialog extends React.Component {
     }
 
     performLogin() {
-        const self = this;
         if (!this.state.loggingIn) {
             this.setState({
                 loggingIn: true,
                 loginMessage: null,
             });
-            api.login(this.state.login, this.state.password || '', function(result) {
+            api.login(this.state.login, this.state.password || '', (result) => {
                 if(result.success) {
                     if(result.password_valid) {
                         session.user = result.username;
-                        self.props.onLogin();
+                        this.props.onLogin();
                     } else {
-                        self.setState({
-                            login: result.username,
-                            username: result.username,
-                            usernameConfirmed: true,
-                            loggingIn: false,
-                            loginMessage: '',
-                            resetPassword: result.reset_password,
-                        }, function() {
-                            self.refs.password_field.focus();
+                        this.setState((prevState) => {
+                            return {
+                                login: result.username,
+                                username: result.username,
+                                usernameConfirmed: true,
+                                loggingIn: false,
+                                loginMessage: '',
+                            };
+                        }, () => {
+                            if(result.reset_password) {
+                                this.props.resetPassword();
+                            }
                         });
                     }
                 } else {
-                    self.setState({
+                    this.setState({
+                        loggingIn: false,
+                        loginMessage: result.message,
+                    });
+                }
+            });
+        }
+    }
+
+    performResetPassword() {
+        if (!this.state.loggingIn) {
+            this.setState({
+                loggingIn: true,
+                loginMessage: null,
+            });
+            api.changePassword(this.state.login, this.state.password || '', (result) => {
+                if(result.success) {
+                    session.user = result.username;
+                    this.props.onLogin();
+                } else {
+                    this.setState({
                         loggingIn: false,
                         loginMessage: result.message,
                     });
@@ -170,13 +228,14 @@ class LoginDialog extends React.Component {
         } else {
             this.setState({
                 loggingIn: false,
-                signupWarning: result.message,
+                warning: result.message,
             });
         }
     }
 
     recover() {
         this.setState({
+            login: null,
             loginMessage: null,
         }, function() {
             this.props.recover();
@@ -184,13 +243,14 @@ class LoginDialog extends React.Component {
     }
 
     checkUsernameAvailable(username) {
-        api.check(username, function(result) {
+        api.check(username, (result) => {
             if(!result.success) {
+                const prop = result.type==='username' ? 'usernameTaken' : 'emailExists';
                 this.setState({
-                    signupWarning: result.message,
+                    [prop]: result.message,
                 });
             }
-        }.bind(this));
+        });
     }
 
     signUp() {
@@ -209,41 +269,50 @@ class LoginDialog extends React.Component {
     }
 
     loginChange(e) {
+        const target = e.target;
         this.setState({
-            login: e.target.value,
+            login: target.value,
         });
     }
 
     usernameChange(e) {
+        const target = e.target;
         this.setState((prevState) => {
             return {
-                signupWarning: null,
-                username: e.target.value,
+                usernameTaken: null,
+                username: target.value,
             }
         });
     }
 
     emailChange(e) {
+        const target = e.target;
         this.setState((prevState) => {
             return {
-                signupWarning: null,
-                email: e.target.value,
+                emailExists: null,
+                email: target.value,
             };
         });
+    }
+
+    getWarning() {
+        if (this.state.loggingIn) {
+            return null;
+        }
+        return this.state.warning
+            || this.state.passwordMismatch
+            || this.state.passwordWeak
+            || this.state.emailExists
+            || this.state.usernameTaken;
     }
 
     passwordChange(e) {
         const target = e.target;
         this.setState((prevState) => {
-            const invalid = !LoginDialog.validPassword(target.value);
-            const warning = "Your password must have at least eight characters, including one letter and one number.";
-            const signupWarning = invalid
-                ? warning
-                : prevState.signupWarning && warning !== prevState.signupWarning
-                ? prevState.signupWarning
-                : null;
             return {
-                signupWarning,
+                passwordWeak: !LoginDialog.validPassword(target.value)
+                    ? "Your password must have at least eight characters, including one letter and one number."
+                    : null,
                 password: target.value,
             };
         });
@@ -252,54 +321,103 @@ class LoginDialog extends React.Component {
     password2Change(e) {
         const target = e.target;
         this.setState((prevState) => {
-            const invalid = prevState.password !== target.value;
-            const warning = "The password you entered must match.";
-            const signupWarning = invalid
-                ? warning
-                : prevState.signupWarning && warning !== prevState.signupWarning
-                ? prevState.signupWarning
-                : null;
             return {
-                signupWarning,
+                passwordMismatch: prevState.password !== target.value
+                    ? "The passwords you entered must match." : null,
                 password2: target.value,
             };
         });
     }
     
     static validPassword(password) {
-        return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
+        return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password);
     }
 
     static invalidForm(state) {
         return !state.username
             || !this.validEmail(state.email)
-            || !this.constructor.validPassword(state.password)
-            || state.password2 !== state.password;
+            || !this.validPassword(state.password)
+            || state.password2 !== state.password
+            || state.usernameTaken
+            || state.emailExists;
     }
 
     submitForm(event) {
         if(event.key === 'Enter'){
-            this.performLogin();
+            if (this.props.mode==='reset_password') {
+                this.performResetPassword();
+            } else {
+                this.performLogin();
+            }
         }
+    }
+
+    loginUsernameBox() {
+        return [
+            <div style={{ height: 20 }}/>,
+            <input ref={input => input && input.focus()}
+                   type="text"
+                   placeholder="Enter your username or email"
+                   className="input"
+                   onChange={this.loginChange.bind(this)}
+                   disabled={this.state.loggingIn}
+                   value={this.state.login}
+                   onKeyPress={this.submitForm}
+                   style={{
+                       height: 40,
+                       width: '100%',
+                   }}/>,
+            <div style={{ height: 20 }}/>,
+            <div style={{
+                display: 'flex',
+                height: 50,
+                width: '70%',
+            }}>
+                <Button text="next"
+                        leftMost rightMost
+                        onClick={this.performLogin}
+                        fontSize="24"
+                        fontColor="#eee"
+                        background={"linear-gradient(#59f79d, #2c6846)"}
+                        backgroundPressed="#a3e2bf"
+                        pressed={this.state.loggingIn}
+                        disabled={!this.state.login}
+                />
+            </div>,
+        ];
+    }
+
+    profile_pic() {
+        return `/profile-picture/${this.state.username}/image.png`;
     }
 
     loginPasswordBox() {
         const fontFamily = "'Concert One', cursive";
         return [
             <div style={{ height: 20 }}/>,
+            <div ref="profile_pic" className="profile-pic"
+                 style={{
+                     backgroundImage: `url(${this.profile_pic()})`,
+                     backgroundPositionX: this.state.profileX,
+                     backgroundPositionY: this.state.profileY,
+                 }}/>,
             <div style={{
                     fontFamily,
                     fontSize: 20,
                     height: 40,
                     display: this.state.usernameConfirmed ? '' : 'none',
                 }}
-                onClick={function() { this.setState({ usernameConfirmed: false }); }.bind(this)}
-            >{ this.state.username }</div>,
+                onClick={() => {
+                    this.setState({
+                        usernameConfirmed: false,
+                        password: null,
+                    });
+                }}>{ this.state.username }</div>,
             <input type="text"
                value={this.state.login} readonly autocomplete="off"
                style={{ display: 'none' }}
             />,
-            <input ref="password_field"
+            <input ref={input => input && input.focus()}
                 type="password"
                 placeholder="Enter your password"
                 className="input"
@@ -323,45 +441,10 @@ class LoginDialog extends React.Component {
                     onClick={this.performLogin}
                     fontSize="24"
                     fontColor="#eee"
-                    background="linear-gradient(#59f79d, #2c6846)"
+                    background={"linear-gradient(#59f79d, #2c6846)"}
                     backgroundPressed="#a3e2bf"
                     pressed={this.state.loggingIn}
                     disabled={!this.state.password}
-                />
-            </div>,
-        ];
-    }
-
-    loginUsernameBox() {
-        return [
-            <div style={{ height: 20 }}/>,
-            <input ref="username_field"
-                type="text"
-                placeholder="Enter your username or email"
-                className="input"
-                onChange={this.loginChange.bind(this)}
-                disabled={this.state.loggingIn}
-                value={this.state.login}
-                onKeyPress={this.submitForm}
-                style={{
-                    height: 40,
-                    width: '100%',
-                }}/>,
-            <div style={{ height: 20 }}/>,
-            <div style={{
-                display: 'flex',
-                height: 50,
-                width: '70%',
-            }}>
-                <Button text="next"
-                    leftMost rightMost
-                    onClick={this.performLogin}
-                    fontSize="24"
-                    fontColor="#eee"
-                    background="linear-gradient(#59f79d, #2c6846)"
-                    backgroundPressed="#a3e2bf"
-                    pressed={this.state.loggingIn}
-                    disabled={!this.state.login}
                 />
             </div>,
         ];
@@ -377,45 +460,44 @@ class LoginDialog extends React.Component {
                 height: 40,
                 display: this.state.usernameConfirmed ? '' : 'none',
             }}
-                 onClick={(() => { this.setState({ usernameConfirmed: false }); }).bind(this)}
+                 onClick={() => { this.setState({ usernameConfirmed: false }); }}
             >{ this.state.username }</div>,
-            <input type="text"
-                   value={this.state.login} readonly autocomplete="off"
-                   style={{ display: 'none' }}
+            <input type="text" value={this.state.login} readonly autocomplete="off"
+               style={{ display: 'none' }}
             />,
-            <input ref="password_field"
-                   type="password"
-                   placeholder="Enter a new password"
-                   className="input"
-                   onChange={this.passwordChange.bind(this)}
-                   disabled={this.state.loggingIn}
-                   value={this.state.password}
-                   onKeyPress={(event) => {
-                       if(event.key === 'Enter'){
-                           this.refs.password_field2.focus();
-                       }
-                   }}
-                   style={{
-                       height: 40,
-                       width: '100%',
-                   }}/>,
-            <div style={{ height: 20 }}/>,
+            <input
+               type="password"
+               placeholder="Enter a new password"
+               className="input"
+               onChange={this.passwordChange.bind(this)}
+               disabled={this.state.loggingIn}
+               value={this.state.password}
+               onKeyPress={(event) => {
+                   if(event.key === 'Enter'){
+                       this.refs.password_field2.focus();
+                   }
+               }}
+               style={{
+                   height: 40,
+                   width: '100%',
+               }}/>,
+            <div style={{ height: 10 }}/>,
             <input ref="password_field2"
-                   type="password"
-                   placeholder="Re-enter the same password"
-                   className="input"
-                   onChange={this.password2Change.bind(this)}
-                   disabled={this.state.loggingIn}
-                   value={this.state.password2}
-                   onKeyPress={function(event) {
-                       if(!this.constructor.invalidForm(this.state)) {
-                           this.submitForm(event);
-                       }
-                   }.bind(this)}
-                   style={{
-                       height: 40,
-                       width: '100%',
-                   }}/>,
+               type="password"
+               placeholder="Re-enter the same password"
+               className="input"
+               onChange={this.password2Change.bind(this)}
+               disabled={this.state.loggingIn}
+               value={this.state.password2}
+               onKeyPress={(event) => {
+                   if(!this.constructor.invalidForm(this.state)) {
+                       this.submitForm(event);
+                   }
+               }}
+               style={{
+                   height: 40,
+                   width: '100%',
+               }}/>,
             <div style={{ height: 20 }}/>,
             <div style={{
                 display: 'flex',
@@ -425,15 +507,22 @@ class LoginDialog extends React.Component {
                 <Button
                     text="Change password"
                     leftMost rightMost
-                    onClick={this.performLogin}
+                    onClick={this.performResetPassword}
                     fontSize="24"
                     fontColor="#eee"
-                    background="linear-gradient(#59f79d, #2c6846)"
+                    background={"linear-gradient(#59f79d, #2c6846)"}
                     backgroundPressed="#a3e2bf"
                     pressed={this.state.loggingIn}
-                    disabled={!this.state.password}
+                    disabled={
+                        !LoginDialog.validPassword(this.state.password)
+                        || this.state.password2 !== this.state.password
+                    }
                 />
             </div>,
+            <div style={{
+                color: '#D00',
+                marginTop: 15,
+            }}>{this.getWarning()}</div>,
         ];
     }
 
@@ -451,7 +540,7 @@ class LoginDialog extends React.Component {
         }}>
             <div className="loginsection">
                 {
-                    this.state.resetPassword
+                    this.props.mode === 'reset-password' && this.state.username && this.state.usernameConfirmed
                     ? this.resetPasswordBox()
                     : this.state.usernameConfirmed
                     ? this.loginPasswordBox()
@@ -461,7 +550,7 @@ class LoginDialog extends React.Component {
                     display: 'flex',
                     marginTop: 20,
                     alignItems: 'center', alignSelf: 'center', justifyContent: 'center',
-                    'width': 50, 'height': 50,
+                    width: 50, height: 50,
                 }}>
                     <div className={
                         `tux-loading-indicator ${this.state.loggingIn?'show':''}`
@@ -476,9 +565,9 @@ class LoginDialog extends React.Component {
                         { this.state.loginMessage }
                     </div>
                 }
-                { !this.state.loggingIn && !this.state.resetPassword &&
+                { !this.state.loggingIn && this.props.mode!=='reset-password' &&
                     <div><a className="link" onClick={this.recover}>
-                        Did you forget your username or password?
+                        Did you forget your password?
                     </a></div>
                 }
             </div>
@@ -499,7 +588,7 @@ class LoginDialog extends React.Component {
         }}>
             <div className="loginsection">
                 <div style={{ height: 20 }}/>
-                <input ref="username_field"
+                <input ref={input => input && input.focus()}
                    type="email"
                    placeholder="Enter your email"
                    className="input"
@@ -522,7 +611,7 @@ class LoginDialog extends React.Component {
                         onClick={this.sendRecoveryLink}
                         fontSize="24"
                         fontColor="#eee"
-                        background="linear-gradient(#59f79d, #2c6846)"
+                        background={"linear-gradient(#59f79d, #2c6846)"}
                         backgroundPressed="#a3e2bf"
                         pressed={this.state.loggingIn || this.state.recoverySent}
                         disabled={!this.state.login || !LoginDialog.validEmail(this.state.login)}
@@ -547,12 +636,29 @@ class LoginDialog extends React.Component {
                     { this.state.loginMessage }
                 </div>
                 }
+                <div style={{
+                    display: 'flex',
+                    height: 50,
+                    width: '70%',
+                }}>
+                { this.state.recoverySent &&
+                    <Button text="close"
+                        leftMost rightMost
+                        onClick={this.props.onClickOut}
+                        fontSize="24"
+                        fontColor="#eee"
+                        background={"linear-gradient(#59f79d, #2c6846)"}
+                        backgroundPressed="#a3e2bf"
+                    />
+                }
+                </div>
+
             </div>
         </div>);
     }
 
     static validEmail(email) {
-        return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email);
+        return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email);
     }
 
     signupSection() {
@@ -582,31 +688,31 @@ class LoginDialog extends React.Component {
                         onClick={this.props.onClickOut}
                         fontSize="24"
                         fontColor="#eee"
-                        background="linear-gradient(#59f79d, #2c6846)"
+                        background={"linear-gradient(#59f79d, #2c6846)"}
                         backgroundPressed="#a3e2bf"
                     />
                 </div>
             </div> :
             <div style={{
-            width: '100%',
-            height: 'auto',
-            borderBottomLeftRadius: borderRadius,
-            borderBottomRightRadius: borderRadius,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-        }}>
+                width: '100%',
+                height: 'auto',
+                borderBottomLeftRadius: borderRadius,
+                borderBottomRightRadius: borderRadius,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}>
             <div className="loginsection">
                 <div style={{ height: 20 }}/>
                 <input
-                    ref={(input) => { this.usernameInput = input; }}
+                    ref={(input) => { this.usernameInput = input; input && input.focus(); }}
                     placeholder="Enter a username"
                     className="input"
                     onChange={this.usernameChange.bind(this)}
-                    onBlur={(() => { this.setState((prevState) => {
+                    onBlur={() => { this.setState((prevState) => {
                         this.checkUsernameAvailable(prevState.username);
                         return { usernameConfirmed: prevState.username }});
-                    }).bind(this)}
+                    }}
                     disabled={this.state.loggingIn}
                     value={this.state.username}
                     onKeyPress={(event) => {
@@ -624,23 +730,23 @@ class LoginDialog extends React.Component {
                     style={{
                         display: this.state.usernameConfirmed ? '' : 'none',
                     }}
-                     onClick={(() => {
-                         this.setState({ usernameConfirmed: false }, function() {
+                     onClick={() => {
+                         this.setState({ usernameConfirmed: false }, () => {
                              this.usernameInput.focus();
-                         }.bind(this));
-                     }).bind(this)}
+                         });
+                     }}
                 ><div><b>Username:</b> { this.state.username }</div></div>
                 <div style={{ height: 20 }}/>
                 <input ref="email" type="email"
                     placeholder="Enter an email"
                     className="input"
                     onChange={this.emailChange.bind(this)}
-                    onBlur={(() => {this.setState((prevState) => {
+                    onBlur={() => {this.setState((prevState) => {
                         this.checkUsernameAvailable(prevState.email);
                         return { emailConfirmed:
                             this.constructor.validEmail(prevState.email) ? prevState.email : null
                         }});
-                    }).bind(this)}
+                    }}
                     disabled={this.state.loggingIn}
                     value={this.state.email}
                        onKeyPress={(event) => {
@@ -658,19 +764,19 @@ class LoginDialog extends React.Component {
                     style={{
                         display: this.state.emailConfirmed ? '' : 'none',
                     }}
-                     onClick={(() => {
-                         this.setState({ emailConfirmed: false }, function() {
+                     onClick={() => {
+                         this.setState({ emailConfirmed: false }, () => {
                              this.usernameInput.focus();
-                         }.bind(this));
-                     }).bind(this)}
+                         });
+                     }}
                 ><div><b>Email:</b> { this.state.email }</div></div>
                 <div style={{ height: 20 }}/>
                 <input ref="password_field" type="password"
                     placeholder="Enter a password"
                     className="input"
                     onChange={this.passwordChange.bind(this)}
-                    onBlur={(() => { this.setState({ passwordConfirmed: true }); }).bind(this)}
-                    onFocus={(() => { this.setState({ passwordConfirmed: false }); }).bind(this)}
+                    onBlur={() => { this.setState({ passwordConfirmed: true }); }}
+                    onFocus={() => { this.setState({ passwordConfirmed: false }); }}
                     disabled={this.state.loggingIn}
                     value={this.state.password}
                     onKeyPress={(event) => {
@@ -691,11 +797,11 @@ class LoginDialog extends React.Component {
                        onChange={this.password2Change.bind(this)}
                        disabled={this.state.loggingIn}
                        value={this.state.password2}
-                       onKeyPress={((event) => {
+                       onKeyPress={(event) => {
                            if(event.key === 'Enter'){
                                this.signUp();
                            }
-                       }).bind(this)}
+                       }}
                        style={{
                            height: 40,
                            width: '100%',
@@ -713,7 +819,7 @@ class LoginDialog extends React.Component {
                             onClick={this.signUp}
                             fontSize="24"
                             fontColor="#eee"
-                            background="linear-gradient(#59f79d, #2c6846)"
+                            background={"linear-gradient(#59f79d, #2c6846)"}
                             backgroundPressed="#a3e2bf"
                             pressed={this.state.loggingIn}
                             disabled={this.constructor.invalidForm(this.state)}
@@ -722,12 +828,10 @@ class LoginDialog extends React.Component {
                         </Button>
                     </div>
                 ]}
-                { !this.state.loggingIn && this.state.signupWarning &&
-                    <div style={{
-                        color: '#D00',
-                        marginTop: 10,
-                    }}>{this.state.signupWarning}</div>
-                }
+                <div style={{
+                    color: '#D00',
+                    marginTop: 15,
+                }}>{this.getWarning()}</div>
                 <div style={{
                     display: 'flex',
                     marginTop: 20,
@@ -744,7 +848,6 @@ class LoginDialog extends React.Component {
     }
 
     render() {
-        const borderRadius = 8;
         return (
             <div>
                 <Overlay mode={this.props.mode}>
@@ -765,6 +868,7 @@ class LoginDialog extends React.Component {
                             <LoginDialogHeader toggle={this.props.toggle} mode={this.props.mode}/>
                             <div style={{ width: '100%', overflow: 'hidden' }}>
                                 { this.props.mode==='login' && this.loginSection() }
+                                { this.props.mode==='reset-password' && this.loginSection() }
                                 { this.props.mode==='signup' && this.signupSection() }
                                 { this.props.mode==='recover' && this.recoverSection() }
                             </div>
@@ -777,11 +881,18 @@ class LoginDialog extends React.Component {
     }
 }
 
+class PopDialog extends React.Component {
+    render() {
+
+    }
+}
+
 class Button extends React.Component {
     render() {
         const borderRadius = 8;
         const fontFamily = "'Concert One', cursive";
         return (!this.props.hidden && <div style={{
+            margin: this.props.space ? "0 5px" : null,
             flex: 1,
             transition: '.2s',
             background: this.props.pressed
@@ -825,13 +936,12 @@ class ButtonBar extends React.Component {
     }
 
     render() {
-        const self = this;
         const buttons = this.props.list.map((property, index, array) => {
             const prop = typeof(property)==='string' ? { text:property } : property;
             return (
                 <Button
-                    pressed={self.props.pressed===index}
-                    onClick={prop.onClick ? prop.onClick : () => { self.onClick(index); }}
+                    pressed={this.props.pressed===index}
+                    onClick={prop.onClick ? prop.onClick : () => { this.onClick(index); }}
                     text={prop.text}
                     leftMost={index===0}
                     rightMost={index===array.length-1}
@@ -870,38 +980,92 @@ class LoginDialogHeader extends React.Component {
                 Please enter your email. We will send you a link to reset your password.
             </div>:
             <ButtonBar list={[ 'login', 'signup' ]} onClick={this.props.toggle}
-               pressed={this.props.mode==='login' ? 0 : 1}
+               pressed={this.props.mode==='login' || this.props.mode==='reset-password' ? 0 : 1}
             />}
         </div>
     }
 }
 
-class Login extends React.Component {
+class MenuSwitcher extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            mode: this.constructor.loginState(props.url),
-            initialMode: this.constructor.loginState(props.url) || 'login',
+            username: session.user,
+            path: location.pathname,
+        };
+        this.handleLogin = this.handleLogin.bind(this);
+        this.onModeChange = this.onModeChange.bind(this);
+        this.canUpdateHistory = true;
+        this.onUrlChange = this.onUrlChange.bind(this);
+    }
+
+    handleLogin() {
+        this.setState({
+            username: session.user,
+        });
+    }
+
+    onModeChange(mode) {
+        this.setState({
+            path: `/${mode || ''}`,
+        });
+    }
+
+    onUrlChange() {
+        if (location.pathname !== this.state.path) {
+            this.canUpdateHistory = false;
+            this.setState({
+                path: location.pathname,
+            });
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.path !== this.state.path) {
+            if (!this.canUpdateHistory) {
+                this.canUpdateHistory = true;
+            } else {
+                const mode = this.state.path.substr(1);
+                history.pushState({mode}, mode || 'Dobuki', this.state.path);
+            }
+        }
+    }
+
+    componentDidMount() {
+        window.addEventListener('popstate', this.onUrlChange);
+    }
+
+    componentDidUnmount() {
+        window.removeEventListener('popstate', this.onUrlChange);
+    }
+
+    render() {
+        return this.state.username
+            ? <ProfileMenu url={this.state.path}
+                username={this.state.username}
+                onLogout={this.handleLogin}
+                onModeChange={this.onModeChange}
+            />
+            : <LoginMenu url={this.state.path}
+                onLogin={this.handleLogin}
+                onModeChange={this.onModeChange}
+            />
+        ;
+    }
+}
+
+class LoginMenu extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            mode: this.props.url.substr(1),
         };
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.toggle = this.toggle.bind(this);
         this.recover = this.recover.bind(this);
         this.onLogin = this.onLogin.bind(this);
-        this.canUpdateHistory = true;
-        window.addEventListener('popstate', this.onUrlChange.bind(this));
-    }
-
-    static loginState(url) {
-        switch(url) {
-            case '/login':
-                return 'login';
-            case '/signup':
-                return 'signup';
-            case '/recover':
-                return 'recover';
-        }
-        return '';
+        this.resetPassword = this.resetPassword.bind(this);
     }
 
     open(mode) {
@@ -912,7 +1076,6 @@ class Login extends React.Component {
 
     close() {
         this.setState((prevState) => ({
-            initialMode: prevState.mode,
             mode: null,
         }));
         this.refs.loginDialog.clear();
@@ -925,65 +1088,61 @@ class Login extends React.Component {
 
     toggle() {
         this.setState((prevState, props) => ({
-            mode: prevState.mode === 'login' ? 'signup' : 'login',
+            mode: prevState.mode === 'signup' ? 'login' : 'signup',
         }));
     }
 
-    recover() {
+    recover(callback) {
         this.setState({
             mode: 'recover',
-        })
+        }, callback);
     }
 
-    onUrlChange() {
-        const mode = this.constructor.loginState(location.pathname);
-        if (mode !== this.state.mode) {
-            this.canUpdateHistory = false;
-            this.setState({ mode });
-        }
+    resetPassword(callback) {
+        this.setState({
+            mode: 'reset-password',
+        }, callback);
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (prevState.mode !== this.state.mode) {
-            if (!this.canUpdateHistory) {
-                this.canUpdateHistory = true;
-            } else {
-                history.pushState(
-                    {mode: this.state.mode},
-                    this.state.mode || 'Dobuki',
-                    `/${this.state.mode || ''}`
-                );
-            }
+            this.props.onModeChange(this.state.mode);
+        }
+        if (prevProps.url !== this.props.url) {
+            this.setState({
+                mode: this.props.url.substr(1),
+            });
         }
     }
 
     render() {
+        const fontFamily = "'Concert One', cursive";
         return (
             <div>
                 <div style={{
                     position: 'fixed',
-                    top: 0, right: 0,
+                    top: 0, right: 10,
                     margin: '0 8px',
                     display: 'flex',
                     flexDirection: 'row',
                     zIndex: 3,
                 }}>
-                    <div className="button" onClick={(() => this.open('login')).bind(this)} style={{
+                    <div className="button" onClick={() => this.open('login')} style={{
                         width: 50, height: 50,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                     }}>
-                        <div style={{ fontFamily: "'Concert One', cursive" }}>login</div>
+                        <div style={{ fontFamily }}>login</div>
                         <img style={{ width: 32, height: 32 }} src="/assets/login.svg" />
                     </div>
-                    <div className="button" onClick={(() => this.open('signup')).bind(this)} style={{
+                    <div className="button" onClick={() => this.open('signup')} style={{
                         width: 50, height: 50,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                     }}>
-                        <div style={{ fontFamily: "'Concert One', cursive" }}>signup</div>
+                        <div style={{ fontFamily }}>signup</div>
                         <img style={{ width: 28, height: 28 }} src="/assets/signup.svg" />
                     </div>
                 </div>
@@ -993,22 +1152,28 @@ class Login extends React.Component {
                     toggle={this.toggle}
                     recover={this.recover}
                     onLogin={this.onLogin}
+                    resetPassword={this.resetPassword}
                 />
             </div>
         );
     }
 }
 
-class Profile extends React.Component {
+class ProfileMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             view: false,
+            mode: this.props.url.substr(1),
+            updateTime: session.refresh,
         };
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.logout = this.logout.bind(this);
+        this.editProfile = this.editProfile.bind(this);
         this.handleClickOutside = this.handleClickOutside.bind(this);
+        this.profilePicUpdated = this.profilePicUpdated.bind(this);
+        LoginMenu.canUpdateHistory = true;
     }
 
     componentDidMount() {
@@ -1029,8 +1194,17 @@ class Profile extends React.Component {
         }
         this.close();
     }
+
     profile_pic() {
-        return `/profile/${this.props.username}/image.png`;
+        return this.state.updateTime
+            ? `/profile-picture/${this.props.username}/thumbnail.png?${this.state.updateTime}`
+            : `/profile-picture/${this.props.username}/thumbnail.png`;
+    }
+
+    profilePicUpdated() {
+        this.setState({
+            updateTime: Date.now(),
+        });
     }
 
     open() {
@@ -1040,25 +1214,45 @@ class Profile extends React.Component {
     }
 
     close() {
+        this.setState((prevState) => ({
+            view: false,
+        }));
+        this.refs.profileDialog.clear();
+    }
+
+    logout() {
+        this.close();
+        api.logout((result) => {
+            session.user = null;
+            this.props.onLogout();
+        });
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.mode !== this.state.mode) {
+            this.props.onModeChange(this.state.mode);
+        }
+        if (prevProps.url !== this.props.url) {
+            this.setState({
+                mode: this.props.url.substr(1),
+            });
+        }
+    }
+
+    editProfile() {
         this.setState({
+            mode: 'profile',
             view: false,
         });
     }
 
-    logout() {
-        close();
-        api.logout(function(result) {
-            session.user = null;
-            this.props.onLogout();
-        }.bind(this));
-    }
-
     render() {
+        const fontFamily = "'Concert One', cursive";
         return (
             <div ref="wrapper">
                 <div className="button" onClick={this.open} style={{
                     position: 'fixed',
-                    top: 0, right: 0,
+                    top: 0, right: 10,
                     padding: '0 8px',
                     height: 50,
                     display: 'flex',
@@ -1068,25 +1262,41 @@ class Profile extends React.Component {
                     zIndex: 3,
                 }}>
                     <div style={{
-                        fontFamily: "'Concert One', cursive",
+                        fontFamily,
                         fontSize: 16,
                     }}>
                         { this.props.username }
                     </div>
-                    <img style={{ width: 40, height: 40, margin: '0 0 0 8px' }} src={ this.profile_pic() } />
+                    <img style={{
+                        width: 40, height: 40, margin: '0 0 0 8px',
+                        borderRadius: 3,
+                    }} src={ this.profile_pic() } />
                 </div>
                 { this.state.view &&
                     <div style={{
-                        position: 'absolute',
+                        position: 'fixed',
                         backgroundColor: '#555',
                         minWidth: 150,
                         right: 0,
+                        zIndex: 2,
                     }}>
+                        <div className="menu" onMouseDown={this.editProfile}>
+                            <div>Edit profile</div>
+                        </div>
                         <div className="menu" onMouseDown={this.logout}>
-                            <div style={{ fontFamily: "'Concert One', cursive" }}>Log out</div>
+                            <div>Log out</div>
                         </div>
                     </div>
                 }
+                <ProfileDialog ref="profileDialog"
+                    mode={this.state.mode}
+                    username={this.props.username}
+                    onClickOut={() => {
+                        this.setState({ mode: null });
+                    }}
+                    profilePicUpdated={this.profilePicUpdated}
+                    updateTime={this.state.updateTime}
+                />
             </div>
         );
     }
@@ -1096,21 +1306,458 @@ class Tip extends React.Component {
     render() {
         const fontFamily = "'Concert One', cursive";
         return (<div style={{
-            position: 'absolute',
+            position: 'fixed',
             width: '100%',
             height: 30,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
+            zIndex: 2,
         }}>
             <div className="statetip" style={{
                 fontFamily,
                 marginTop: this.props.showTip ? 0 : -100,
-                opacity: this.props.showTip ? .9 : 0,
+                opacity: this.props.showTip ? .95 : 0,
             }}>
                 {this.props.tip}
             </div>
         </div>);
+    }
+}
+
+class ProfileDialog extends React.Component {
+    constructor(props) {
+        super(props);
+        this.initialState = {
+            cursorOnProfile: 'pointer',
+            profileX: 0,
+            profileY: 0,
+            image: null,
+            saving: false,
+            password: null,
+            password2: null,
+            old_password: null,
+            canChangePassword: false,
+            canSave: false,
+        };
+        this.state = {};
+        for (let k in this.initialState) {
+            this.state[k] = this.initialState[k];
+        }
+        this.state.canChangePassword = this.props.mode==='reset-password';
+
+        this.image = new Image();
+        this.image.addEventListener('load', this.onImageLoaded.bind(this));
+
+        this.profileSection = this.profileSection.bind(this);
+        this.onFileUpload = this.onFileUpload.bind(this);
+        this.onFileRead = this.onFileRead.bind(this);
+        this.onTouchProfile = this.onTouchProfile.bind(this);
+        this.onClickProfile = this.onClickProfile.bind(this);
+        this.onMoveProfile = this.onMoveProfile.bind(this);
+        this.onSave = this.onSave.bind(this);
+        this.profile_pic = this.profile_pic.bind(this);
+        this.passwordChange = this.passwordChange.bind(this);
+        this.password2Change = this.password2Change.bind(this);
+        this.oldPasswordChange = this.oldPasswordChange.bind(this);
+        this.lastMousePoint = { x: 0, y: 0 };
+        this.canUpload = false;
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.mode !== this.state.mode) {
+            this.image = new Image();
+            this.image.addEventListener('load', this.onImageLoaded.bind(this));
+            this.setState({
+                image: null,
+            });
+        }
+    }
+
+    onImageLoaded(e) {
+        const image = e.target;
+        const minSize = Math.min(image.naturalWidth, image.naturalHeight);
+        const scale = 120 / minSize;
+        this.setState({
+            image: image.src,
+            profileX: -(image.naturalWidth * scale - 120) / 2,
+            profileY: -(image.naturalHeight * scale - 120) / 2,
+            canSave: true,
+            imageTooSmall: minSize < 240,
+        });
+    }
+
+    onFileUpload(e) {
+        const uploader = e.target;
+        if (uploader.files && uploader.files[0]) {
+            const reader = new FileReader();
+            reader.addEventListener('load', this.onFileRead);
+            reader.readAsDataURL(uploader.files[0]);
+        }
+    }
+
+    onFileRead(e) {
+        const reader = e.target;
+        this.image.src = reader.result;
+    }
+
+    clear() {
+        this.setState(this.initialState);
+    }
+
+    onClickProfile() {
+        if (this.canUpload) {
+            this.setState({
+                cursorOnProfile: 'pointer',
+            });
+            this.refs.fileupload.click();
+        }
+    }
+
+    onTouchProfile(e) {
+        this.canUpload = true;
+        this.lastMousePoint.x = e.clientX;
+        this.lastMousePoint.y = e.clientY;
+        if (this.image.naturalWidth !== this.image.naturalHeight) {
+            this.setState({
+                cursorOnProfile: this.image.naturalWidth > this.image.naturalHeight ? 'ew-resize' : 'ns-resize',
+            });
+        }
+    }
+
+    onMoveProfile(e) {
+        if(e.buttons && this.image.naturalWidth !== this.image.naturalHeight) {
+            const movementX = this.lastMousePoint.x - e.clientX;
+            const movementY = this.lastMousePoint.y - e.clientY;
+            if (movementX || movementY) {
+                this.canUpload = false;
+                this.setState((prevState) => {
+                    const scale = 240 / Math.min(this.image.naturalWidth, this.image.naturalHeight);
+                    const profileX = Math.min(0, Math.max(
+                        -(this.image.naturalWidth * scale / 2 - 120),
+                        prevState.profileX - movementX
+                    ));
+                    const profileY = Math.min(0, Math.max(
+                        -(this.image.naturalHeight * scale / 2 - 120),
+                        prevState.profileY - movementY
+                    ));
+
+                    return {
+                        profileX, profileY,
+                    };
+                });
+                this.lastMousePoint.x = e.clientX;
+                this.lastMousePoint.y = e.clientY;
+            }
+            e.stopPropagation();
+        }
+    }
+    
+    profilePicBinary() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 240; canvas.height = 240;
+        const ctx = canvas.getContext('2d');
+        const minSize = Math.min(this.image.naturalWidth, this.image.naturalHeight);
+        const scale = minSize / 120;
+        ctx.drawImage(this.image,
+            -this.state.profileX * scale, -this.state.profileY * scale, minSize, minSize,
+            0, 0, 240, 240
+        );
+        return canvas.toDataURL("image/png");
+    }
+
+    onSave() {
+        if (!this.state.loggingIn) {
+            this.setState({
+                saving: true,
+            }, () => {
+                api.save(this.props.username,
+                        this.state.image ? this.profilePicBinary() : null,
+                        this.state.password,
+                        this.state.old_password,
+                        (result) => {
+                    if(result.success) {
+                        this.props.profilePicUpdated();
+                        this.props.onClickOut();
+                    } else {
+                        this.setState({
+                            saving: false,
+                        });
+                    }
+                });
+            });
+        }
+    }
+
+    passwordChange(e) {
+        const target = e.target;
+        this.setState((prevState) => {
+            const invalid = !LoginDialog.validPassword(target.value);
+            const warningMessage = "Your password must have at least eight characters, including one letter and one number.";
+            const warning = invalid
+                ? warningMessage
+                : prevState.warning && warningMessage !== prevState.warning
+                ? prevState.warning
+                : null;
+            return {
+                warning,
+                password: target.value,
+                canSave: true,
+            };
+        });
+    }
+
+    password2Change(e) {
+        const target = e.target;
+        this.setState((prevState) => {
+            const invalid = prevState.password !== target.value;
+            const warningMessage = "The passwords you entered must match.";
+            const warning = invalid
+                ? warningMessage
+                : prevState.warning && warningMessage !== prevState.warning
+                ? prevState.warning
+                : null;
+            return {
+                warning,
+                password2: target.value,
+                canSave: true,
+            };
+        });
+    }
+
+    oldPasswordChange(e) {
+        const target = e.target;
+        this.setState({
+            old_password: target.value,
+        });
+    }
+
+    profile_pic() {
+        return this.state.image
+            ? this.state.image
+            : this.props.updateTime
+            ? `/profile-picture/${this.props.username}/image.png?${this.props.updateTime}`
+            : `/profile-picture/${this.props.username}/image.png`;
+    }
+
+    profileSection() {
+        const borderRadius = 8;
+        const fontFamily = "'Concert One', cursive";
+        return (<div style={{
+            width: '100%',
+            height: 'auto',
+            borderBottomLeftRadius: borderRadius,
+            borderBottomRightRadius: borderRadius,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+        }}>
+            <div className="loginsection">
+                <div style={{ height: 50 }}/>
+                <div ref="profile_pic" className="profile-pic"
+                 style={{
+                    cursor: this.state.cursorOnProfile,
+                    backgroundImage: `url(${this.profile_pic()})`,
+                    backgroundPositionX: this.state.profileX,
+                    backgroundPositionY: this.state.profileY,
+                 }}
+                 draggable="false"
+                 onMouseMove={this.onMoveProfile}
+                 onMouseDown={this.onTouchProfile}
+                 onClick={this.onClickProfile}>
+                    <img style={{
+                        marginLeft: 100,
+                        position: 'absolute', width: 20, height: 20, zIndex: 1,
+                    }} src="/assets/edit.svg" />
+                </div>
+                {this.state.imageTooSmall &&
+                <div style={{height: 10, margin: 5,
+                    color: '#D00', fontSize: 12}}>
+                    For best result, your image should be at least 240x240
+                </div>
+                }
+                <div style={{
+                    width: 0, height: 0,
+                    overflow: 'hidden',
+                }}>
+                    <input ref="fileupload" onChange={this.onFileUpload} type="file" />
+                </div>
+                <div style={{
+                    fontFamily,
+                    fontSize: 20,
+                }}>{this.props.username}</div>
+
+                {!this.state.canChangePassword ? <div style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        height: 40,
+                        width: 160,
+                        marginTop: 20,
+                    }}>
+                        <Button
+                            text="Change password"
+                            leftMost rightMost
+                            fontSize="18"
+                            fontColor="#eee"
+                            background={"linear-gradient(#59f79d, #2c6846)"}
+                            backgroundPressed="#a3e2bf"
+                            space="true"
+                            onClick={() => {
+                                this.setState({
+                                    canChangePassword: true,
+                                });
+                            }}
+                        />
+                    </div> :
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        width: '70%',
+                        marginTop: 20,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}>
+                        { this.resetPasswordBox() }
+                    </div>
+                }
+
+                <div style={{
+                    display: 'flex',
+                    marginTop: 20,
+                    alignItems: 'center', alignSelf: 'center', justifyContent: 'center',
+                    width: 50, height: 50,
+                }}>
+                    <div className={
+                        `tux-loading-indicator ${this.state.saving?'show':''}`
+                    }>
+                    </div>
+                </div>
+                <hr/>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    height: 50,
+                    width: '70%',
+                    margin: '20px 0',
+                }}>
+                    <Button
+                        text="Save"
+                        leftMost rightMost
+                        fontSize="24"
+                        fontColor="#eee"
+                        background={"linear-gradient(#59f79d, #2c6846)"}
+                        backgroundPressed="#a3e2bf"
+                        space="true"
+                        onClick={this.onSave}
+                        disabled={!this.state.canSave}
+                    />
+                    <Button
+                        text="Cancel"
+                        leftMost rightMost
+                        fontSize="24"
+                        fontColor="#eee"
+                        background={"linear-gradient(#f7599d, #682c46)"}
+                        backgroundPressed="#e2bfa3"
+                        space="true"
+                        onClick={this.props.onClickOut}
+                    />
+                </div>
+            </div>
+        </div>);
+    }
+
+    resetPasswordBox() {
+        const fontFamily = "'Concert One', cursive";
+        return [
+            <div style={{ fontFamily, marginBottom: 5 }}>Old password</div>,
+            <input ref="old_password_field"
+                   type="password"
+                   placeholder="Enter your old password"
+                   className="input"
+                   onChange={this.oldPasswordChange.bind(this)}
+                   value={this.state.old_password}
+                   onKeyPress={(event) => {
+                       if(event.key === 'Enter'){
+                           this.refs.password_field.focus();
+                       }
+                   }}
+                   style={{
+                       height: 40,
+                       width: '100%',
+                   }}/>,
+            <div style={{ height: 20 }}/>,
+            <div style={{ fontFamily, marginBottom: 5 }}>New password</div>,
+            <input ref="password_field"
+                   type="password"
+                   placeholder="Enter a new password"
+                   className="input"
+                   onChange={this.passwordChange.bind(this)}
+                   disabled={this.state.loggingIn}
+                   value={this.state.password}
+                   onKeyPress={(event) => {
+                       if(event.key === 'Enter'){
+                           this.refs.password_field2.focus();
+                       }
+                   }}
+                   style={{
+                       height: 40,
+                       width: '100%',
+                   }}/>,
+            <div style={{ height: 10 }}/>,
+            <input ref="password_field2"
+                   type="password"
+                   placeholder="Re-enter the same password"
+                   className="input"
+                   onChange={this.password2Change.bind(this)}
+                   disabled={this.state.loggingIn}
+                   value={this.state.password2}
+                   onKeyPress={(event) => {
+                       if (event.key === 'Enter') {
+                           event.target.blur();
+                       }
+                   }}
+                   style={{
+                       height: 40,
+                       width: '100%',
+                   }}/>,
+            <div style={{ height: 20 }}/>,
+            <div style={{
+                color: '#D00',
+                marginTop: 15,
+            }}>{this.state.warning}</div>,
+        ];
+    }
+
+    render() {
+        return (
+            <div>
+                <Overlay mode={this.props.mode}>
+                    { this.props.mode &&
+                    <div className="overlay">
+                        <div style={{
+                            position: 'fixed',
+                            top: 0, left: 0,
+                            width: '100%', height: 'calc(100% + 200px)',
+                            transition: 'opacity .2s linear',
+                            opacity: this.props.mode ? .8: 0,
+                            backgroundColor: '#046',
+                            cursor: 'pointer',
+                            display: this.props.mode ? '' : 'none',
+                        }} onClick={this.props.onClickOut}>
+                        </div>
+                        <div className="popdialog" style={{
+                            width: 600, height: 'auto',
+                        }}>
+                            <div style={{ width: '100%', overflow: 'hidden' }}>
+                                { this.profileSection() }
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </Overlay>
+            </div>
+        );
     }
 }

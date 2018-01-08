@@ -10,6 +10,7 @@ class Globals {
     static private $login;
     static private $email;
     static private $javascript;
+    static private $profile;
 
     static private function get_brand(): string {
         require_once 'database.php';
@@ -52,7 +53,8 @@ class Globals {
                 self::get_session(),
                 self::get_login(),
                 self::get_emailer(),
-                self::get_javascript()
+                self::get_javascript(),
+                self::get_profile()
             );
         }
         return self::$router;
@@ -71,7 +73,7 @@ class Globals {
         return self::$database;
     }
 
-    static public function get_login() {
+    static public function get_login(): Login {
         if (!self::$login) {
             require_once 'login.php';
             self::$login = new DokLogin(self::get_database(), self::get_session());
@@ -79,7 +81,7 @@ class Globals {
         return self::$login;
     }
 
-    static public function get_emailer() {
+    static public function get_emailer(): Email {
         if (!self::$email) {
             require_once 'email.php';
             self::$email = new DokEmail();
@@ -87,12 +89,20 @@ class Globals {
         return self::$email;
     }
 
-    static public function get_javascript() {
+    static public function get_javascript(): Javascript {
         if (!self::$javascript) {
             require_once 'javascript.php';
             self::$javascript = new DokJavascript();
         }
         return self::$javascript;
+    }
+
+    static public function get_profile(): Profile {
+        if (!self::$profile) {
+            require_once 'profile.php';
+            self::$profile = new DokProfile(self::get_database(), self::get_session());
+        }
+        return self::$profile;
     }
 
     static private function get_database_name(): string {

@@ -4,18 +4,10 @@ class Homepage extends Page {
 
         this.state = {
             tip: null,
-            showTip: false,
-            username: session.user
+            showTip: false
         };
 
         this.hideTip = this.hideTip.bind(this);
-        this.handleLogin = this.handleLogin.bind(this);
-    }
-
-    handleLogin() {
-        this.setState({
-            username: session.user
-        });
     }
 
     hideTip() {
@@ -29,7 +21,7 @@ class Homepage extends Page {
             showTip: true,
             tip
         });
-        setTimeout(this.hideTip, 8000);
+        setTimeout(this.hideTip, 6000);
     }
 
     render() {
@@ -41,7 +33,7 @@ class Homepage extends Page {
                 } },
             React.createElement(HeaderTitle, { ref: "header", title: "Dobuki.net", icon: "/assets/dobuki.png" }),
             this.state.tip && React.createElement(Tip, { showTip: this.state.showTip, tip: this.state.tip }),
-            this.state.username ? React.createElement(Profile, { username: this.state.username, onLogout: this.handleLogin }) : React.createElement(Login, { url: location.pathname, onLogin: this.handleLogin }),
+            React.createElement(MenuSwitcher, null),
             React.createElement(
                 "div",
                 { className: "banner" },
@@ -50,7 +42,7 @@ class Homepage extends Page {
                         backgroundSize: 'contain',
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'center',
-                        backgroundImage: 'url("/assets/banner.png")'
+                        backgroundImage: 'url("/assets/banner.jpg")'
                     } })
             ),
             React.createElement(

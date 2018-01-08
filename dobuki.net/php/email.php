@@ -31,7 +31,7 @@ class DokEmail implements Email {
         $message = "Hello $username,\n\n".
             "You have requested a link to recover your account.\n".
             "Click this link to recover your account:\n".
-            "https://www.dobuki.net/?email=$email&recover=$recoverycode";
+            "https://www.dobuki.net/reset-password?username=$username&recover=$recoverycode";
         $headers =
             "From: $from\r\n" .
             "Reply-To: $from\r\n" .

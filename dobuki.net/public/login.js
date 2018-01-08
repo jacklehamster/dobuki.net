@@ -1,15 +1,44 @@
 class Api {
+    static parseResult(result) {
+        try {
+            return JSON.parse(result);
+        } catch (error) {
+            return {
+                'success': false,
+                'message': 'An unexpected error has occured. We are working on it...',
+            };
+        }
+    }
+
     login(username, password, callback) {
         $.ajax({
             type: 'POST',
             url: "/api/login",
             cache: false,
             data: {
-                username: username,
+                username,
                 password: password ? md5(`${password} ${username}`) : null,
             },
             success: (result,xhr,status) => {
-                callback(JSON.parse(result));
+                callback(Api.parseResult(result));
+            },
+            error: (xhr,status,error) => {
+                console.error(error);
+            }
+        });
+    }
+
+    changePassword(username, password, callback) {
+        $.ajax({
+            type: 'POST',
+            url: "/api/change-password",
+            cache: false,
+            data: {
+                username,
+                password: password ? md5(`${password} ${username}`) : null,
+            },
+            success: (result,xhr,status) => {
+                callback(Api.parseResult(result));
             },
             error: (xhr,status,error) => {
                 console.error(error);
@@ -23,10 +52,10 @@ class Api {
             url: "/api/check",
             cache: false,
             data: {
-                username: username,
+                username,
             },
             success: (result,xhr,status) => {
-                callback(JSON.parse(result));
+                callback(Api.parseResult(result));
             },
             error: (xhr,status,error) => {
                 console.error(error);
@@ -40,12 +69,12 @@ class Api {
             url: "/api/signup",
             cache: false,
             data: {
-                username: username,
-                email: email,
-                password: password,
+                username,
+                email,
+                password: md5(`${password} ${username}`),
             },
             success: (result,xhr,status) => {
-                callback(JSON.parse(result));
+                callback(Api.parseResult(result));
             },
             error: (xhr,status,error) => {
                 console.error(error);
@@ -59,7 +88,7 @@ class Api {
             url: "/api/logout",
             cache: false,
             success: (result,xhr,status) => {
-                callback(JSON.parse(result));
+                callback(Api.parseResult(result));
             },
             error: (xhr,status,error) => {
                 console.error(error);
@@ -73,10 +102,29 @@ class Api {
             url: "/api/recover",
             cache: false,
             data: {
-                email: email,
+                email,
             },
             success: (result,xhr,status) => {
-                callback(JSON.parse(result));
+                callback(Api.parseResult(result));
+            },
+            error: (xhr,status,error) => {
+                console.error(error);
+            }
+        });
+    }
+
+    save(username, profile_image, password, old_password, callback) {
+        $.ajax({
+            type: 'POST',
+            url: "/api/save-profile",
+            cache: false,
+            data: {
+                profile_image,
+                password: md5(`${password} ${username}`),
+                old_password: md5(`${old_password} ${username}`),
+            },
+            success: (result,xhr,status) => {
+                callback(Api.parseResult(result));
             },
             error: (xhr,status,error) => {
                 console.error(error);

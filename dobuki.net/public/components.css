@@ -2,6 +2,10 @@ a:link {
     text-decoration:  none;
 }
 
+a:hover {
+    text-decoration: underline;
+}
+
 .button {
     cursor: pointer;
     transition: background .2s, width .3s;
@@ -11,6 +15,18 @@ a:link {
     background-color: #F4F6F7;
 }
 
+hr {
+    width: 90%;
+}
+
+.profile-pic {
+    cursor: pointer;
+    width: 120px; height: 120px;
+    background-size: cover;
+    border-radius: 5px;
+    user-select: none;
+}
+
 .link {
     color: blue;
     cursor: pointer;
@@ -18,13 +34,13 @@ a:link {
 
 .menu {
     cursor: pointer;
-    transition: background .2s;
-    border-radius: 5px;
+    transition: background .1s;
     margin: 1px;
     padding: 4px 20px 4px 4px;
     display: flex;
     flex-direction: column;
     background-color: #ccc;
+    font-family: 'Concert One', cursive;
 }
 .menu:hover {
     background-color: #F4F6F7;
@@ -102,8 +118,7 @@ i[down] {
 }
 .overlay {
     width: 100vw;
-    height: 100vw;
-    max-height: 100vh;
+    min-height: 400px;
     display: flex;
     justify-content: center;
 }

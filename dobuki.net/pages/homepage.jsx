@@ -5,17 +5,9 @@ class Homepage extends Page {
         this.state = {
             tip: null,
             showTip: false,
-            username: session.user,
         };
 
         this.hideTip = this.hideTip.bind(this);
-        this.handleLogin = this.handleLogin.bind(this);
-    }
-
-    handleLogin() {
-        this.setState({
-            username: session.user,
-        });
     }
 
     hideTip() {
@@ -29,7 +21,7 @@ class Homepage extends Page {
             showTip: true,
             tip,
         });
-        setTimeout(this.hideTip, 8000);
+        setTimeout(this.hideTip, 6000);
     }
 
     render() {
@@ -41,17 +33,14 @@ class Homepage extends Page {
             { this.state.tip &&
                 <Tip showTip={this.state.showTip} tip={this.state.tip} />
             }
-            { this.state.username
-                ? <Profile username={this.state.username} onLogout={this.handleLogin} />
-                : <Login url={location.pathname} onLogin={this.handleLogin} />
-            }
+            <MenuSwitcher />
             <div className="banner">
                 <div style={{
                     flex: 1,
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center',
-                    backgroundImage: 'url("/assets/banner.png")',
+                    backgroundImage: 'url("/assets/banner.jpg")',
                 }}>
                 </div>
             </div>

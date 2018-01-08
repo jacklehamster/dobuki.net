@@ -8,6 +8,8 @@ interface Login {
     function validate(string $email, string $lockcode): array;
     function get_recovery_code($email): array;
     function check_username_available($username): array;
+    function recover(string $email, string $recoverycode): array;
+    function change_password(string $username, string $pass_user_hash, string $old_pass): array;
 }
 
 class DokLogin implements Login {
@@ -20,17 +22,15 @@ class DokLogin implements Login {
     }
 
     public function get_recovery_code($email): array {
-        $result = $this->database->query('
+        $result = $this->database->query("
             SELECT username,
-            md5(CONCAT(email, :space, lastlogin)) as code,
+            md5(CONCAT(email, ' ', lastlogin)) as code,
             validated,
-            md5(CONCAT(:lockcode_salt, created, :space, username)) as lockcode
+            md5(CONCAT('lockcode => ', created, ' ', username)) as lockcode
             FROM users
             WHERE email=:email
-        ', [
+        ", [
             ':email' => $email,
-            ':space' => ' ',
-            ':lockcode_salt' => 'lockcode => ',
         ], false);
         if (count($result) === 0) {
             $this->failure();
@@ -44,18 +44,52 @@ class DokLogin implements Login {
             'success' => true,
             'username' => $row['username'],
             'code' => $row['code'],
-            'message' => $row['validated']
-                ? "Your recover link has been sent to $email."
+            'message' => $row['validated'] ? "Your recover link has been sent to $email."
                 : "Your email has not yet been validated. A validation link has been sent to email.",
             'lockcode' => $row['lockcode'],
             'validated' => $row['validated'],
         ];
     }
 
-    public function sign_up($username, $email, $password): array {
+    public function change_password(string $username, string $pass_user_hash, string $old_pass=null): array {
+        if ($this->session->can_recover($username)) {
+            $result = $this->database->query("
+                UPDATE users 
+                SET password=md5(CONCAT(created, ' ', :password))
+                WHERE username=:username AND password IS NULL
+            ", [
+                ':username' => $username,
+                ':password' => $pass_user_hash,
+            ], true);
+        } else {
+            $result = $this->database->query("
+                UPDATE users 
+                SET password=md5(CONCAT(created, ' ', :password))
+                WHERE username=:username AND password=md5(CONCAT(created, ' ', :old_password))
+            ", [
+                ':username' => $username,
+                ':password' => $pass_user_hash,
+                ':old_password' => $old_pass,
+            ], true);
+        }
+
+        if (!$result) {
+            return [
+                'success' => false,
+                'message' => 'Failed to reset this password',
+            ];
+        } else {
+            $result = $this->login($username, $pass_user_hash);
+            if ($result['success']) {
+                $result['tip'] = 'Thank you, your password has been successfully updated.';
+            }
+            return $result;
+        }
+    }
+
+    public function sign_up($username, $email, $pass_user_hash): array {
         $created = date('Y-m-d H:i:s');
 
-        $pass_user_hash = md5("$password $username");
         $password = md5("$created $pass_user_hash");
         $lockcode = md5("lockcode => $created $username");
 
@@ -97,8 +131,9 @@ class DokLogin implements Login {
             $result = [
                 'success' => false,
                 'message' => $username === $row['username']
-                ? 'This username is already taken.'
-                : 'An account with this email already exists'
+                    ? 'This username is already taken.'
+                    : 'An account with this email already exists',
+                'type' => $username === $row['username'] ? 'username' : 'email',
             ];
         } else {
             $result = [
@@ -110,7 +145,7 @@ class DokLogin implements Login {
 
     private function failure() {
         $this->session->add_failure();
-        $this->session->write_close();
+        $this->session->commit();
         usleep(min(10000000, pow(2, $this->session->get_failures()) * 1000));
     }
 
@@ -135,6 +170,7 @@ class DokLogin implements Login {
                     $password_hash = $row['password'];
                     $created = $row['created'];
                     $username = $row['username'];
+                    $id = $row['id'];
                     if (md5("$created $pass_user_hash") !== $password_hash) {
                         $result = [
                             'success' => false,
@@ -152,7 +188,8 @@ class DokLogin implements Login {
 
                         if ($count_updated) {
                             $this->session->reset();
-                            $this->session->set_username($username);
+                            $this->session->set_username($username, $id);
+                            $this->session->set_refresh_now();
                             $result = [
                                 'success' => true,
                                 'username' => $username,
@@ -168,12 +205,27 @@ class DokLogin implements Login {
                     }
                 } else {
                     $this->session->clear_failures();
-                    $result = [
-                        'username' => $username,
-                        'success' => true,
-                        'reset_password' =>
-                            !$row['password'] && $this->session->can_recover($row['email']),
-                    ];
+                    if (!$row['password']) {
+                        if ($this->session->can_recover($row['username'])) {
+                            $result = [
+                                'username' => $row['username'],
+                                'success' => true,
+                                'reset_password' => true,
+                            ];
+                        } else {
+                            $result = [
+                                'success' => false,
+                                'message' => 'This account has been locked. Please use the '.
+                                    'recovery link sent your email to recover it. To request the '.
+                                    'email to be sent again, use the link below.',
+                            ];
+                        }
+                    } else {
+                        $result = [
+                            'username' => $row['username'],
+                            'success' => true,
+                        ];
+                    }
                 }
             } else {
                 $result = [
@@ -198,9 +250,7 @@ class DokLogin implements Login {
      * @return array
      */
     public function logout(): array {
-        session_unset();
-        session_destroy();
-
+        $this->session->destroy();
         $result = [
             'success' => true,
         ];
@@ -210,16 +260,14 @@ class DokLogin implements Login {
 
     public function validate(string $email, string $lockcode): array {
         $this->session->clear_failures();
-        $update_count = $this->database->query('
+        $update_count = $this->database->query("
                 UPDATE users SET validated=NOW()
                 WHERE email=:email
-                AND md5(CONCAT(:lockcode_salt, created, :space, username))=:lockcode
+                AND md5(CONCAT('lockcode => ', created, ' ', username))=:lockcode
                 AND validated IS NULL
-            ', [
+            ", [
                 ':lockcode' => $lockcode,
                 ':email' => $email,
-                ':lockcode_salt' => 'lockcode => ',
-                ':space' => ' ',
             ],
             true
         );
@@ -227,15 +275,13 @@ class DokLogin implements Login {
         $success = $update_count > 0;
 
         if (!$success) {
-            $query_result = $this->database->query('
+            $query_result = $this->database->query("
                     SELECT validated FROM users
                     WHERE email=:email
-                    AND md5(CONCAT(:lockcode_salt, created, :space, username))=:lockcode
-                ', [
+                    AND md5(CONCAT('lockcode => ', created, ' ', username)) = :lockcode
+                ", [
                     ':lockcode' => $lockcode,
                     ':email' => $email,
-                    ':lockcode_salt' => 'lockcode => ',
-                    ':space' => ' ',
                 ], false
             );
             if (count($query_result) > 0) {
@@ -253,26 +299,26 @@ class DokLogin implements Login {
         ];
     }
 
-    public function recover(string $email, string $recoverycode): array {
+    public function recover(string $username, string $recoverycode): array {
         $this->session->clear_failures();
-        $update_count = $this->database->query('
+        $this->session->set_username(null, null);
+        $update_count = $this->database->query("
                 UPDATE users SET validated=NOW(), password=null
-                WHERE email=:email AND validated IS NOT NULL
-                AND md5(CONCAT(email, :space, lastlogin))=:recoverycode
-            ', [
+                WHERE username=:username AND validated IS NOT NULL
+                AND md5(CONCAT(email, ' ', lastlogin)) = :recoverycode
+            ", [
                 ':recoverycode' => $recoverycode,
-                ':email' => $email,
-                ':space' => ' ',
+                ':username' => $username,
             ],
             true
         );
 
         $success = $update_count > 0;
         if ($success) {
-            $this->session->prepare_recovery($email);
+            $this->session->prepare_recovery($username);
         }
 
-        $message = $success ? "Please reset your password."
+        $message = $success ? "Please enter your new password."
             : "Account recovery failed. The recovery link you used is invalid or has expired.";
 
         return [

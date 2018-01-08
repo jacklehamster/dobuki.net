@@ -1,8 +1,24 @@
 class Page extends React.Component {
+    constructor(props) {
+        super(props);
+        Page.consumeParams();
+    }
+
+    static consumeParams() {
+        Page.originalParams = location.search.substring(1).split("&").reduce((map, obj) => {
+            const [, key, value] = obj.match(/^(\w+)=([^?&]+|)$/) || [];
+            if (key) {
+                map[key] = value;
+            }
+            return map;
+        }, {});
+    }
+
     showTip() {}
 
-    static clearQuery() {
-        history.replaceState({}, 'Dobuki', location.href.split("?")[0]);
+    static clearQuery(replacement) {
+        const search = replacement && replacement.length ? `?${replacement}` : '';
+        history.replaceState({}, 'Dobuki', `${location.href.split("?")[0]}${search}`);
     }
 
     static reloadPage() {
@@ -62,7 +78,7 @@ class Overlay extends React.Component {
             { style: {
                     position: 'absolute',
                     top: 51, left: 0,
-                    width: '100%', height: '100%',
+                    width: '100%', height: 'auto',
                     pointerEvents: this.props.mode ? '' : 'none'
                 } },
             this.props.children
@@ -85,16 +101,29 @@ class LoginDialog extends React.Component {
             signupMessage: null,
             loginMessage: null,
             recoverySent: false,
-            resetPassword: false,
-            signupWarning: null
+            warning: null,
+            passwordWeak: null,
+            passwordMismatch: null,
+            usernameTaken: null,
+            emailExists: null
         };
-        this.state = this.initialState;
+        this.state = {};
+        for (let k in this.initialState) {
+            this.state[k] = this.initialState[k];
+        }
+        if (this.props.mode === 'reset-password' && Page.originalParams.username) {
+            this.state.login = this.state.username = Page.originalParams.username;
+            this.state.usernameConfirmed = true;
+        }
+
         this.performLogin = this.performLogin.bind(this);
+        this.performResetPassword = this.performResetPassword.bind(this);
         this.signUp = this.signUp.bind(this);
         this.loginUsernameBox = this.loginUsernameBox.bind(this);
         this.resetPasswordBox = this.resetPasswordBox.bind(this);
         this.loginPasswordBox = this.loginPasswordBox.bind(this);
         this.passwordChange = this.passwordChange.bind(this);
+        this.password2Change = this.password2Change.bind(this);
         this.submitForm = this.submitForm.bind(this);
         this.sendRecoveryLink = this.sendRecoveryLink.bind(this);
         this.recover = this.recover.bind(this);
@@ -105,28 +134,30 @@ class LoginDialog extends React.Component {
         this.setState(this.initialState);
     }
 
-    componentDidMount() {
-        if (this.props.mode === 'login' && this.refs.username_field) {
-            this.refs.username_field.focus();
+    componentWillReceiveProps(nextProps) {
+        if (this.props.mode !== nextProps.mode) {
+            this.setState({
+                password: null,
+                password2: null
+            });
         }
     }
 
     sendRecoveryLink() {
-        const self = this;
         if (!this.state.loggingIn) {
             this.setState({
                 loggingIn: true,
                 loginMessage: null
             });
-            api.recover(this.state.login, function (result) {
+            api.recover(this.state.login, result => {
                 if (result.success) {
-                    self.setState({
+                    this.setState({
                         loggingIn: false,
                         loginMessage: result.message,
                         recoverySent: true
                     });
                 } else {
-                    self.setState({
+                    this.setState({
                         loggingIn: false,
                         loginMessage: result.message
                     });
@@ -136,31 +167,53 @@ class LoginDialog extends React.Component {
     }
 
     performLogin() {
-        const self = this;
         if (!this.state.loggingIn) {
             this.setState({
                 loggingIn: true,
                 loginMessage: null
             });
-            api.login(this.state.login, this.state.password || '', function (result) {
+            api.login(this.state.login, this.state.password || '', result => {
                 if (result.success) {
                     if (result.password_valid) {
                         session.user = result.username;
-                        self.props.onLogin();
+                        this.props.onLogin();
                     } else {
-                        self.setState({
-                            login: result.username,
-                            username: result.username,
-                            usernameConfirmed: true,
-                            loggingIn: false,
-                            loginMessage: '',
-                            resetPassword: result.reset_password
-                        }, function () {
-                            self.refs.password_field.focus();
+                        this.setState(prevState => {
+                            return {
+                                login: result.username,
+                                username: result.username,
+                                usernameConfirmed: true,
+                                loggingIn: false,
+                                loginMessage: ''
+                            };
+                        }, () => {
+                            if (result.reset_password) {
+                                this.props.resetPassword();
+                            }
                         });
                     }
                 } else {
-                    self.setState({
+                    this.setState({
+                        loggingIn: false,
+                        loginMessage: result.message
+                    });
+                }
+            });
+        }
+    }
+
+    performResetPassword() {
+        if (!this.state.loggingIn) {
+            this.setState({
+                loggingIn: true,
+                loginMessage: null
+            });
+            api.changePassword(this.state.login, this.state.password || '', result => {
+                if (result.success) {
+                    session.user = result.username;
+                    this.props.onLogin();
+                } else {
+                    this.setState({
                         loggingIn: false,
                         loginMessage: result.message
                     });
@@ -180,13 +233,14 @@ class LoginDialog extends React.Component {
         } else {
             this.setState({
                 loggingIn: false,
-                signupWarning: result.message
+                warning: result.message
             });
         }
     }
 
     recover() {
         this.setState({
+            login: null,
             loginMessage: null
         }, function () {
             this.props.recover();
@@ -194,13 +248,14 @@ class LoginDialog extends React.Component {
     }
 
     checkUsernameAvailable(username) {
-        api.check(username, function (result) {
+        api.check(username, result => {
             if (!result.success) {
+                const prop = result.type === 'username' ? 'usernameTaken' : 'emailExists';
                 this.setState({
-                    signupWarning: result.message
+                    [prop]: result.message
                 });
             }
-        }.bind(this));
+        });
     }
 
     signUp() {
@@ -214,37 +269,44 @@ class LoginDialog extends React.Component {
     }
 
     loginChange(e) {
+        const target = e.target;
         this.setState({
-            login: e.target.value
+            login: target.value
         });
     }
 
     usernameChange(e) {
+        const target = e.target;
         this.setState(prevState => {
             return {
-                signupWarning: null,
-                username: e.target.value
+                usernameTaken: null,
+                username: target.value
             };
         });
     }
 
     emailChange(e) {
+        const target = e.target;
         this.setState(prevState => {
             return {
-                signupWarning: null,
-                email: e.target.value
+                emailExists: null,
+                email: target.value
             };
         });
+    }
+
+    getWarning() {
+        if (this.state.loggingIn) {
+            return null;
+        }
+        return this.state.warning || this.state.passwordMismatch || this.state.passwordWeak || this.state.emailExists || this.state.usernameTaken;
     }
 
     passwordChange(e) {
         const target = e.target;
         this.setState(prevState => {
-            const invalid = !LoginDialog.validPassword(target.value);
-            const warning = "Your password must have at least eight characters, including one letter and one number.";
-            const signupWarning = invalid ? warning : prevState.signupWarning && warning !== prevState.signupWarning ? prevState.signupWarning : null;
             return {
-                signupWarning,
+                passwordWeak: !LoginDialog.validPassword(target.value) ? "Your password must have at least eight characters, including one letter and one number." : null,
                 password: target.value
             };
         });
@@ -253,34 +315,76 @@ class LoginDialog extends React.Component {
     password2Change(e) {
         const target = e.target;
         this.setState(prevState => {
-            const invalid = prevState.password !== target.value;
-            const warning = "The password you entered must match.";
-            const signupWarning = invalid ? warning : prevState.signupWarning && warning !== prevState.signupWarning ? prevState.signupWarning : null;
             return {
-                signupWarning,
+                passwordMismatch: prevState.password !== target.value ? "The passwords you entered must match." : null,
                 password2: target.value
             };
         });
     }
 
     static validPassword(password) {
-        return (/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password)
+        return (/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)
         );
     }
 
     static invalidForm(state) {
-        return !state.username || !this.validEmail(state.email) || !this.constructor.validPassword(state.password) || state.password2 !== state.password;
+        return !state.username || !this.validEmail(state.email) || !this.validPassword(state.password) || state.password2 !== state.password || state.usernameTaken || state.emailExists;
     }
 
     submitForm(event) {
         if (event.key === 'Enter') {
-            this.performLogin();
+            if (this.props.mode === 'reset_password') {
+                this.performResetPassword();
+            } else {
+                this.performLogin();
+            }
         }
+    }
+
+    loginUsernameBox() {
+        return [React.createElement('div', { style: { height: 20 } }), React.createElement('input', { ref: input => input && input.focus(),
+            type: 'text',
+            placeholder: 'Enter your username or email',
+            className: 'input',
+            onChange: this.loginChange.bind(this),
+            disabled: this.state.loggingIn,
+            value: this.state.login,
+            onKeyPress: this.submitForm,
+            style: {
+                height: 40,
+                width: '100%'
+            } }), React.createElement('div', { style: { height: 20 } }), React.createElement(
+            'div',
+            { style: {
+                    display: 'flex',
+                    height: 50,
+                    width: '70%'
+                } },
+            React.createElement(Button, { text: 'next',
+                leftMost: true, rightMost: true,
+                onClick: this.performLogin,
+                fontSize: '24',
+                fontColor: '#eee',
+                background: "linear-gradient(#59f79d, #2c6846)",
+                backgroundPressed: '#a3e2bf',
+                pressed: this.state.loggingIn,
+                disabled: !this.state.login
+            })
+        )];
+    }
+
+    profile_pic() {
+        return `/profile-picture/${this.state.username}/image.png`;
     }
 
     loginPasswordBox() {
         const fontFamily = "'Concert One', cursive";
-        return [React.createElement('div', { style: { height: 20 } }), React.createElement(
+        return [React.createElement('div', { style: { height: 20 } }), React.createElement('div', { ref: 'profile_pic', className: 'profile-pic',
+            style: {
+                backgroundImage: `url(${this.profile_pic()})`,
+                backgroundPositionX: this.state.profileX,
+                backgroundPositionY: this.state.profileY
+            } }), React.createElement(
             'div',
             { style: {
                     fontFamily,
@@ -288,15 +392,17 @@ class LoginDialog extends React.Component {
                     height: 40,
                     display: this.state.usernameConfirmed ? '' : 'none'
                 },
-                onClick: function () {
-                    this.setState({ usernameConfirmed: false });
-                }.bind(this)
-            },
+                onClick: () => {
+                    this.setState({
+                        usernameConfirmed: false,
+                        password: null
+                    });
+                } },
             this.state.username
         ), React.createElement('input', { type: 'text',
             value: this.state.login, readonly: true, autocomplete: 'off',
             style: { display: 'none' }
-        }), React.createElement('input', { ref: 'password_field',
+        }), React.createElement('input', { ref: input => input && input.focus(),
             type: 'password',
             placeholder: 'Enter your password',
             className: 'input',
@@ -320,42 +426,10 @@ class LoginDialog extends React.Component {
                 onClick: this.performLogin,
                 fontSize: '24',
                 fontColor: '#eee',
-                background: 'linear-gradient(#59f79d, #2c6846)',
+                background: "linear-gradient(#59f79d, #2c6846)",
                 backgroundPressed: '#a3e2bf',
                 pressed: this.state.loggingIn,
                 disabled: !this.state.password
-            })
-        )];
-    }
-
-    loginUsernameBox() {
-        return [React.createElement('div', { style: { height: 20 } }), React.createElement('input', { ref: 'username_field',
-            type: 'text',
-            placeholder: 'Enter your username or email',
-            className: 'input',
-            onChange: this.loginChange.bind(this),
-            disabled: this.state.loggingIn,
-            value: this.state.login,
-            onKeyPress: this.submitForm,
-            style: {
-                height: 40,
-                width: '100%'
-            } }), React.createElement('div', { style: { height: 20 } }), React.createElement(
-            'div',
-            { style: {
-                    display: 'flex',
-                    height: 50,
-                    width: '70%'
-                } },
-            React.createElement(Button, { text: 'next',
-                leftMost: true, rightMost: true,
-                onClick: this.performLogin,
-                fontSize: '24',
-                fontColor: '#eee',
-                background: 'linear-gradient(#59f79d, #2c6846)',
-                backgroundPressed: '#a3e2bf',
-                pressed: this.state.loggingIn,
-                disabled: !this.state.login
             })
         )];
     }
@@ -370,15 +444,14 @@ class LoginDialog extends React.Component {
                     height: 40,
                     display: this.state.usernameConfirmed ? '' : 'none'
                 },
-                onClick: (() => {
+                onClick: () => {
                     this.setState({ usernameConfirmed: false });
-                }).bind(this)
+                }
             },
             this.state.username
-        ), React.createElement('input', { type: 'text',
-            value: this.state.login, readonly: true, autocomplete: 'off',
+        ), React.createElement('input', { type: 'text', value: this.state.login, readonly: true, autocomplete: 'off',
             style: { display: 'none' }
-        }), React.createElement('input', { ref: 'password_field',
+        }), React.createElement('input', {
             type: 'password',
             placeholder: 'Enter a new password',
             className: 'input',
@@ -393,18 +466,18 @@ class LoginDialog extends React.Component {
             style: {
                 height: 40,
                 width: '100%'
-            } }), React.createElement('div', { style: { height: 20 } }), React.createElement('input', { ref: 'password_field2',
+            } }), React.createElement('div', { style: { height: 10 } }), React.createElement('input', { ref: 'password_field2',
             type: 'password',
             placeholder: 'Re-enter the same password',
             className: 'input',
             onChange: this.password2Change.bind(this),
             disabled: this.state.loggingIn,
             value: this.state.password2,
-            onKeyPress: function (event) {
+            onKeyPress: event => {
                 if (!this.constructor.invalidForm(this.state)) {
                     this.submitForm(event);
                 }
-            }.bind(this),
+            },
             style: {
                 height: 40,
                 width: '100%'
@@ -418,14 +491,21 @@ class LoginDialog extends React.Component {
             React.createElement(Button, {
                 text: 'Change password',
                 leftMost: true, rightMost: true,
-                onClick: this.performLogin,
+                onClick: this.performResetPassword,
                 fontSize: '24',
                 fontColor: '#eee',
-                background: 'linear-gradient(#59f79d, #2c6846)',
+                background: "linear-gradient(#59f79d, #2c6846)",
                 backgroundPressed: '#a3e2bf',
                 pressed: this.state.loggingIn,
-                disabled: !this.state.password
+                disabled: !LoginDialog.validPassword(this.state.password) || this.state.password2 !== this.state.password
             })
+        ), React.createElement(
+            'div',
+            { style: {
+                    color: '#D00',
+                    marginTop: 15
+                } },
+            this.getWarning()
         )];
     }
 
@@ -446,14 +526,14 @@ class LoginDialog extends React.Component {
             React.createElement(
                 'div',
                 { className: 'loginsection' },
-                this.state.resetPassword ? this.resetPasswordBox() : this.state.usernameConfirmed ? this.loginPasswordBox() : this.loginUsernameBox(),
+                this.props.mode === 'reset-password' && this.state.username && this.state.usernameConfirmed ? this.resetPasswordBox() : this.state.usernameConfirmed ? this.loginPasswordBox() : this.loginUsernameBox(),
                 React.createElement(
                     'div',
                     { style: {
                             display: 'flex',
                             marginTop: 20,
                             alignItems: 'center', alignSelf: 'center', justifyContent: 'center',
-                            'width': 50, 'height': 50
+                            width: 50, height: 50
                         } },
                     React.createElement('div', { className: `tux-loading-indicator ${this.state.loggingIn ? 'show' : ''}` })
                 ),
@@ -466,13 +546,13 @@ class LoginDialog extends React.Component {
                         } },
                     this.state.loginMessage
                 ),
-                !this.state.loggingIn && !this.state.resetPassword && React.createElement(
+                !this.state.loggingIn && this.props.mode !== 'reset-password' && React.createElement(
                     'div',
                     null,
                     React.createElement(
                         'a',
                         { className: 'link', onClick: this.recover },
-                        'Did you forget your username or password?'
+                        'Did you forget your password?'
                     )
                 )
             )
@@ -497,7 +577,7 @@ class LoginDialog extends React.Component {
                 'div',
                 { className: 'loginsection' },
                 React.createElement('div', { style: { height: 20 } }),
-                React.createElement('input', { ref: 'username_field',
+                React.createElement('input', { ref: input => input && input.focus(),
                     type: 'email',
                     placeholder: 'Enter your email',
                     className: 'input',
@@ -523,7 +603,7 @@ class LoginDialog extends React.Component {
                         onClick: this.sendRecoveryLink,
                         fontSize: '24',
                         fontColor: '#eee',
-                        background: 'linear-gradient(#59f79d, #2c6846)',
+                        background: "linear-gradient(#59f79d, #2c6846)",
                         backgroundPressed: '#a3e2bf',
                         pressed: this.state.loggingIn || this.state.recoverySent,
                         disabled: !this.state.login || !LoginDialog.validEmail(this.state.login)
@@ -547,13 +627,29 @@ class LoginDialog extends React.Component {
                             padding: 20
                         } },
                     this.state.loginMessage
+                ),
+                React.createElement(
+                    'div',
+                    { style: {
+                            display: 'flex',
+                            height: 50,
+                            width: '70%'
+                        } },
+                    this.state.recoverySent && React.createElement(Button, { text: 'close',
+                        leftMost: true, rightMost: true,
+                        onClick: this.props.onClickOut,
+                        fontSize: '24',
+                        fontColor: '#eee',
+                        background: "linear-gradient(#59f79d, #2c6846)",
+                        backgroundPressed: '#a3e2bf'
+                    })
                 )
             )
         );
     }
 
     static validEmail(email) {
-        return (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)
+        return (/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)
         );
     }
 
@@ -589,7 +685,7 @@ class LoginDialog extends React.Component {
                     onClick: this.props.onClickOut,
                     fontSize: '24',
                     fontColor: '#eee',
-                    background: 'linear-gradient(#59f79d, #2c6846)',
+                    background: "linear-gradient(#59f79d, #2c6846)",
                     backgroundPressed: '#a3e2bf'
                 })
             )
@@ -610,17 +706,17 @@ class LoginDialog extends React.Component {
                 React.createElement('div', { style: { height: 20 } }),
                 React.createElement('input', {
                     ref: input => {
-                        this.usernameInput = input;
+                        this.usernameInput = input;input && input.focus();
                     },
                     placeholder: 'Enter a username',
                     className: 'input',
                     onChange: this.usernameChange.bind(this),
-                    onBlur: (() => {
+                    onBlur: () => {
                         this.setState(prevState => {
                             this.checkUsernameAvailable(prevState.username);
                             return { usernameConfirmed: prevState.username };
                         });
-                    }).bind(this),
+                    },
                     disabled: this.state.loggingIn,
                     value: this.state.username,
                     onKeyPress: event => {
@@ -640,11 +736,11 @@ class LoginDialog extends React.Component {
                         style: {
                             display: this.state.usernameConfirmed ? '' : 'none'
                         },
-                        onClick: (() => {
-                            this.setState({ usernameConfirmed: false }, function () {
+                        onClick: () => {
+                            this.setState({ usernameConfirmed: false }, () => {
                                 this.usernameInput.focus();
-                            }.bind(this));
-                        }).bind(this)
+                            });
+                        }
                     },
                     React.createElement(
                         'div',
@@ -663,13 +759,13 @@ class LoginDialog extends React.Component {
                     placeholder: 'Enter an email',
                     className: 'input',
                     onChange: this.emailChange.bind(this),
-                    onBlur: (() => {
+                    onBlur: () => {
                         this.setState(prevState => {
                             this.checkUsernameAvailable(prevState.email);
                             return { emailConfirmed: this.constructor.validEmail(prevState.email) ? prevState.email : null
                             };
                         });
-                    }).bind(this),
+                    },
                     disabled: this.state.loggingIn,
                     value: this.state.email,
                     onKeyPress: event => {
@@ -689,11 +785,11 @@ class LoginDialog extends React.Component {
                         style: {
                             display: this.state.emailConfirmed ? '' : 'none'
                         },
-                        onClick: (() => {
-                            this.setState({ emailConfirmed: false }, function () {
+                        onClick: () => {
+                            this.setState({ emailConfirmed: false }, () => {
                                 this.usernameInput.focus();
-                            }.bind(this));
-                        }).bind(this)
+                            });
+                        }
                     },
                     React.createElement(
                         'div',
@@ -712,12 +808,12 @@ class LoginDialog extends React.Component {
                     placeholder: 'Enter a password',
                     className: 'input',
                     onChange: this.passwordChange.bind(this),
-                    onBlur: (() => {
+                    onBlur: () => {
                         this.setState({ passwordConfirmed: true });
-                    }).bind(this),
-                    onFocus: (() => {
+                    },
+                    onFocus: () => {
                         this.setState({ passwordConfirmed: false });
-                    }).bind(this),
+                    },
                     disabled: this.state.loggingIn,
                     value: this.state.password,
                     onKeyPress: event => {
@@ -737,11 +833,11 @@ class LoginDialog extends React.Component {
                     onChange: this.password2Change.bind(this),
                     disabled: this.state.loggingIn,
                     value: this.state.password2,
-                    onKeyPress: (event => {
+                    onKeyPress: event => {
                         if (event.key === 'Enter') {
                             this.signUp();
                         }
-                    }).bind(this),
+                    },
                     style: {
                         height: 40,
                         width: '100%'
@@ -761,7 +857,7 @@ class LoginDialog extends React.Component {
                             onClick: this.signUp,
                             fontSize: '24',
                             fontColor: '#eee',
-                            background: 'linear-gradient(#59f79d, #2c6846)',
+                            background: "linear-gradient(#59f79d, #2c6846)",
                             backgroundPressed: '#a3e2bf',
                             pressed: this.state.loggingIn,
                             disabled: this.constructor.invalidForm(this.state)
@@ -769,13 +865,13 @@ class LoginDialog extends React.Component {
                         React.createElement('i', { right: true })
                     )
                 )],
-                !this.state.loggingIn && this.state.signupWarning && React.createElement(
+                React.createElement(
                     'div',
                     { style: {
                             color: '#D00',
-                            marginTop: 10
+                            marginTop: 15
                         } },
-                    this.state.signupWarning
+                    this.getWarning()
                 ),
                 React.createElement(
                     'div',
@@ -792,7 +888,6 @@ class LoginDialog extends React.Component {
     }
 
     render() {
-        const borderRadius = 8;
         return React.createElement(
             'div',
             null,
@@ -820,6 +915,7 @@ class LoginDialog extends React.Component {
                             'div',
                             { style: { width: '100%', overflow: 'hidden' } },
                             this.props.mode === 'login' && this.loginSection(),
+                            this.props.mode === 'reset-password' && this.loginSection(),
                             this.props.mode === 'signup' && this.signupSection(),
                             this.props.mode === 'recover' && this.recoverSection()
                         )
@@ -830,6 +926,10 @@ class LoginDialog extends React.Component {
     }
 }
 
+class PopDialog extends React.Component {
+    render() {}
+}
+
 class Button extends React.Component {
     render() {
         const borderRadius = 8;
@@ -837,6 +937,7 @@ class Button extends React.Component {
         return !this.props.hidden && React.createElement(
             'div',
             { style: {
+                    margin: this.props.space ? "0 5px" : null,
                     flex: 1,
                     transition: '.2s',
                     background: this.props.pressed ? this.props.backgroundPressed || '#444466' : this.props.disabled ? 'linear-gradient(white, silver)' : this.props.background || 'linear-gradient(white, gray)',
@@ -876,13 +977,12 @@ class ButtonBar extends React.Component {
     }
 
     render() {
-        const self = this;
         const buttons = this.props.list.map((property, index, array) => {
             const prop = typeof property === 'string' ? { text: property } : property;
             return React.createElement(Button, {
-                pressed: self.props.pressed === index,
+                pressed: this.props.pressed === index,
                 onClick: prop.onClick ? prop.onClick : () => {
-                    self.onClick(index);
+                    this.onClick(index);
                 },
                 text: prop.text,
                 leftMost: index === 0,
@@ -926,38 +1026,89 @@ class LoginDialogHeader extends React.Component {
                     } },
                 'Please enter your email. We will send you a link to reset your password.'
             ) : React.createElement(ButtonBar, { list: ['login', 'signup'], onClick: this.props.toggle,
-                pressed: this.props.mode === 'login' ? 0 : 1
+                pressed: this.props.mode === 'login' || this.props.mode === 'reset-password' ? 0 : 1
             })
         );
     }
 }
 
-class Login extends React.Component {
+class MenuSwitcher extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            mode: this.constructor.loginState(props.url),
-            initialMode: this.constructor.loginState(props.url) || 'login'
+            username: session.user,
+            path: location.pathname
+        };
+        this.handleLogin = this.handleLogin.bind(this);
+        this.onModeChange = this.onModeChange.bind(this);
+        this.canUpdateHistory = true;
+        this.onUrlChange = this.onUrlChange.bind(this);
+    }
+
+    handleLogin() {
+        this.setState({
+            username: session.user
+        });
+    }
+
+    onModeChange(mode) {
+        this.setState({
+            path: `/${mode || ''}`
+        });
+    }
+
+    onUrlChange() {
+        if (location.pathname !== this.state.path) {
+            this.canUpdateHistory = false;
+            this.setState({
+                path: location.pathname
+            });
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.path !== this.state.path) {
+            if (!this.canUpdateHistory) {
+                this.canUpdateHistory = true;
+            } else {
+                const mode = this.state.path.substr(1);
+                history.pushState({ mode }, mode || 'Dobuki', this.state.path);
+            }
+        }
+    }
+
+    componentDidMount() {
+        window.addEventListener('popstate', this.onUrlChange);
+    }
+
+    componentDidUnmount() {
+        window.removeEventListener('popstate', this.onUrlChange);
+    }
+
+    render() {
+        return this.state.username ? React.createElement(ProfileMenu, { url: this.state.path,
+            username: this.state.username,
+            onLogout: this.handleLogin,
+            onModeChange: this.onModeChange
+        }) : React.createElement(LoginMenu, { url: this.state.path,
+            onLogin: this.handleLogin,
+            onModeChange: this.onModeChange
+        });
+    }
+}
+
+class LoginMenu extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            mode: this.props.url.substr(1)
         };
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.toggle = this.toggle.bind(this);
         this.recover = this.recover.bind(this);
         this.onLogin = this.onLogin.bind(this);
-        this.canUpdateHistory = true;
-        window.addEventListener('popstate', this.onUrlChange.bind(this));
-    }
-
-    static loginState(url) {
-        switch (url) {
-            case '/login':
-                return 'login';
-            case '/signup':
-                return 'signup';
-            case '/recover':
-                return 'recover';
-        }
-        return '';
+        this.resetPassword = this.resetPassword.bind(this);
     }
 
     open(mode) {
@@ -968,7 +1119,6 @@ class Login extends React.Component {
 
     close() {
         this.setState(prevState => ({
-            initialMode: prevState.mode,
             mode: null
         }));
         this.refs.loginDialog.clear();
@@ -981,35 +1131,35 @@ class Login extends React.Component {
 
     toggle() {
         this.setState((prevState, props) => ({
-            mode: prevState.mode === 'login' ? 'signup' : 'login'
+            mode: prevState.mode === 'signup' ? 'login' : 'signup'
         }));
     }
 
-    recover() {
+    recover(callback) {
         this.setState({
             mode: 'recover'
-        });
+        }, callback);
     }
 
-    onUrlChange() {
-        const mode = this.constructor.loginState(location.pathname);
-        if (mode !== this.state.mode) {
-            this.canUpdateHistory = false;
-            this.setState({ mode });
-        }
+    resetPassword(callback) {
+        this.setState({
+            mode: 'reset-password'
+        }, callback);
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (prevState.mode !== this.state.mode) {
-            if (!this.canUpdateHistory) {
-                this.canUpdateHistory = true;
-            } else {
-                history.pushState({ mode: this.state.mode }, this.state.mode || 'Dobuki', `/${this.state.mode || ''}`);
-            }
+            this.props.onModeChange(this.state.mode);
+        }
+        if (prevProps.url !== this.props.url) {
+            this.setState({
+                mode: this.props.url.substr(1)
+            });
         }
     }
 
     render() {
+        const fontFamily = "'Concert One', cursive";
         return React.createElement(
             'div',
             null,
@@ -1017,7 +1167,7 @@ class Login extends React.Component {
                 'div',
                 { style: {
                         position: 'fixed',
-                        top: 0, right: 0,
+                        top: 0, right: 10,
                         margin: '0 8px',
                         display: 'flex',
                         flexDirection: 'row',
@@ -1025,7 +1175,7 @@ class Login extends React.Component {
                     } },
                 React.createElement(
                     'div',
-                    { className: 'button', onClick: (() => this.open('login')).bind(this), style: {
+                    { className: 'button', onClick: () => this.open('login'), style: {
                             width: 50, height: 50,
                             display: 'flex',
                             flexDirection: 'column',
@@ -1033,14 +1183,14 @@ class Login extends React.Component {
                         } },
                     React.createElement(
                         'div',
-                        { style: { fontFamily: "'Concert One', cursive" } },
+                        { style: { fontFamily } },
                         'login'
                     ),
                     React.createElement('img', { style: { width: 32, height: 32 }, src: '/assets/login.svg' })
                 ),
                 React.createElement(
                     'div',
-                    { className: 'button', onClick: (() => this.open('signup')).bind(this), style: {
+                    { className: 'button', onClick: () => this.open('signup'), style: {
                             width: 50, height: 50,
                             display: 'flex',
                             flexDirection: 'column',
@@ -1048,7 +1198,7 @@ class Login extends React.Component {
                         } },
                     React.createElement(
                         'div',
-                        { style: { fontFamily: "'Concert One', cursive" } },
+                        { style: { fontFamily } },
                         'signup'
                     ),
                     React.createElement('img', { style: { width: 28, height: 28 }, src: '/assets/signup.svg' })
@@ -1059,22 +1209,28 @@ class Login extends React.Component {
                 onClickOut: this.close,
                 toggle: this.toggle,
                 recover: this.recover,
-                onLogin: this.onLogin
+                onLogin: this.onLogin,
+                resetPassword: this.resetPassword
             })
         );
     }
 }
 
-class Profile extends React.Component {
+class ProfileMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            view: false
+            view: false,
+            mode: this.props.url.substr(1),
+            updateTime: session.refresh
         };
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.logout = this.logout.bind(this);
+        this.editProfile = this.editProfile.bind(this);
         this.handleClickOutside = this.handleClickOutside.bind(this);
+        this.profilePicUpdated = this.profilePicUpdated.bind(this);
+        LoginMenu.canUpdateHistory = true;
     }
 
     componentDidMount() {
@@ -1095,8 +1251,15 @@ class Profile extends React.Component {
         }
         this.close();
     }
+
     profile_pic() {
-        return `/profile/${this.props.username}/image.png`;
+        return this.state.updateTime ? `/profile-picture/${this.props.username}/thumbnail.png?${this.state.updateTime}` : `/profile-picture/${this.props.username}/thumbnail.png`;
+    }
+
+    profilePicUpdated() {
+        this.setState({
+            updateTime: Date.now()
+        });
     }
 
     open() {
@@ -1106,20 +1269,40 @@ class Profile extends React.Component {
     }
 
     close() {
+        this.setState(prevState => ({
+            view: false
+        }));
+        this.refs.profileDialog.clear();
+    }
+
+    logout() {
+        this.close();
+        api.logout(result => {
+            session.user = null;
+            this.props.onLogout();
+        });
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.mode !== this.state.mode) {
+            this.props.onModeChange(this.state.mode);
+        }
+        if (prevProps.url !== this.props.url) {
+            this.setState({
+                mode: this.props.url.substr(1)
+            });
+        }
+    }
+
+    editProfile() {
         this.setState({
+            mode: 'profile',
             view: false
         });
     }
 
-    logout() {
-        close();
-        api.logout(function (result) {
-            session.user = null;
-            this.props.onLogout();
-        }.bind(this));
-    }
-
     render() {
+        const fontFamily = "'Concert One', cursive";
         return React.createElement(
             'div',
             { ref: 'wrapper' },
@@ -1127,7 +1310,7 @@ class Profile extends React.Component {
                 'div',
                 { className: 'button', onClick: this.open, style: {
                         position: 'fixed',
-                        top: 0, right: 0,
+                        top: 0, right: 10,
                         padding: '0 8px',
                         height: 50,
                         display: 'flex',
@@ -1139,31 +1322,53 @@ class Profile extends React.Component {
                 React.createElement(
                     'div',
                     { style: {
-                            fontFamily: "'Concert One', cursive",
+                            fontFamily,
                             fontSize: 16
                         } },
                     this.props.username
                 ),
-                React.createElement('img', { style: { width: 40, height: 40, margin: '0 0 0 8px' }, src: this.profile_pic() })
+                React.createElement('img', { style: {
+                        width: 40, height: 40, margin: '0 0 0 8px',
+                        borderRadius: 3
+                    }, src: this.profile_pic() })
             ),
             this.state.view && React.createElement(
                 'div',
                 { style: {
-                        position: 'absolute',
+                        position: 'fixed',
                         backgroundColor: '#555',
                         minWidth: 150,
-                        right: 0
+                        right: 0,
+                        zIndex: 2
                     } },
+                React.createElement(
+                    'div',
+                    { className: 'menu', onMouseDown: this.editProfile },
+                    React.createElement(
+                        'div',
+                        null,
+                        'Edit profile'
+                    )
+                ),
                 React.createElement(
                     'div',
                     { className: 'menu', onMouseDown: this.logout },
                     React.createElement(
                         'div',
-                        { style: { fontFamily: "'Concert One', cursive" } },
+                        null,
                         'Log out'
                     )
                 )
-            )
+            ),
+            React.createElement(ProfileDialog, { ref: 'profileDialog',
+                mode: this.state.mode,
+                username: this.props.username,
+                onClickOut: () => {
+                    this.setState({ mode: null });
+                },
+                profilePicUpdated: this.profilePicUpdated,
+                updateTime: this.state.updateTime
+            })
         );
     }
 }
@@ -1174,22 +1379,454 @@ class Tip extends React.Component {
         return React.createElement(
             'div',
             { style: {
-                    position: 'absolute',
+                    position: 'fixed',
                     width: '100%',
                     height: 30,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    zIndex: 2
                 } },
             React.createElement(
                 'div',
                 { className: 'statetip', style: {
                         fontFamily,
                         marginTop: this.props.showTip ? 0 : -100,
-                        opacity: this.props.showTip ? .9 : 0
+                        opacity: this.props.showTip ? .95 : 0
                     } },
                 this.props.tip
+            )
+        );
+    }
+}
+
+class ProfileDialog extends React.Component {
+    constructor(props) {
+        super(props);
+        this.initialState = {
+            cursorOnProfile: 'pointer',
+            profileX: 0,
+            profileY: 0,
+            image: null,
+            saving: false,
+            password: null,
+            password2: null,
+            old_password: null,
+            canChangePassword: false,
+            canSave: false
+        };
+        this.state = {};
+        for (let k in this.initialState) {
+            this.state[k] = this.initialState[k];
+        }
+        this.state.canChangePassword = this.props.mode === 'reset-password';
+
+        this.image = new Image();
+        this.image.addEventListener('load', this.onImageLoaded.bind(this));
+
+        this.profileSection = this.profileSection.bind(this);
+        this.onFileUpload = this.onFileUpload.bind(this);
+        this.onFileRead = this.onFileRead.bind(this);
+        this.onTouchProfile = this.onTouchProfile.bind(this);
+        this.onClickProfile = this.onClickProfile.bind(this);
+        this.onMoveProfile = this.onMoveProfile.bind(this);
+        this.onSave = this.onSave.bind(this);
+        this.profile_pic = this.profile_pic.bind(this);
+        this.passwordChange = this.passwordChange.bind(this);
+        this.password2Change = this.password2Change.bind(this);
+        this.oldPasswordChange = this.oldPasswordChange.bind(this);
+        this.lastMousePoint = { x: 0, y: 0 };
+        this.canUpload = false;
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.mode !== this.state.mode) {
+            this.image = new Image();
+            this.image.addEventListener('load', this.onImageLoaded.bind(this));
+            this.setState({
+                image: null
+            });
+        }
+    }
+
+    onImageLoaded(e) {
+        const image = e.target;
+        const minSize = Math.min(image.naturalWidth, image.naturalHeight);
+        const scale = 120 / minSize;
+        this.setState({
+            image: image.src,
+            profileX: -(image.naturalWidth * scale - 120) / 2,
+            profileY: -(image.naturalHeight * scale - 120) / 2,
+            canSave: true,
+            imageTooSmall: minSize < 240
+        });
+    }
+
+    onFileUpload(e) {
+        const uploader = e.target;
+        if (uploader.files && uploader.files[0]) {
+            const reader = new FileReader();
+            reader.addEventListener('load', this.onFileRead);
+            reader.readAsDataURL(uploader.files[0]);
+        }
+    }
+
+    onFileRead(e) {
+        const reader = e.target;
+        this.image.src = reader.result;
+    }
+
+    clear() {
+        this.setState(this.initialState);
+    }
+
+    onClickProfile() {
+        if (this.canUpload) {
+            this.setState({
+                cursorOnProfile: 'pointer'
+            });
+            this.refs.fileupload.click();
+        }
+    }
+
+    onTouchProfile(e) {
+        this.canUpload = true;
+        this.lastMousePoint.x = e.clientX;
+        this.lastMousePoint.y = e.clientY;
+        if (this.image.naturalWidth !== this.image.naturalHeight) {
+            this.setState({
+                cursorOnProfile: this.image.naturalWidth > this.image.naturalHeight ? 'ew-resize' : 'ns-resize'
+            });
+        }
+    }
+
+    onMoveProfile(e) {
+        if (e.buttons && this.image.naturalWidth !== this.image.naturalHeight) {
+            const movementX = this.lastMousePoint.x - e.clientX;
+            const movementY = this.lastMousePoint.y - e.clientY;
+            if (movementX || movementY) {
+                this.canUpload = false;
+                this.setState(prevState => {
+                    const scale = 240 / Math.min(this.image.naturalWidth, this.image.naturalHeight);
+                    const profileX = Math.min(0, Math.max(-(this.image.naturalWidth * scale / 2 - 120), prevState.profileX - movementX));
+                    const profileY = Math.min(0, Math.max(-(this.image.naturalHeight * scale / 2 - 120), prevState.profileY - movementY));
+
+                    return {
+                        profileX, profileY
+                    };
+                });
+                this.lastMousePoint.x = e.clientX;
+                this.lastMousePoint.y = e.clientY;
+            }
+            e.stopPropagation();
+        }
+    }
+
+    profilePicBinary() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 240;canvas.height = 240;
+        const ctx = canvas.getContext('2d');
+        const minSize = Math.min(this.image.naturalWidth, this.image.naturalHeight);
+        const scale = minSize / 120;
+        ctx.drawImage(this.image, -this.state.profileX * scale, -this.state.profileY * scale, minSize, minSize, 0, 0, 240, 240);
+        return canvas.toDataURL("image/png");
+    }
+
+    onSave() {
+        if (!this.state.loggingIn) {
+            this.setState({
+                saving: true
+            }, () => {
+                api.save(this.props.username, this.state.image ? this.profilePicBinary() : null, this.state.password, this.state.old_password, result => {
+                    if (result.success) {
+                        this.props.profilePicUpdated();
+                        this.props.onClickOut();
+                    } else {
+                        this.setState({
+                            saving: false
+                        });
+                    }
+                });
+            });
+        }
+    }
+
+    passwordChange(e) {
+        const target = e.target;
+        this.setState(prevState => {
+            const invalid = !LoginDialog.validPassword(target.value);
+            const warningMessage = "Your password must have at least eight characters, including one letter and one number.";
+            const warning = invalid ? warningMessage : prevState.warning && warningMessage !== prevState.warning ? prevState.warning : null;
+            return {
+                warning,
+                password: target.value,
+                canSave: true
+            };
+        });
+    }
+
+    password2Change(e) {
+        const target = e.target;
+        this.setState(prevState => {
+            const invalid = prevState.password !== target.value;
+            const warningMessage = "The passwords you entered must match.";
+            const warning = invalid ? warningMessage : prevState.warning && warningMessage !== prevState.warning ? prevState.warning : null;
+            return {
+                warning,
+                password2: target.value,
+                canSave: true
+            };
+        });
+    }
+
+    oldPasswordChange(e) {
+        const target = e.target;
+        this.setState({
+            old_password: target.value
+        });
+    }
+
+    profile_pic() {
+        return this.state.image ? this.state.image : this.props.updateTime ? `/profile-picture/${this.props.username}/image.png?${this.props.updateTime}` : `/profile-picture/${this.props.username}/image.png`;
+    }
+
+    profileSection() {
+        const borderRadius = 8;
+        const fontFamily = "'Concert One', cursive";
+        return React.createElement(
+            'div',
+            { style: {
+                    width: '100%',
+                    height: 'auto',
+                    borderBottomLeftRadius: borderRadius,
+                    borderBottomRightRadius: borderRadius,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                } },
+            React.createElement(
+                'div',
+                { className: 'loginsection' },
+                React.createElement('div', { style: { height: 50 } }),
+                React.createElement(
+                    'div',
+                    { ref: 'profile_pic', className: 'profile-pic',
+                        style: {
+                            cursor: this.state.cursorOnProfile,
+                            backgroundImage: `url(${this.profile_pic()})`,
+                            backgroundPositionX: this.state.profileX,
+                            backgroundPositionY: this.state.profileY
+                        },
+                        draggable: 'false',
+                        onMouseMove: this.onMoveProfile,
+                        onMouseDown: this.onTouchProfile,
+                        onClick: this.onClickProfile },
+                    React.createElement('img', { style: {
+                            marginLeft: 100,
+                            position: 'absolute', width: 20, height: 20, zIndex: 1
+                        }, src: '/assets/edit.svg' })
+                ),
+                this.state.imageTooSmall && React.createElement(
+                    'div',
+                    { style: { height: 10, margin: 5,
+                            color: '#D00', fontSize: 12 } },
+                    'For best result, your image should be at least 240x240'
+                ),
+                React.createElement(
+                    'div',
+                    { style: {
+                            width: 0, height: 0,
+                            overflow: 'hidden'
+                        } },
+                    React.createElement('input', { ref: 'fileupload', onChange: this.onFileUpload, type: 'file' })
+                ),
+                React.createElement(
+                    'div',
+                    { style: {
+                            fontFamily,
+                            fontSize: 20
+                        } },
+                    this.props.username
+                ),
+                !this.state.canChangePassword ? React.createElement(
+                    'div',
+                    { style: {
+                            display: 'flex',
+                            flexDirection: 'row',
+                            height: 40,
+                            width: 160,
+                            marginTop: 20
+                        } },
+                    React.createElement(Button, {
+                        text: 'Change password',
+                        leftMost: true, rightMost: true,
+                        fontSize: '18',
+                        fontColor: '#eee',
+                        background: "linear-gradient(#59f79d, #2c6846)",
+                        backgroundPressed: '#a3e2bf',
+                        space: 'true',
+                        onClick: () => {
+                            this.setState({
+                                canChangePassword: true
+                            });
+                        }
+                    })
+                ) : React.createElement(
+                    'div',
+                    { style: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            width: '70%',
+                            marginTop: 20,
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        } },
+                    this.resetPasswordBox()
+                ),
+                React.createElement(
+                    'div',
+                    { style: {
+                            display: 'flex',
+                            marginTop: 20,
+                            alignItems: 'center', alignSelf: 'center', justifyContent: 'center',
+                            width: 50, height: 50
+                        } },
+                    React.createElement('div', { className: `tux-loading-indicator ${this.state.saving ? 'show' : ''}` })
+                ),
+                React.createElement('hr', null),
+                React.createElement(
+                    'div',
+                    { style: {
+                            display: 'flex',
+                            flexDirection: 'row',
+                            height: 50,
+                            width: '70%',
+                            margin: '20px 0'
+                        } },
+                    React.createElement(Button, {
+                        text: 'Save',
+                        leftMost: true, rightMost: true,
+                        fontSize: '24',
+                        fontColor: '#eee',
+                        background: "linear-gradient(#59f79d, #2c6846)",
+                        backgroundPressed: '#a3e2bf',
+                        space: 'true',
+                        onClick: this.onSave,
+                        disabled: !this.state.canSave
+                    }),
+                    React.createElement(Button, {
+                        text: 'Cancel',
+                        leftMost: true, rightMost: true,
+                        fontSize: '24',
+                        fontColor: '#eee',
+                        background: "linear-gradient(#f7599d, #682c46)",
+                        backgroundPressed: '#e2bfa3',
+                        space: 'true',
+                        onClick: this.props.onClickOut
+                    })
+                )
+            )
+        );
+    }
+
+    resetPasswordBox() {
+        const fontFamily = "'Concert One', cursive";
+        return [React.createElement(
+            'div',
+            { style: { fontFamily, marginBottom: 5 } },
+            'Old password'
+        ), React.createElement('input', { ref: 'old_password_field',
+            type: 'password',
+            placeholder: 'Enter your old password',
+            className: 'input',
+            onChange: this.oldPasswordChange.bind(this),
+            value: this.state.old_password,
+            onKeyPress: event => {
+                if (event.key === 'Enter') {
+                    this.refs.password_field.focus();
+                }
+            },
+            style: {
+                height: 40,
+                width: '100%'
+            } }), React.createElement('div', { style: { height: 20 } }), React.createElement(
+            'div',
+            { style: { fontFamily, marginBottom: 5 } },
+            'New password'
+        ), React.createElement('input', { ref: 'password_field',
+            type: 'password',
+            placeholder: 'Enter a new password',
+            className: 'input',
+            onChange: this.passwordChange.bind(this),
+            disabled: this.state.loggingIn,
+            value: this.state.password,
+            onKeyPress: event => {
+                if (event.key === 'Enter') {
+                    this.refs.password_field2.focus();
+                }
+            },
+            style: {
+                height: 40,
+                width: '100%'
+            } }), React.createElement('div', { style: { height: 10 } }), React.createElement('input', { ref: 'password_field2',
+            type: 'password',
+            placeholder: 'Re-enter the same password',
+            className: 'input',
+            onChange: this.password2Change.bind(this),
+            disabled: this.state.loggingIn,
+            value: this.state.password2,
+            onKeyPress: event => {
+                if (event.key === 'Enter') {
+                    event.target.blur();
+                }
+            },
+            style: {
+                height: 40,
+                width: '100%'
+            } }), React.createElement('div', { style: { height: 20 } }), React.createElement(
+            'div',
+            { style: {
+                    color: '#D00',
+                    marginTop: 15
+                } },
+            this.state.warning
+        )];
+    }
+
+    render() {
+        return React.createElement(
+            'div',
+            null,
+            React.createElement(
+                Overlay,
+                { mode: this.props.mode },
+                this.props.mode && React.createElement(
+                    'div',
+                    { className: 'overlay' },
+                    React.createElement('div', { style: {
+                            position: 'fixed',
+                            top: 0, left: 0,
+                            width: '100%', height: 'calc(100% + 200px)',
+                            transition: 'opacity .2s linear',
+                            opacity: this.props.mode ? .8 : 0,
+                            backgroundColor: '#046',
+                            cursor: 'pointer',
+                            display: this.props.mode ? '' : 'none'
+                        }, onClick: this.props.onClickOut }),
+                    React.createElement(
+                        'div',
+                        { className: 'popdialog', style: {
+                                width: 600, height: 'auto'
+                            } },
+                        React.createElement(
+                            'div',
+                            { style: { width: '100%', overflow: 'hidden' } },
+                            this.profileSection()
+                        )
+                    )
+                )
             )
         );
     }
