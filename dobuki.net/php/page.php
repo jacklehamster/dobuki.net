@@ -25,7 +25,9 @@ class Page {
     }
 
     public function insertStylesheet() {
-        ?><link rel="stylesheet" type="text/css" href="/<?=$this->page?>.css"/><?
+        echo "<style>";
+        readfile("pages/{$this->page}.css");
+        echo "</style>";
     }
 
     public function insertScript() {

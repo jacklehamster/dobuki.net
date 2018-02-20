@@ -11,6 +11,8 @@ class Globals {
     static private $email;
     static private $javascript;
     static private $profile;
+    static private $media;
+    static private $cache;
 
     static private function get_brand(): string {
         require_once 'database.php';
@@ -54,7 +56,9 @@ class Globals {
                 self::get_login(),
                 self::get_emailer(),
                 self::get_javascript(),
-                self::get_profile()
+                self::get_profile(),
+                self::get_media(),
+                self::get_cache()
             );
         }
         return self::$router;
@@ -103,6 +107,23 @@ class Globals {
             self::$profile = new DokProfile(self::get_database(), self::get_session());
         }
         return self::$profile;
+    }
+
+    static public function get_media(): Media {
+        if (!self::$media) {
+            require_once 'media.php';
+            self::$media = new DokMedia(self::get_database(), self::get_session());
+        }
+        return self::$media;
+    }
+
+    static public function get_cache(): Cache {
+        if (!self::$cache) {
+            require_once 'cache.php';
+            self::$cache = new DokCache();
+        }
+        return self::$cache;
+
     }
 
     static private function get_database_name(): string {

@@ -9,12 +9,16 @@ interface Session {
     function reset();
     function set_username($user, $id);
     function get_username();
+    function set_property($property, $value);
+    function get_property($property);
     function set_refresh_now();
     function get_id():int;
     function get_vars():array;
     function increment():int;
     function prepare_recovery(string $username);
     function can_recover(string $username): bool;
+    function ensure_session();
+    function check_session_key($key): bool;
     function destroy();
 }
 
@@ -33,6 +37,7 @@ class DokSession implements Session {
 
     public function reset() {
         session_unset();
+        $this->session_vars = $_SESSION;
     }
 
     public function get_failures():int {
@@ -55,16 +60,25 @@ class DokSession implements Session {
     }
 
     public function set_username($user, $id) {
-        $this->set_session_var('user', $user);
-        $this->set_session_var('id', $id);
+        $this->set_property('user', $user);
+        $this->set_property('id', $id);
     }
 
     public function get_username() {
-        return $this->get_session_vars()['user'] ?? null;
+        return $this->get_property('user');
     }
 
     public function set_refresh_now() {
-        $this->set_session_var('refresh', time());
+        $this->set_property('refresh', time());
+    }
+
+    public function set_property($property, $value) {
+        $this->set_session_var($property, $value);
+    }
+
+    public function get_property($property) {
+        $vars = $this->get_session_vars();
+        return $vars[$property] ?? null;
     }
 
     public function get_id():int {
@@ -76,7 +90,21 @@ class DokSession implements Session {
         return array_filter([
             'user' => $this->session_vars['user'] ?? null,
             'refresh' => $this->session_vars['refresh'] ?? null,
+            'session_key' => $this->session_vars['session_key'] ?? null,
         ]);
+    }
+
+    public function ensure_session() {
+        $this->get_session_vars();
+        if (!isset($this->session_vars['session_key'])) {
+            $this->set_session_var('session_key', md5(time() . rand()));
+            $this->set_session_var('session_time', time());
+        }
+    }
+
+    function check_session_key($key): bool {
+        $this->get_session_vars();
+        return ($this->session_vars['session_key'] ?? null) === $key;
     }
 
     public function increment():int {
@@ -107,7 +135,7 @@ class DokSession implements Session {
 
     public function destroy() {
         $this->get_session_vars();
-        session_unset();
+        $this->reset();
         session_destroy();
     }
 }

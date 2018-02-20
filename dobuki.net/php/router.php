@@ -15,10 +15,12 @@ class DokRouter implements Router {
     private $handled;
     private $javascript;
     private $profile;
+    private $media;
+    private $cache;
 
     public function __construct(
         Server $server, Session $session, Login $login,
-        Email $emailer, Javascript $javascript, Profile $profile
+        Email $emailer, Javascript $javascript, Profile $profile, Media $media, Cache $cache
     ) {
         $this->server = $server;
         $this->login = $login;
@@ -26,6 +28,8 @@ class DokRouter implements Router {
         $this->session = $session;
         $this->javascript = $javascript;
         $this->profile = $profile;
+        $this->media = $media;
+        $this->cache = $cache;
         $this->handled = false;
     }
 
@@ -59,8 +63,7 @@ class DokRouter implements Router {
             $request['username'],
             $request['password'] ?? null
         );
-        echo json_encode($result);
-        $this->handled = true;
+        $this->create_response($result);
     }
 
     private function handle_signup(array $request) {
@@ -69,14 +72,12 @@ class DokRouter implements Router {
             $this->emailer->send_welcome_email($request['email'], $result['lockcode']);
             unset($result['lockcode']);
         }
-        echo json_encode($result);
-        $this->handled = true;
+        $this->create_response($result);
     }
 
     private function handle_logout() {
         $result = $this->login->logout();
-        echo json_encode($result);
-        $this->handled = true;
+        $this->create_response($result);
     }
 
     private function handle_recovery(array $request) {
@@ -94,18 +95,20 @@ class DokRouter implements Router {
             unset($result['lockcode']);
             unset($result['validated']);
         }
-        echo json_encode($result);
-        $this->handled = true;
+        $this->create_response($result);
     }
 
     private function handle_check(array $request) {
         $result = $this->login->check_username_available($request['username']);
-        echo json_encode($result);
-        $this->handled = true;
+        $this->create_response($result);
     }
 
     private function handle_change_password(array $request) {
         $result = $this->login->change_password($request['username'], $request['password']);
+        $this->create_response($result);
+    }
+
+    private function create_response(array $result) {
         echo json_encode($result);
         $this->handled = true;
     }
@@ -156,101 +159,157 @@ class DokRouter implements Router {
 
     private function handle_redirect($path) {
         if($path==='/dobuki-games') {
-            $dobuki_games_version = "1.03.50258";
+            $dobuki_games_version = "1.03.52416";
 
             $request = $this->server->get_request();
             if (isset($request['version'])) {
                 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
                 header("Cache-Control: post-check=0, pre-check=0", false);
                 header("Pragma: no-cache");
-                echo json_encode([
+                $this->create_response([
                     'version' => $dobuki_games_version,
                 ]);
             } else {
                 header( 'Location: https://jacklehamster.itch.io/dobuki-game-collection' ) ;
+                exit();
             }
-            $this->handled = true;
         }
     }
 
     private function handle_save_profile(array $request) {
         $username = $this->session->get_username();
+        $result = [ 'success' => true ];
         if ($request['profile_image']) {
             $result = $this->profile->save($request['profile_image']);
         }
         if ($request['password'] && $request['old_password']) {
             $result = $this->login->change_password($username, $request['password'], $request['old_password']);
         }
-        echo json_encode($result);
-        $this->handled = true;
+        $this->create_response($result);
     }
 
-    private function get_image($username, $format) {
-        $this->profile->show_picture($username, $format);
-        $this->handled = true;
+    private function handle_upload(array $request) {
+        $result = $this->media->upload($request['image']??'');
+        $this->create_response($result);
     }
 
-    private function check_split($paths) {
-        switch($paths[1]) {
+    private function handle_failed_session() {
+        $result = [
+            'success' => false,
+            'message' => 'Your session key is invalid',
+        ];
+        $this->create_response($result);
+    }
+
+    private function check_split($chunks, $path) {
+        switch($chunks[1]) {
+            case 'cache-grab':
+                $url = implode('/', array_slice($chunks, 2));
+                $result = $this->cache->get_url($url);
+
+                $last_modified_header = 'Last-Modified: ' . @$_SERVER['HTTP_IF_MODIFIED_SINCE'];
+                $etag_header = 'ETag: ' . @$_SERVER['HTTP_IF_NONE_MATCH'];
+
+                foreach ($result['headers'] as $header) {
+                    header($header);
+                }
+                foreach ($result['headers'] as $header) {
+                    if ($header === $etag_header || $header === $last_modified_header) {
+                        header("HTTP/1.1 304 Not Modified");
+                        $this->handled = true;
+                        return;
+                    }
+                }
+
+                echo $result['content'];
+                $this->handled = true;
+                break;
             case 'profile-picture':
-                list(,,$username,$format) = $paths;
-                $this->get_image($username, $format);
+                list(,,$username,$format) = $chunks;
+                $this->profile->show_picture($username, $format);
+                $this->handled = true;
+                break;
+            case 'picture':
+                list(,,$md5) = $chunks;
+                $this->media->get_image($md5);
                 break;
             case 'api':
-                list(,,$command) = $paths;
+                $this->session->ensure_session();
+                list(,,$command) = $chunks;
                 $this->api($command);
+                break;
+            case 'phpinfo':
+                $this->handle_phpinfo();
+                break;
+            case '':
+            case 'recover':
+            case 'login':
+            case 'signup':
+            case 'reset-password':
+            case 'profile':
+                $this->session->ensure_session();
+                $this->show_homepage();
+                break;
+            case 'dobuki-games':
+                $this->handle_redirect($path);
+                break;
+            default:
                 break;
         }
     }
 
-    private function api($command) {
+    private function needs_session_key($command):bool {
         switch($command) {
             case 'login':
-                $this->handle_login($this->server->get_request());
-                break;
             case 'signup':
-                $this->handle_signup($this->server->get_request());
-                break;
-            case 'logout':
-                $this->handle_logout();
-                break;
             case 'recover':
-                $this->handle_recovery($this->server->get_request());
-                break;
             case 'check':
-                $this->handle_check($this->server->get_request());
-                break;
-            case 'change-password':
-                $this->handle_change_password($this->server->get_request());
-                break;
-            case 'save-profile':
-                $this->handle_save_profile($this->server->get_request());
-                break;
+                return false;
+            case 'upload':
+                return false;
+        }
+        return true;
+    }
+
+    private function api($command) {
+        $request = $this->server->get_request();
+        if ($this->needs_session_key($command)
+            && !$this->session->check_session_key($request['session_key']??null)) {
+            $this->handle_failed_session();
+        } else {
+            switch($command) {
+                case 'login':
+                    $this->handle_login($request);
+                    break;
+                case 'signup':
+                    $this->handle_signup($this->server->get_request());
+                    break;
+                case 'logout':
+                    $this->handle_logout();
+                    break;
+                case 'recover':
+                    $this->handle_recovery($this->server->get_request());
+                    break;
+                case 'check':
+                    $this->handle_check($this->server->get_request());
+                    break;
+                case 'change-password':
+                    $this->handle_change_password($this->server->get_request());
+                    break;
+                case 'save-profile':
+                    $this->handle_save_profile($this->server->get_request());
+                    break;
+                case 'upload':
+                    $this->handle_upload($this->server->get_request());
+                    break;
+            }
         }
     }
 
     private function handle_www() {
         $this->check_request($this->server->get_request());
         $path = $this->server->get_path();
-        switch($path) {
-            case '/phpinfo':
-                $this->handle_phpinfo();
-                break;
-            case '/':
-            case '/recover':
-            case '/login':
-            case '/signup':
-            case '/reset-password':
-            case '/profile':
-                $this->show_homepage();
-                break;
-            case '/dobuki-games':
-                $this->handle_redirect($path);
-                break;
-            default:
-                $this->check_split(explode('/',$path));
-                break;
-        }
+        $this->check_split(explode('/',$path), $path);
         if (!$this->handled) {
             $this->check_slash($path);
         }

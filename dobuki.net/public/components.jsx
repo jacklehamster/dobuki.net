@@ -1371,6 +1371,12 @@ class ProfileDialog extends React.Component {
             this.image.addEventListener('load', this.onImageLoaded.bind(this));
             this.setState({
                 image: null,
+                canChangePassword: false,
+                saving: false,
+                canSave: false,
+                password: null,
+                password2: null,
+                old_password: null,
             });
         }
     }
@@ -1582,7 +1588,7 @@ class ProfileDialog extends React.Component {
                     width: 0, height: 0,
                     overflow: 'hidden',
                 }}>
-                    <input ref="fileupload" onChange={this.onFileUpload} type="file" />
+                    <input ref="fileupload" onChange={this.onFileUpload} type="file" accept="image/*" />
                 </div>
                 <div style={{
                     fontFamily,

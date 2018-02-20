@@ -1445,7 +1445,13 @@ class ProfileDialog extends React.Component {
             this.image = new Image();
             this.image.addEventListener('load', this.onImageLoaded.bind(this));
             this.setState({
-                image: null
+                image: null,
+                canChangePassword: false,
+                saving: false,
+                canSave: false,
+                password: null,
+                password2: null,
+                old_password: null
             });
         }
     }
@@ -1640,7 +1646,7 @@ class ProfileDialog extends React.Component {
                             width: 0, height: 0,
                             overflow: 'hidden'
                         } },
-                    React.createElement('input', { ref: 'fileupload', onChange: this.onFileUpload, type: 'file' })
+                    React.createElement('input', { ref: 'fileupload', onChange: this.onFileUpload, type: 'file', accept: 'image/*' })
                 ),
                 React.createElement(
                     'div',

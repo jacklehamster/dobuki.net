@@ -9,7 +9,7 @@ interface Login {
     function get_recovery_code($email): array;
     function check_username_available($username): array;
     function recover(string $email, string $recoverycode): array;
-    function change_password(string $username, string $pass_user_hash, string $old_pass): array;
+    function change_password(string $username, string $pass_user_hash, string $old_pass=null): array;
 }
 
 class DokLogin implements Login {
@@ -188,12 +188,15 @@ class DokLogin implements Login {
 
                         if ($count_updated) {
                             $this->session->reset();
+                            $this->session->ensure_session();
                             $this->session->set_username($username, $id);
                             $this->session->set_refresh_now();
+
                             $result = [
                                 'success' => true,
                                 'username' => $username,
                                 'password_valid' => true,
+                                'vars' => $this->session->get_vars(),
                             ];
                         } else {
                             $result = [

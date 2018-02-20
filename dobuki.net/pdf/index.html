@@ -1,0 +1,86 @@
+<script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+
+<body></body>
+
+<script>
+	var url = 'AccGeoCh10_HW#3.pdf';
+//    var url = 'AccGeoCh9Sec8Notes.pdf';
+//    var url = 'AccGeoCh9TrigReviewKEY.pdf';
+//    var url = 'AccGeoCh9Sec7Day2.pdf';
+//    var url = 'AccGeoCh9Sec7PracticePacketkKEY.pdf';
+//    var url = 'AccGeoCh9Sec7SpecialRightTrianglesDay1.pdf';
+//    var url = 'AccGeoCh9Sec9TrigNotesDay2.pdf';
+//    var url = 'AccGeoCh9Test1ReviewKey.pdf';
+//    var url = 'AccGeoCh9Test2Review2011Key.pdf';
+//    var url = 'AccGeoCh9TrigWk2Lesson9_10.pdf';
+
+    PDFJS.workerSrc = 'https://mozilla.github.io/pdf.js/build/pdf.worker.js';
+
+    function isColored(red, green, blue) {
+
+        return red > 200 && green < 230 && blue < 230
+        || red < 230 && green < 230 && blue > 200
+        || Math.abs(red-green) > 20 && Math.abs(green-blue) > 20
+        || red > 200 && green > 200 && blue < 230;
+//        || red > 120 && green < 200 && blue > 120;
+    }
+
+
+    function removeRed(context, width, height) {
+        var imgData = context.getImageData(0,0,width, height);
+        console.log(imgData.data.length);
+        for(var i=0; i<imgData.data.length; i+=4) {
+            var red=imgData.data[i];
+            var green=imgData.data[i+1];
+            var blue=imgData.data[i+2];
+            var alpha=imgData.data[i+3];
+            if (isColored(red, green, blue)) {
+                imgData.data[i] = 255;
+                imgData.data[i+1] = 255;
+                imgData.data[i+2] = 255;
+            }
+        }
+        context.putImageData(imgData, 0,0);
+    }
+
+    function renderPage(page, canvas) {
+        console.log('Page loaded');
+
+        var scale = 1.5;
+        var viewport = page.getViewport(scale);
+
+        // Prepare canvas using PDF page dimensions
+        var context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        // Render PDF page into canvas context
+        var renderContext = {
+            canvasContext: context,
+            viewport: viewport
+        };
+        var renderTask = page.render(renderContext);
+        renderTask.then(function () {
+            removeRed(context, canvas.width, canvas.height);
+            console.log('Page rendered');
+        });
+    }
+
+    // Asynchronous download of PDF
+    var loadingTask = PDFJS.getDocument(url);
+    loadingTask.promise.then(function(pdf) {
+        console.log('PDF loaded');
+
+        // Fetch the first page
+        for(var i=0; i< pdf.numPages; i++) {
+            pdf.getPage(i+1).then(page => {
+                var canvas = document.body.appendChild(document.createElement('canvas'));
+                renderPage(page, canvas);
+            });
+        }
+    }, function (reason) {
+        // PDF loading error
+        console.error(reason);
+    });
+
+</script>

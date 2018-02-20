@@ -10,126 +10,87 @@ class Api {
         }
     }
 
-    login(username, password, callback) {
+    static getSessionKey() {
+        return session.session_key;
+    }
+
+    performCall(type, url, data, callback) {
         $.ajax({
-            type: 'POST',
-            url: "/api/login",
+            type,
+            url,
             cache: false,
-            data: {
-                username,
-                password: password ? md5(`${password} ${username}`) : null,
-            },
+            data,
             success: (result,xhr,status) => {
+                const resultObj = Api.parseResult(result);
+                if (resultObj.vars) {
+                    for(let i in resultObj.vars) {
+                        session[i] = resultObj.vars[i];
+                    }
+                }
                 callback(Api.parseResult(result));
             },
             error: (xhr,status,error) => {
                 console.error(error);
             }
         });
+
+    }
+
+    login(username, password, callback) {
+        this.performCall(
+            'POST', '/api/login', {
+                username,
+                password: password ? md5(`${password} ${username}`) : null,
+            }, callback);
     }
 
     changePassword(username, password, callback) {
-        $.ajax({
-            type: 'POST',
-            url: "/api/change-password",
-            cache: false,
-            data: {
+        this.performCall(
+            'POST', '/api/change-password', {
                 username,
                 password: password ? md5(`${password} ${username}`) : null,
-            },
-            success: (result,xhr,status) => {
-                callback(Api.parseResult(result));
-            },
-            error: (xhr,status,error) => {
-                console.error(error);
-            }
-        });
+                session_key: Api.getSessionKey(),
+            }, callback);
     }
 
     check(username, callback) {
-        $.ajax({
-            type: 'GET',
-            url: "/api/check",
-            cache: false,
-            data: {
+        this.performCall(
+            'GET', '/api/check', {
                 username,
-            },
-            success: (result,xhr,status) => {
-                callback(Api.parseResult(result));
-            },
-            error: (xhr,status,error) => {
-                console.error(error);
-            }
-        });
+            }, callback);
     }
 
     signup(username, email, password, callback) {
-        $.ajax({
-            type: 'POST',
-            url: "/api/signup",
-            cache: false,
-            data: {
+        this.performCall(
+            'POST', '/api/signup', {
                 username,
                 email,
                 password: md5(`${password} ${username}`),
-            },
-            success: (result,xhr,status) => {
-                callback(Api.parseResult(result));
-            },
-            error: (xhr,status,error) => {
-                console.error(error);
-            }
-        });
+            }, callback);
     }
 
     logout(callback) {
-        $.ajax({
-            type: 'POST',
-            url: "/api/logout",
-            cache: false,
-            success: (result,xhr,status) => {
-                callback(Api.parseResult(result));
-            },
-            error: (xhr,status,error) => {
-                console.error(error);
-            }
-        });
+        this.performCall(
+            'POST', '/api/logout', {
+                session_key: Api.getSessionKey(),
+            }, callback);
     }
 
     recover(email, callback) {
-        $.ajax({
-            type: 'POST',
-            url: "/api/recover",
-            cache: false,
-            data: {
+        this.performCall(
+            'POST', '/api/recover', {
                 email,
-            },
-            success: (result,xhr,status) => {
-                callback(Api.parseResult(result));
-            },
-            error: (xhr,status,error) => {
-                console.error(error);
-            }
-        });
+            }, callback);
     }
 
     save(username, profile_image, password, old_password, callback) {
-        $.ajax({
-            type: 'POST',
-            url: "/api/save-profile",
-            cache: false,
-            data: {
+        this.performCall(
+            'POST', '/api/save-profile', {
                 profile_image,
-                password: md5(`${password} ${username}`),
-                old_password: md5(`${old_password} ${username}`),
-            },
-            success: (result,xhr,status) => {
-                callback(Api.parseResult(result));
-            },
-            error: (xhr,status,error) => {
-                console.error(error);
-            }
-        });
+                password: password ? md5(`${password} ${username}`) : null,
+                old_password: old_password ? md5(`${old_password} ${username}`) : null,
+                session_key: Api.getSessionKey(),
+            }, callback);
     }
 }
 
