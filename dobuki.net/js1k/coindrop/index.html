@@ -1,0 +1,74 @@
+<body style="margin: 0; padding: 0; border: 0; width: 100%; height: 100%;">
+    <canvas style="display: block; width: 900px; height: 450px;" width="900" height="450"></canvas>
+</body>
+<script>
+    var c = document.getElementsByTagName('canvas')[0];
+    c.style.backgroundColor = '#a23';
+    var ct = c.getContext("2d");
+    var p = [];
+    var tl = 0;
+    var cw = c.width;
+    var ch = c.height;
+    var r = Math.random;
+
+    function cr(x,y) {
+        p.push(
+            [x,y,0,0,'#'+((Math.floor(r()*0xFFFFFF)&0x222200) + 0xDDDD00).toString(16)]
+        );
+    }
+
+    addEventListener("mousemove", (e) => {
+        cr(e.clientX - c.offsetLeft,e.clientY - c.offsetTop);
+    });
+
+    step = () => {
+        p.forEach((o, index) => {
+            o[0]+=o[2]/9;
+            o[1]+=o[3]/9;
+            o[2]*=.95;
+            o[3]*=.95;
+            if(Math.abs(o[0] -cw/2) > cw/2) {
+                o[0]+= (cw/2-o[0])/99;
+            }
+            if(o[1] < tl) {
+                o[3]+= tl - o[1];
+            }
+        });
+        for(var i=0; i<p.length; i++) {
+            for(var j=0; j<p.length;j++) {
+                var dx = p[i][0] - p[j][0];
+                var dy = p[i][1] - p[j][1];
+                var ds = dx*dx + dy*dy;
+                if(ds < 324 && i!==j) {
+                    var d = Math.sqrt(ds);
+                    var f = Math.abs(d - 18);
+                    p[i][2] += dx*f/d/3;
+                    p[i][3] += dy*f/d/3;
+                }
+            }
+        }
+    }
+
+    ct.lineWidth=3;
+    loop = () => {
+        ct.clearRect(0,0,c.width,c.height);
+
+        ct.fillStyle = "#000000";
+        p.forEach((pallet,index) => {
+            ct.beginPath();
+            ct.fillStyle=pallet[4];
+            ct.arc(pallet[0], pallet[1],9,0,2*Math.PI);
+            ct.fill();
+        });
+
+        tl = Math.sin(performance.now()/999) * 50 + 50;
+        step();
+        ct.fillStyle = "#ccc";
+        ct.fillRect(0,0,cw,tl);
+
+    }
+    setInterval(loop, 9);
+    for(i=0; i<999; i++) {
+        cr( cw * r(),ch * r());
+    }
+</script>

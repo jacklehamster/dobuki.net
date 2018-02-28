@@ -1,0 +1,61 @@
+<canvas id="canvas" width="800" height="100" style="background-color: powderblue"/>
+<script>
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext("2d");
+    var pallets = [
+        [50,50,12,0],
+        [600,60,0,0],
+    ];
+
+    addEventListener("mousedown", function(e) {
+        pallets.push([e.clientX - canvas.offsetLeft,e.clientY - canvas.offsetTop,12,0]);
+    });
+
+    function step() {
+        var didCollide = false;
+        var newpallets = new Array(pallets.length);
+        pallets.forEach((pallet, index) => {
+            newpallets[index] = new Array(4);
+            newpallets[index][0]=pallet[0]+pallet[2]/10;
+            newpallets[index][1]=pallet[1]+pallet[3]/10;
+            newpallets[index][2]=pallet[2]*.998;
+            newpallets[index][3]=pallet[3]*.998;
+        });
+        for(var i=0; i<pallets.length; i++) {
+            for(var j=i+1; j<pallets.length;j++) {
+                var dx = pallets[i][0] - pallets[j][0];
+                var dy = pallets[i][1] - pallets[j][1];
+                var distsq = dx*dx + dy*dy;
+                if(distsq < 400) {
+                    didCollide = true;
+                    var dist = Math.sqrt(distsq);
+                    var force = Math.abs(dist - 20);
+                    newpallets[i][2] += dx*force/dist/4;
+                    newpallets[i][3] += dy*force/dist/4;
+                    newpallets[j][2] -= dx*force/dist/4;
+                    newpallets[j][3] -= dy*force/dist/4;
+                }
+            }
+        }
+        return [newpallets, didCollide];
+    }
+
+    function loop() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.strokeStyle = "#000";
+        ctx.beginPath();
+        ctx.moveTo(100,0);
+        ctx.lineTo(100,100);
+        ctx.stroke();
+        for(var i=0; i<5; i++) {
+            [pallets] = step();
+        }
+        pallets.forEach((pallet,index) => {
+            ctx.beginPath();
+            ctx.strokeStyle=index%2===0?"#EE0000":"#DDAA00";
+            ctx.arc(pallet[0], pallet[1],10,0,2*Math.PI);
+            ctx.stroke();
+        });
+    }
+    setInterval(loop, 10);
+</script>
