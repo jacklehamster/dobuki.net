@@ -9,6 +9,17 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0,minimum-scale=1.0"/>
     <meta name="theme-color" content="<?= $this->theme_color ?>" />
+    <meta property="og:title" content="Dobuki Art and Games">
+    <meta property="og:description" content="All the games and projects from Dobuki Studio.">
+    <meta property="og:image" content="https://www.dobuki.net/assets/851x351.png">
+    <meta property="og:url" content="http://www.dobuki.net">
+    <meta property="og:site_name" content="Dobuki Art and Games">
+    <meta name="twitter:title" content="Dobuki Art and Games">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://www.dobuki.net/assets/851x351.png">
+    <meta name="twitter:image:alt" content="Dobuki Family">
+    <meta name="twitter:site" content="@dobukistudio">
+
     <link href="https://fonts.googleapis.com/css?family=Concert+One|Fredoka+One" rel="stylesheet" media="none" onload="if(media!='all')media='all'">
     <link rel="prefetch"  href="/assets/dobuki.png" as "image"/>
     <link rel="prefetch" href="/assets/login.svg" as "image"/>
@@ -55,6 +66,10 @@
             justify-content: center; text-align: center; vertical-align: middle;">
         <h2>More games <a target="_blank" href="https://dobuki.weebly.com/">here</a></h2>
         </div>
+    </div>
+    <div style="text-align: right; font-size: 10px">
+        Site by <a rel="author" href="https://plus.google.com/u/4/107340140805357940387">
+            Jack Le Hamster</a>
     </div>
 </body>
 </html>

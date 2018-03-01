@@ -6,6 +6,10 @@ a:hover {
     text-decoration: underline;
 }
 
+a:visited {
+    color: #00e676;
+}
+
 .button {
     cursor: pointer;
     transition: background .2s, width .3s;
@@ -162,12 +166,39 @@ i[down] {
 
 .banner {
     margin: 0;
-    height: 120px;
+    height: 100px;
     display: flex;
     background-color: #000;
     border-width: 1px 0 1px 0;
     border-color: #222;
     border-style: solid;
+}
+
+.tab {
+    margin: 5px 3px;
+    padding: 3px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    background-color: #ffffff;
+    color: #000;
+}
+
+.tab.selected {
+    color: #fbe9e7;
+    background-color: #cf4944;
+    cursor: default;
+}
+
+.paragraph {
+    margin-top: 15px;
+    border-radius: 15px;
+    background-color: honeydew;
+    padding: 10px;
+    border: 2px solid #00c853;
+}
+
+.summary {
+    font-size: 12px;
 }
 
 @media screen and (min-width: 500px) {
@@ -188,6 +219,6 @@ i[down] {
         justify-content: center;
     }
     .banner {
-        height: 247px;
+        height: 150px;
     }
 }

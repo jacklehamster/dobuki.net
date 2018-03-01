@@ -74,7 +74,7 @@ class Overlay extends React.Component {
             position: 'absolute',
             top: 51, left: 0,
             width: '100%', height: 'auto',
-            pointerEvents: this.props.mode ? '' : 'none',
+            pointerEvents: this.props.visible ? '' : 'none',
         }}>
             { this.props.children }
         </div>
@@ -847,21 +847,34 @@ class LoginDialog extends React.Component {
         </div>);
     }
 
+    static shouldShowOverlay(mode) {
+        if (!mode) {
+            return false;
+        }
+        switch(mode) {
+            case 'games':
+            case 'projects':
+                return false;
+        }
+        return true;
+    }
+    
     render() {
+        const visible = LoginDialog.shouldShowOverlay(this.props.mode);
         return (
             <div>
-                <Overlay mode={this.props.mode}>
-                { this.props.mode &&
+                <Overlay visible={visible}>
+                { visible &&
                     <div className="overlay">
                         <div style={{
                             position: 'fixed',
                             top: 0, left: 0,
                             width: '100%', height: 'calc(100% + 200px)',
                             transition: 'opacity .2s linear',
-                            opacity: this.props.mode ? .8: 0,
+                            opacity: visible ? .8: 0,
                             backgroundColor: '#002',
                             cursor: 'pointer',
-                            display: this.props.mode ? '' : 'none',
+                            display: visible ? '' : 'none',
                         }} onClick={this.props.onClickOut}>
                         </div>
                         <div className="popdialog">
@@ -1737,10 +1750,11 @@ class ProfileDialog extends React.Component {
     }
 
     render() {
+        const visible = LoginDialog.shouldShowOverlay(this.props.mode);
         return (
             <div>
-                <Overlay mode={this.props.mode}>
-                    { this.props.mode &&
+                <Overlay visible={visible}>
+                    { visible &&
                     <div className="overlay">
                         <div style={{
                             position: 'fixed',

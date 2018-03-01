@@ -79,7 +79,7 @@ class Overlay extends React.Component {
                     position: 'absolute',
                     top: 51, left: 0,
                     width: '100%', height: 'auto',
-                    pointerEvents: this.props.mode ? '' : 'none'
+                    pointerEvents: this.props.visible ? '' : 'none'
                 } },
             this.props.children
         );
@@ -887,14 +887,27 @@ class LoginDialog extends React.Component {
         );
     }
 
+    static shouldShowOverlay(mode) {
+        if (!mode) {
+            return false;
+        }
+        switch (mode) {
+            case 'games':
+            case 'projects':
+                return false;
+        }
+        return true;
+    }
+
     render() {
+        const visible = LoginDialog.shouldShowOverlay(this.props.mode);
         return React.createElement(
             'div',
             null,
             React.createElement(
                 Overlay,
-                { mode: this.props.mode },
-                this.props.mode && React.createElement(
+                { visible: visible },
+                visible && React.createElement(
                     'div',
                     { className: 'overlay' },
                     React.createElement('div', { style: {
@@ -902,10 +915,10 @@ class LoginDialog extends React.Component {
                             top: 0, left: 0,
                             width: '100%', height: 'calc(100% + 200px)',
                             transition: 'opacity .2s linear',
-                            opacity: this.props.mode ? .8 : 0,
+                            opacity: visible ? .8 : 0,
                             backgroundColor: '#002',
                             cursor: 'pointer',
-                            display: this.props.mode ? '' : 'none'
+                            display: visible ? '' : 'none'
                         }, onClick: this.props.onClickOut }),
                     React.createElement(
                         'div',
@@ -1802,13 +1815,14 @@ class ProfileDialog extends React.Component {
     }
 
     render() {
+        const visible = LoginDialog.shouldShowOverlay(this.props.mode);
         return React.createElement(
             'div',
             null,
             React.createElement(
                 Overlay,
-                { mode: this.props.mode },
-                this.props.mode && React.createElement(
+                { visible: visible },
+                visible && React.createElement(
                     'div',
                     { className: 'overlay' },
                     React.createElement('div', { style: {

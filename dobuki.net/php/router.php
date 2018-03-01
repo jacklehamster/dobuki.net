@@ -247,6 +247,8 @@ class DokRouter implements Router {
             case 'signup':
             case 'reset-password':
             case 'profile':
+            case 'games':
+            case 'projects':
                 $this->session->ensure_session();
                 $this->show_homepage();
                 break;
