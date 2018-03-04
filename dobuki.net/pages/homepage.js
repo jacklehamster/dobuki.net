@@ -122,17 +122,30 @@ class Homepage extends Page {
                     { className: 'paragraph' },
                     React.createElement(
                         'div',
-                        null,
+                        { style: {
+                                display: "flex",
+                                flexDirection: "row",
+                                justifyContent: "end"
+                            } },
                         React.createElement(
-                            'a',
-                            { href: '/sudoku' },
-                            'Sudoku Solver'
-                        )
-                    ),
-                    React.createElement(
-                        'div',
-                        { className: 'summary' },
-                        'Sudoku Solver is able to solve any Sudoku Puzzle. In fact, every refresh you see is a new Sudoku Puzzle solved by the algorithm. The solver uses WebAssembly and WebWorkers to run smoothly and efficiently. Note that the algorithm itself is not perfect at solving Sudoku puzzle, but it is successful at it nearly 100% of the time because of retries hundreds of times per second.'
+                            'div',
+                            { style: { marginRight: 10 } },
+                            React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                    'a',
+                                    { href: '/sudoku' },
+                                    'Sudoku Solver'
+                                )
+                            ),
+                            React.createElement(
+                                'div',
+                                { className: 'summary' },
+                                'Sudoku Solver is able to solve any Sudoku Puzzle. In fact, every refresh you see is a new Sudoku Puzzle solved by the algorithm. The solver uses WebAssembly and WebWorkers to run smoothly and efficiently. Note that the algorithm itself is not perfect at solving Sudoku puzzle, but it is successful at it nearly 100% of the time because of retries hundreds of times per second.'
+                            )
+                        ),
+                        React.createElement('iframe', { frameBorder: '0', width: '80', height: '80', src: '/sudoku' })
                     )
                 ),
                 React.createElement(
@@ -140,17 +153,30 @@ class Homepage extends Page {
                     { className: 'paragraph' },
                     React.createElement(
                         'div',
-                        null,
+                        { style: {
+                                display: "flex",
+                                flexDirection: "row",
+                                justifyContent: "end"
+                            } },
                         React.createElement(
-                            'a',
-                            { href: '/webgl/animation' },
-                            'WebGL Sprite Animator'
-                        )
-                    ),
-                    React.createElement(
-                        'div',
-                        { className: 'summary' },
-                        'This project is a work in progress for a tool that will facilitate transfer of animated Flash movieclips to javascript. The first step is splitting the animation into pngs, and spilling out a JSON file containing all the details for reproducing the animation. Then the files get combined into one single SpriteSheet. The display goes through WebGL, because this project is mainly for gaming, so we want the best performing graphics technology on the Web.'
+                            'div',
+                            { style: { marginRight: 10 } },
+                            React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                    'a',
+                                    { href: '/webgl/animation' },
+                                    'WebGL Sprite Animator'
+                                )
+                            ),
+                            React.createElement(
+                                'div',
+                                { className: 'summary' },
+                                'This project is a work in progress for a tool that will facilitate transfer of animated Flash movieclips to javascript. The first step is splitting the animation into pngs, and spilling out a JSON file containing all the details for reproducing the animation. Then the files get combined into one single SpriteSheet. The display goes through WebGL, because this project is mainly for gaming, so we want the best performing graphics technology on the Web.'
+                            )
+                        ),
+                        React.createElement('iframe', { frameBorder: '0', width: '80', height: '100', src: '/webgl/animation' })
                     )
                 ),
                 React.createElement(
@@ -158,29 +184,48 @@ class Homepage extends Page {
                     { className: 'paragraph' },
                     React.createElement(
                         'div',
-                        null,
+                        { style: {
+                                display: "flex",
+                                flexDirection: "row",
+                                justifyContent: "right"
+                            } },
                         React.createElement(
-                            'a',
-                            { href: '/click-and-point-editor' },
-                            'Click and Point Editor'
-                        )
-                    ),
-                    React.createElement(
-                        'div',
-                        { className: 'summary' },
-                        'A collaboration with ',
-                        React.createElement(
-                            'a',
-                            { href: 'https://www.linkedin.com/in/leobenkel/' },
-                            'Leo Benkel'
+                            'div',
+                            { style: { marginRight: 10 } },
+                            React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                    'a',
+                                    { href: '/click-and-point-editor' },
+                                    'Click and Point Editor'
+                                )
+                            ),
+                            React.createElement(
+                                'div',
+                                { className: 'summary' },
+                                'A collaboration with ',
+                                React.createElement(
+                                    'a',
+                                    { href: 'https://www.linkedin.com/in/leobenkel/' },
+                                    'Leo Benkel'
+                                ),
+                                '. The goal is to devise an easy way to make point and click games. The version shown here is a bit behind the one on the ',
+                                React.createElement(
+                                    'a',
+                                    { href: 'https://github.com/The-Brains/ClickAndPointLib' },
+                                    'official repo'
+                                ),
+                                ', but it showcases an GUI editor for editing the game as you play it, which I believe is the most friendly way to build a point and click game.'
+                            )
                         ),
-                        '. The goal is to devise an easy way to make point and click games. The version shown here is a bit behind the one on the ',
-                        React.createElement(
-                            'a',
-                            { href: 'https://github.com/The-Brains/ClickAndPointLib' },
-                            'official repo'
-                        ),
-                        ', but it showcases an GUI editor for editing the game as you play it, which I believe is the most friendly way to build a point and click game.'
+                        React.createElement('div', { style: {
+                                minWidth: 80, minHeight: 80,
+                                backgroundSize: "80px 49px",
+                                backgroundImage: "url(assets/click-and-point-thumbnail.png)",
+                                backgroundRepeat: "no-repeat",
+                                backgroundPosition: "center"
+                            } })
                     )
                 )
             ),
@@ -206,9 +251,6 @@ class Homepage extends Page {
                     width: '288', height: '167' }),
                 React.createElement('iframe', { frameBorder: '0',
                     src: 'https://itch.io/embed/18395?bg_color=000000&fg_color=9899ae&link_color=5c5ffa&border_color=333333',
-                    width: '280', height: '167' }),
-                React.createElement('iframe', { frameBorder: '0',
-                    src: 'https://itch.io/embed/170227?bg_color=ecefe6&fg_color=222222&link_color=b0cc2e&border_color=c0ca9f',
                     width: '280', height: '167' }),
                 React.createElement('iframe', { frameBorder: '0',
                     src: 'https://itch.io/embed/170228?bg_color=e1daf6&fg_color=222222&link_color=d2d079&border_color=a589c1',

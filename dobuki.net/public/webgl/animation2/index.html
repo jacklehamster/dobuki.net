@@ -59,9 +59,7 @@ void main() {
 
     var files = [
         "json/combined-oozie.json",
-        "json/oozie.json",
         "json/combined-kylo.json",
-        "json/kylo.json",
     ];
     url = getQueryVariable("url") || files[0];
 
@@ -122,6 +120,12 @@ void main() {
                 }
             });
 
+            if(tagCount>1) {
+                var button = document.body.appendChild(document.createElement('button'));
+                button.innerText = 'combine into one spritesheet';
+                button.style.marginTop = "5px";
+                button.addEventListener("click", combine);
+            }
             startAnimation();
         });
         oReq.open("GET", filename, true);
@@ -184,11 +188,12 @@ void main() {
         gl.vertexAttribPointer(textureCoordinateAttributeLocation, 2, gl.FLOAT, false, 0, 0);
     }
 
-    function setPosition(gl, vertextPositionBuffer, vertexArray, rect, size) {
+    function setPosition(gl, vertextPositionBuffer, vertexArray, rect, width, height) {
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+
         for(var i=0; i<rect.length; i++) {
-            var x = 2*(rect[i][0] / size[0])-1;
-            var y = 2*(1 - rect[i][1] / size[1])-1;
+            var x = 2*(rect[i][0] / width)-1;
+            var y = 2*(1 - rect[i][1] / height)-1;
             vertexArray[i*3] = x;
             vertexArray[i*3 + 1] = y;
         }
@@ -197,12 +202,16 @@ void main() {
 
     var info = document.createElement('div');
     document.body.appendChild(info);
+
     function display(gl, canvas, texture, frameObject, frameIdToLabel) {
         var tag = data.sprites[frameObject.tag][0];
         var imageCanvas = canvasMap[tag];
         if(imageCanvas && readyCanvas[tag]) {
             refreshTexture(gl, texture, imageCanvas, data.sprites[frameObject.tag]);
-            setPosition(gl, vertexPositionBuffer, vertexArray, frameObject.rect, data.size);
+            setPosition(gl, vertexPositionBuffer, vertexArray,
+                frameObject.rect,
+                canvas.width,
+                canvas.height);
             gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
         }
         if(info.innerText !== frameIdToLabel[frameObject.frame]) {
@@ -231,8 +240,8 @@ void main() {
         }
 
         var canvas = document.getElementById('canvas');
-        canvas.width = data.size[0];
-        canvas.height = data.size[1];
+        canvas.width = 1024;//data.size[0];
+        canvas.height = 600;//data.size[1];
         canvas.style.width = (canvas.width / 2) + "px";
         canvas.style.height = (canvas.height / 2) + "px";
         if(!demoMode) {
@@ -289,5 +298,124 @@ void main() {
     document.addEventListener("DOMContentLoaded", function() {
         loadAnimation(url);
     });
+</script>
+
+
+<script>
+    function getCombinedWidth(sprites) {
+        return sprites.reduce(function(accumulator, sprite) {
+            return accumulator + sprite[3];//  width
+        }, 0);
+    }
+
+    function getRectSize(sprites, maxWidth) {
+        var dims = getDimensions(sprites, maxWidth);
+        var maxW=0, maxH=0;
+        dims.forEach(function(dim) {
+            maxW = Math.max(dim[0] + dim[2], maxW);
+            maxH = Math.max(dim[1] + dim[3], maxH);
+        });
+        return [maxW, maxH];
+    }
+
+    function getDimensions(sprites, maxWidth) {
+        var currentX = 0;
+        var maxY = 0, currentY = 0;
+        var dimensions = [];
+        sprites.forEach(function(sprite) {
+            if (currentX + sprite[3] > maxWidth) {
+                currentX = 0;
+                currentY = maxY;
+                maxY = 0;
+            }
+            dimensions.push([
+                currentX,
+                currentY,
+                sprite[3],
+                sprite[4]
+            ]);
+
+            currentX += sprite[3];
+            maxY = Math.max(maxY, currentY + sprite[4]);
+        });
+        return dimensions;
+    }
+
+    function combine() {
+        var smallestNum = Number.MAX_VALUE;
+        var bestSize = null;
+        data.sprites.forEach(function(sprite, i, array) {
+            var w = getCombinedWidth(array.slice(0,i+1));
+            var size = getRectSize(array, w);
+            var bigLength = Math.max(size[0], size[1]);
+            console.log(size);
+            if(bigLength < smallestNum) {
+                smallestNum = bigLength;
+                bestSize = size;
+            }
+        });
+
+        console.log(bestSize);
+        var dims = getDimensions(data.sprites, bestSize[0]);
+        console.log(dims);
+
+        var container = document.body.appendChild(document.createElement('div'));
+        var canvas = container.appendChild(document.createElement('canvas'));
+
+        canvas.width = bestSize[0];
+        canvas.height = bestSize[1];
+        canvas.style.width = canvas.width/2 + "px";
+        canvas.style.height = canvas.height/2 + "px";
+        var ctx = canvas.getContext("2d");
+
+        data.sprites.forEach(function(sprite, i) {
+            var dim = dims[i];
+            ctx.drawImage(canvasMap[sprite[0]],
+                sprite[1], sprite[2], sprite[3], sprite[4],
+                dim[0], dim[1], dim[2], dim[3]
+            );
+        });
+
+        var newmd5 = md5(data.sprites.map(
+            function(sprite) { return sprite[0]; }
+        ).join(","));
+
+
+        var newdata = {};
+        for(var i in data) {
+            newdata[i] = data[i];
+        }
+        newdata.sprites = dims.map(function(dim) {
+            return [newmd5].concat(dim);
+        });
+
+
+        var button = document.body.appendChild(document.createElement("a"));
+        button.href = "#";
+        button.innerText = "Download";
+        button.style.display = "none";
+        button.addEventListener('click', function (e) {
+            var zip = new JSZip();
+            zip.file("combined-" + currentFilename, JSON.stringify(newdata, null, '\t'));
+            zip.file(newmd5 + ".png", canvas.toDataURL('image/png').split(",")[1], {base64: true});
+            zip.generateAsync({type:"blob"})
+                .then(function(content) {
+                    saveAs(content, replaceExtension(currentFilename, "zip"));
+                });
+
+
+        });
+        button.click();
+        document.body.removeChild(button);
+
+    }
+
+    function replaceExtension(filename, extension) {
+        var split = filename.split(".");
+        if(split.length>1) {
+            split.length--;
+        }
+        return split.concat([extension]).join(".")
+    }
 </script>
 </body>

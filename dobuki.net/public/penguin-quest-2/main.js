@@ -695,7 +695,7 @@ function(THREE, DOK) {
 
     var unlocked = {};
 
-    var overallLight = 1;
+    var overallLight = .7;
     var cells = [];
     var collection = new DOK.Collection(
         {
@@ -710,6 +710,7 @@ function(THREE, DOK) {
             height: range,
         },
         function(x,y) {
+            //console.log(x,y);
             cells.length = 0;
             var cellType = getCellType(x,y);
             var objectType = getDynamicObjectType(x,y);
