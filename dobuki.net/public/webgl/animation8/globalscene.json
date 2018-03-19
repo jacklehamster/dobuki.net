@@ -1,0 +1,19 @@
+{
+	"fps": 30,
+	"elements": [
+		{
+			"position": [
+				291.6,
+				307.35
+			],
+			"name": "elfie1",
+			"frame": 1,
+			"type": "elfie"
+		}
+	],
+	"backgroundColor": "#3366",
+	"size": [
+		600,
+		450
+	]
+}

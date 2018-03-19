@@ -1,0 +1,46 @@
+{
+	"fps": 30,
+	"elements": [
+		{
+			"position": [
+				296.65,
+				412.65
+			],
+			"name": "ground1",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				120.75,
+				247.1
+			],
+			"name": "eve2",
+			"frame": 1,
+			"type": "eve"
+		},
+		{
+			"position": [
+				383.3,
+				187.7
+			],
+			"name": "adam3",
+			"frame": 1,
+			"type": "adam"
+		},
+		{
+			"position": [
+				305.15,
+				64.2
+			],
+			"name": "adam4",
+			"frame": 1,
+			"type": "adam"
+		}
+	],
+	"backgroundColor": "#3366",
+	"size": [
+		600,
+		450
+	]
+}

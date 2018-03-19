@@ -1,0 +1,343 @@
+{
+	"fps": 30,
+	"elements": [
+		{
+			"position": [
+				206.55,
+				125.55
+			],
+			"name": "water1",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				281.55,
+				125.55
+			],
+			"name": "water2",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				356.55,
+				125.55
+			],
+			"name": "water3",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				206.55,
+				200.55
+			],
+			"name": "water4",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				281.55,
+				200.55
+			],
+			"name": "water5",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				356.55,
+				200.55
+			],
+			"name": "water6",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				206.55,
+				275.55
+			],
+			"name": "water7",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				281.55,
+				275.55
+			],
+			"name": "water8",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				356.55,
+				275.55
+			],
+			"name": "water9",
+			"frame": 1,
+			"type": "water"
+		},
+		{
+			"position": [
+				206.55,
+				125.55
+			],
+			"name": "ground10",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				281.55,
+				125.55
+			],
+			"name": "ground11",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				356.55,
+				125.55
+			],
+			"name": "ground12",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				206.55,
+				200.55
+			],
+			"name": "ground13",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				281.55,
+				200.55
+			],
+			"name": "ground14",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				356.55,
+				200.55
+			],
+			"name": "ground15",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				206.55,
+				275.55
+			],
+			"name": "ground16",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				281.55,
+				275.55
+			],
+			"name": "ground17",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				356.55,
+				275.55
+			],
+			"name": "ground18",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				282,
+				272.7
+			],
+			"name": "spike19",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				208,
+				272.7
+			],
+			"name": "spike20",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				357,
+				272.7
+			],
+			"name": "spike21",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				282,
+				196.7
+			],
+			"name": "spike22",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				354,
+				196.7
+			],
+			"name": "spike23",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				205,
+				196.7
+			],
+			"name": "spike24",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				206,
+				121.7
+			],
+			"name": "spike25",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				356,
+				120.7
+			],
+			"name": "spike26",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				282,
+				120.7
+			],
+			"name": "spike27",
+			"frame": 1,
+			"type": "spike"
+		},
+		{
+			"position": [
+				210.25,
+				128.35
+			],
+			"name": "domidead28",
+			"frame": 1,
+			"type": "domidead"
+		},
+		{
+			"position": [
+				285.25,
+				128.35
+			],
+			"name": "domidead29",
+			"frame": 1,
+			"type": "domidead"
+		},
+		{
+			"position": [
+				360.25,
+				128.35
+			],
+			"name": "domidead30",
+			"frame": 1,
+			"type": "domidead"
+		},
+		{
+			"position": [
+				210.25,
+				204.35
+			],
+			"name": "domidead31",
+			"frame": 1,
+			"type": "domidead"
+		},
+		{
+			"position": [
+				283.25,
+				204.35
+			],
+			"name": "domidead32",
+			"frame": 1,
+			"type": "domidead"
+		},
+		{
+			"position": [
+				281.55,
+				200.55
+			],
+			"name": "domi33",
+			"frame": 1,
+			"type": "domi"
+		},
+		{
+			"position": [
+				360.25,
+				204.35
+			],
+			"name": "domidead34",
+			"frame": 1,
+			"type": "domidead"
+		},
+		{
+			"position": [
+				283.25,
+				278.35
+			],
+			"name": "domidead35",
+			"frame": 1,
+			"type": "domidead"
+		},
+		{
+			"position": [
+				210.25,
+				278.35
+			],
+			"name": "domidead36",
+			"frame": 1,
+			"type": "domidead"
+		},
+		{
+			"position": [
+				360.25,
+				278.35
+			],
+			"name": "domidead37",
+			"frame": 1,
+			"type": "domidead"
+		}
+	],
+	"backgroundColor": "#333333",
+	"size": [
+		600,
+		400
+	]
+}

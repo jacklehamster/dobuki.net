@@ -5,7 +5,7 @@
 // directory.
 requirejs.config({
 //    enforceDefine: true,
-    baseUrl: 'scripts/lib',
+    baseUrl: '',
     paths: {
         jquery: [
             'https://code.jquery.com/jquery-3.2.1.slim.min',
@@ -13,7 +13,7 @@ requirejs.config({
         ],
         threejs: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/85/three.min',
         dobuki: [
-            'https://jacklehamster.github.io/dok/out/dok',
+            'dok',
             'dok.min',
         ],
         jsgif: 'jsgif/gif',

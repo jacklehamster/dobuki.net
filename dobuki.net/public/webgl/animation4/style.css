@@ -1,0 +1,14 @@
+.animation {
+    max-width: 100vw;
+    max-height: 100vh;
+}
+
+@media screen and (max-width: 150px) {
+    body {
+        margin: 0;
+    }
+
+    .info {
+        display: none;
+    }
+}

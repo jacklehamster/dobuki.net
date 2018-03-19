@@ -2207,7 +2207,6 @@ define('spriterenderer',['threejs', 'utils', 'spriteobject', 'spritesheet', 'cam
             var image = self.images[index];
 
             var cut = spriteObject && spriteObject.visible ? SpriteSheet.getCut(spriteObject.img, image ? image.time + Loop.time : Loop.time) : null;
-            console.log(cut);
 
             if (cut && cut.ready) {
                 if (!image) {

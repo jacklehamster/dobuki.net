@@ -1,0 +1,91 @@
+{
+	"fps": 30,
+	"elements": [
+		{
+			"position": [
+				206.55,
+				125.55
+			],
+			"name": "instance31",
+			"frame": 1,
+			"type": "instance3"
+		},
+		{
+			"position": [
+				281.55,
+				125.55
+			],
+			"name": "instance82",
+			"frame": 1,
+			"type": "instance8"
+		},
+		{
+			"position": [
+				356.55,
+				125.55
+			],
+			"name": "instance133",
+			"frame": 1,
+			"type": "instance13"
+		},
+		{
+			"position": [
+				206.55,
+				200.55
+			],
+			"name": "instance184",
+			"frame": 1,
+			"type": "instance18"
+		},
+		{
+			"position": [
+				281.55,
+				200.55
+			],
+			"name": "instance235",
+			"frame": 1,
+			"type": "instance23"
+		},
+		{
+			"position": [
+				356.55,
+				200.55
+			],
+			"name": "instance286",
+			"frame": 1,
+			"type": "instance28"
+		},
+		{
+			"position": [
+				206.55,
+				275.55
+			],
+			"name": "instance337",
+			"frame": 1,
+			"type": "instance33"
+		},
+		{
+			"position": [
+				281.55,
+				275.55
+			],
+			"name": "instance388",
+			"frame": 1,
+			"type": "instance38"
+		},
+		{
+			"position": [
+				356.55,
+				275.55
+			],
+			"name": "instance439",
+			"frame": 1,
+			"type": "instance43"
+		}
+	],
+	"backgroundColor": "#333333",
+	"size": [
+		600,
+		400
+	]
+}

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Animation</title>
+        <meta name="google" content="notranslate"/>
+        <meta charset="UTF-8"/>
+        <meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1"/>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0,minimum-scale=1.0"/>
+        <meta name="theme-color" content="#d5f97a" />
+        <link rel="stylesheet" type="text/css" href="style.css" />
+    </head>
+    <body style="background-color: black; color: whitesmoke" onload="init2()">
+        <canvas style="position: absolute" class="animation" id="canvas">
+        </canvas>
+        <video style="width: 400px; height: 300px" id="vid">
+        </video>
+
+
+        <script>
+            function loadVideo(video) {
+                var req = new XMLHttpRequest();
+                req.open('GET', 'test.mov', true);
+                req.responseType = 'blob';
+
+                req.onload = function() {
+                    if (this.status === 200) {
+                        var videoBlob = this.response;
+                        var vid = URL.createObjectURL(videoBlob);
+                        video.src = vid;
+                        console.log(vid);
+                    }
+                };
+                req.onerror = function() {
+                };
+                req.send();
+            }
+            var lastKeycode = 0;
+            function init2() {
+                var video = document.getElementById("vid");
+                loadVideo(video);
+                var limit = 0;
+                addEventListener("keydown", function(e) {
+                    if (lastKeycode !== e.keyCode) {
+                        switch(e.keyCode) {
+                            case 38:
+                                video.currentTime = 4.95;
+                                limit = 5.2;
+                                break;
+                            case 37:
+                                video.currentTime = 3.4;
+                                limit = 3.7;
+                                break;
+                            case 39:
+                                video.currentTime = 9.3;
+                                limit = 9.8;
+                                break;
+                            case 40:
+                                video.currentTime = 6.4;
+                                limit = 6.7;
+                                break;
+                        }
+                        lastKeycode = e.keyCode;
+                        video.play();
+                    }
+                    e.preventDefault();
+                });
+                addEventListener("keyup", function(e) {
+                    if (e.keyCode === lastKeycode) {
+                        lastKeycode = 0;
+                    }
+                    e.preventDefault();
+                });
+                video.addEventListener("timeupdate", function(e) {
+                    if(video.currentTime>limit) {
+                        limit = 0;
+                        video.pause();
+                    }
+                });
+            }
+        </script>
+
+        <script id="vertexShader" type="x-shader/x-vertex">
+        attribute vec4 position;
+        attribute vec2 textureCoordinate;
+        varying vec2 ftextureCoordinate;
+
+        uniform mat4 modelMatrix;
+        uniform mat4 viewMatrix;
+        uniform mat4 projectionMatrix;
+
+        void main() {
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;
+            ftextureCoordinate = textureCoordinate;
+        }
+        </script>
+
+        <script id="fragmentShader" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform sampler2D uSampler;
+        varying vec2 ftextureCoordinate;
+
+        void main() {
+           gl_FragColor = texture2D(uSampler, ftextureCoordinate);
+        }
+            </script>
+
+        <script>
+            var identity = new Float32Array([
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            ]);
+
+            function getQueryVariable(variable) {
+                var query = window.location.search.substring(1);
+                var vars = query.split('&');
+                for (var i = 0; i < vars.length; i++) {
+                    var pair = vars[i].split('=');
+                    if (decodeURIComponent(pair[0]) === variable) {
+                        return decodeURIComponent(pair[1]);
+                    }
+                }
+            }
+
+            var url = "compiled-globalscene.json";
+
+            var gl = null;
+            var canvasMap = {};
+            var readyCanvas = {};
+            var vertexPositionBuffer, textureCoordinatesBuffer;
+            var vertexArray, texArray;
+            var currentFilename = null;
+            var globalData = {};
+            var loopList = [];
+            //var overlay = document.createElement("canvas");
+            var beginningOfTime = 0;
+            var loadsInProgress = {};
+            var shaderProgram;
+
+            function paused() {
+                for(var i in loadsInProgress) {
+                    if(loadsInProgress[i]) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+
+            function loadImage(tag, canvas) {
+                var image = new Image();
+                image.src = "assets/" + tag + ".png";
+                loadsInProgress[image.src] = image;
+                image.addEventListener("load", function() {
+                    for(var w=1; w<image.naturalWidth;w<<=1) {
+                    }
+                    for(var h=1; h<image.naturalHeight;h<<=1) {
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(image,0,0);
+                    readyCanvas[tag] = true;
+        //            document.body.appendChild(canvas);
+                    delete loadsInProgress[image.src];
+                    image = null;
+                });
+            }
+
+            function loadSprite(gl, sprite, globalData) {
+                if(globalData.sprites && globalData.sprites[sprite.name]) {
+                    var data = globalData.sprites[sprite.name];
+                    startAnimation(gl, data, sprite.position);
+                } else {
+                    var filename = "json/" + sprite.name + ".json";
+                    var oReq = new XMLHttpRequest();
+                    oReq.addEventListener("load", function() {
+                        var data = JSON.parse(this.responseText);
+                        startAnimation(gl, data, sprite.position);
+
+                    });
+                    oReq.open("GET", filename, true);
+                    oReq.send();
+                }
+            }
+
+            function loadAnimation(filename, canvas) {
+                gl = canvas.getContext('webgl');
+                var vertexShader = getAndCompileShader(gl, 'vertexShader', 'vertex');
+                var fragmentShader = getAndCompileShader(gl, 'fragmentShader', 'fragment');
+
+                shaderProgram = gl.createProgram();
+                gl.attachShader(shaderProgram, vertexShader);
+                gl.attachShader(shaderProgram, fragmentShader);
+                gl.linkProgram(shaderProgram);
+
+                if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                    console.log('Could not link shaders');
+                }
+                gl.useProgram(shaderProgram);
+
+                prepareBuffers(gl, shaderProgram);
+
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                gl.enable ( gl.BLEND ) ;
+
+                currentFilename = filename.split("/").pop();
+                var oReq = new XMLHttpRequest();
+                oReq.addEventListener("load", function() {
+                    var data = JSON.parse(this.responseText);
+                    globalData = data;
+                    canvas.width = data.size[0]*2;
+                    canvas.height = data.size[1]*2;
+                    gl.viewport(0, 0, canvas.width, canvas.height);
+
+                    canvas.style.width = (canvas.width)/2 + "px";
+                    canvas.style.height = (canvas.height)/2 + "px";
+
+                    data.elements.forEach(
+                        function(sprite) {
+                            loadSprite(gl, sprite, globalData);
+                        }
+                    );
+
+                    requestAnimationFrame(refresh);
+
+                });
+                oReq.open("GET", filename, true);
+                oReq.send();
+            }
+
+            function getOldestTextureObj(textureCaches) {
+                var oldTime = Number.MAX_VALUE;
+                var textureObj = null;
+                textureCaches.forEach(function(obj) {
+                    if(oldTime > obj.time) {
+                        oldTime = obj.time;
+                        textureObj = obj;
+                    }
+                });
+                return textureObj;
+            }
+
+            function uploadTexture(imageCanvas, index, texture) {
+                gl.activeTexture(gl["TEXTURE"+index]);
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageCanvas);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            }
+
+            var textureCaches = [];
+            var textureCacheMap = {};
+            var textureTag = null;
+            function refreshTexture(gl, imageCanvas, sprite, time, flip) {
+                if(textureTag !== sprite[0]) {
+                    textureTag = sprite[0];
+                    var index = null;
+                    if(textureCacheMap[textureTag] !== undefined) {
+                        index = textureCacheMap[textureTag];
+                    } else {
+                        var texture;
+                        if (textureCaches.length < 16) {
+                            index = textureCaches.length;
+                            texture = gl.createTexture();
+                            uploadTexture(imageCanvas, index, texture);
+                            textureCacheMap[textureTag] = index;
+                            textureCaches.push({
+                                index: index,
+                                tag: textureTag,
+                                texture: texture,
+                                time: time,
+                            });
+                        } else {
+                            var textureObj = getOldestTextureObj(textureCaches);
+                            index = textureObj.index;
+                            texture = textureObj.texture;
+                            uploadTexture(imageCanvas, index, texture);
+                            delete textureCacheMap[textureObj.tag];
+                            textureCacheMap[textureTag] = index;
+                            textureObj.tag = textureTag;
+                        }
+                    }
+                    gl.uniform1i(gl.getUniformLocation(shaderProgram, 'uSampler'), index);
+                    textureCaches[index].time = time;
+                }
+                gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
+
+                texArray[0] = texArray[6] = sprite[1] / imageCanvas.width;
+                texArray[1] = texArray[3] = (sprite[2] + sprite[4]) / imageCanvas.height;
+                texArray[2] = texArray[4] = (sprite[1] + sprite[3]) / imageCanvas.width;
+                texArray[5] = texArray[7] = sprite[2] / imageCanvas.height;
+
+                if(flip) {
+                    var tmp = texArray[0];
+                    texArray[0] = texArray[6] = texArray[2];
+                    texArray[2] = texArray[4] = tmp;
+                }
+
+                gl.bufferData(gl.ARRAY_BUFFER, texArray, gl.STATIC_DRAW);
+            }
+
+            function prepareBuffers(gl, shaderProgram) {
+                vertexPositionBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+                vertexArray = new Float32Array([
+                    -1, -1, 0,
+                    1, -1, 0,
+                    1,  1, 0,
+                    -1,  1, 0
+                ]);
+                gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+
+                textureCoordinatesBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
+                texArray = new Float32Array([
+                    0.0, 0.0,
+                    1.0, 0.0,
+                    1.0, 1.0,
+                    0.0, 1.0
+                ]);
+                gl.bufferData(gl.ARRAY_BUFFER, texArray, gl.STATIC_DRAW);
+
+                var vertexIndicesBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexIndicesBuffer);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,0,2,3]), gl.STATIC_DRAW);
+
+                var positionAttributeLocation = gl.getAttribLocation(shaderProgram, 'position');
+                gl.enableVertexAttribArray(positionAttributeLocation);
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+                gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+
+                var textureCoordinateAttributeLocation = gl.getAttribLocation(shaderProgram, 'textureCoordinate');
+                gl.enableVertexAttribArray(textureCoordinateAttributeLocation);
+                gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
+                gl.vertexAttribPointer(textureCoordinateAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "projectionMatrix"), false, identity);
+                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "modelMatrix"), false, identity);
+                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "viewMatrix"), false, identity);
+            }
+
+            function setPosition(gl, xPos, yPos, vertextPositionBuffer, vertexArray, rect, imageCanvas, globalCanvas, scale) {
+                if(!scale) {
+                    scale = 1;
+                }
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+                for(var i=0; i<rect.length; i++) {
+                    var x = 2*(2 * (rect[i][0] * scale + xPos) / globalCanvas.width)-1;
+                    var y = 2*(1 - 2 * (rect[i][1] * scale + yPos) / globalCanvas.height)-1;
+                    vertexArray[i*3] = x;
+                    vertexArray[i*3 + 1] = y;
+                }
+
+                gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+            }
+
+            var info = document.createElement('div');
+            document.body.appendChild(info);
+
+            function display(gl, xPos, yPos, data, globalCanvas, frameObject, frameIdToLabel, time, flip, scale) {
+                var tag = data.sprites[frameObject.tag][0];
+                var imageCanvas = canvasMap[tag];
+                if(imageCanvas && readyCanvas[tag]) {
+                    refreshTexture(gl, imageCanvas, data.sprites[frameObject.tag], time, flip);
+                    setPosition(gl, xPos, yPos, vertexPositionBuffer, vertexArray,
+                        frameObject.rect, imageCanvas, globalCanvas, scale);
+                    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+                    return true;
+                }
+                return false;
+            }
+
+            function startAnimation(gl, data, position) {
+                //  loadImages
+                var tagCount = 0;
+                data.sprites.forEach(function(sprite) {
+                    var tag = sprite[0];
+                    if (!canvasMap[tag]) {
+                        var canvas = document.createElement('canvas');
+                        canvas.ready = false;
+                        loadImage(tag, canvas);
+                        canvasMap[tag] = canvas;
+                        tagCount++;
+                    }
+                });
+
+                // prepare animation
+                var frameIdToFrame = [];
+                var frameIdToLabel = [];
+                var labelData = {};
+                var lastFrameIndex = -1;
+                var label = null;
+                for(var i=1; i <= data.frameCount; i++) {
+                    var nextFrameIndex = lastFrameIndex+1;
+                    var nextFrame = data.frames[nextFrameIndex];
+                    if(nextFrame && i>= nextFrame.frame) {
+                        lastFrameIndex = nextFrameIndex;
+                    }
+
+                    if(data.frames[lastFrameIndex].label) {
+                        label = data.frames[lastFrameIndex].label;
+                    }
+                    frameIdToFrame[i] = data.frames[lastFrameIndex];
+                    frameIdToLabel[i] = label;
+                    if(!labelData[label]) {
+                        labelData[label] = {
+                            index: i,
+                        };
+                    }
+                    labelData[label].count = i-labelData[label].index;
+                }
+
+                loopList.push({
+                    data: data,
+                    frameIdToFrame: frameIdToFrame,
+                    frameIdToLabel: frameIdToLabel,
+                    labelData: labelData,
+                    position: position,
+                    fps: globalData.fps,
+                    frameStart: 0,
+                    previousLabel: null,
+                });
+
+            }
+
+            function checkSize() {
+                if(canvas.width !== canvas.offsetWidth*2 || canvas.height !== canvas.offsetHeight*2) {
+                    canvas.width = canvas.offsetWidth*2;
+                    canvas.height = canvas.offsetHeight*2;
+                    gl.viewport(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            function getUniqueArrowDown() {
+                var key = 0;
+                for(var k in keyboard) {
+                    if(keyboard[k] && k !== "32") {
+                        if(!key) {
+                            key = parseInt(k);
+                            console.log(">", key);
+                        } else {
+                            console.log(k);
+                            return 0;
+                        }
+                    }
+                }
+                console.log("!", key);
+                return key;
+            }
+
+            var globalCanvas = document.getElementById('canvas');
+            function refresh(time) {
+                if(!paused()) {
+                    checkSize();
+                    refreshMap();
+                    var timeDeltaSec = (time - beginningOfTime)/1000;
+                    var globalFrame = Math.floor(timeDeltaSec * globalData.fps);
+                    loopList.forEach(function(obj, index) {
+                        if(!obj.hidden) {
+                            var frame = !obj.fps ? globalFrame : Math.floor(timeDeltaSec * obj.fps);
+                            var frameShift = obj.animate ? frame : 0;
+                            if (obj.label !== obj.previousLabel) {
+                                obj.previousLabel = obj.label;
+                                obj.frameStart = frameShift;
+                            }
+                            if(obj.animate) {
+                                frameShift -= obj.frameStart;
+                            }
+
+                            var labelData = obj.label ? obj.labelData[obj.label] : null;
+                            var frameIndex = labelData ? labelData.index :  1;
+                            var frameCount = labelData ? labelData.count : obj.data.frameCount;
+                            if (frameShift >= frameCount-1) {
+                                if(obj.onLabelDone) {
+                                    console.log(frameShift, frameCount);
+                                    obj.onLabelDone(obj);
+                                    console.log(obj.label);
+                                }
+                            }
+                            frameShift %= frameCount;
+                            var frameId = frameIndex + frameShift;
+
+
+                            var frameObject = obj.frameIdToFrame[frameId];
+                            var xPos = obj.position[0];
+                            var yPos = obj.position[1];
+                            if(display(gl, xPos, yPos, obj.data, globalCanvas, frameObject, obj.frameIdToLabel, time, obj.flip, obj.scale)) {
+                                obj.lastFrameIndex = frameObject.frame;
+                            }
+                        }
+                    });
+                }
+                requestAnimationFrame(refresh);
+            }
+
+            function getAndCompileShader(gl, id, shaderType) {
+                var shaderElement = document.getElementById(id);
+                var shaderText = shaderElement.text.trim();
+                var shader = gl.createShader(
+                    shaderType==='vertex' ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER
+                );
+                gl.shaderSource(shader, shaderText);
+                gl.compileShader(shader);
+
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.log(gl.getShaderInfoLog(shader));
+                    return true;
+                }
+                return shader;
+            }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                loadAnimation(url, document.getElementById("canvas"));
+            });
+
+            function shake(elem, n) {
+                if(n===undefined) {
+                    n = 10;
+                }
+                if(!elem.org) {
+                    elem.org = [elem.position[0], elem.position[1]];
+                }
+                elem.position[0] = elem.org[0] + n * (Math.random()-.5);
+                elem.position[1] = elem.org[1] + n * (Math.random()-.5);
+                if(n > 0) {
+                    setTimeout(shake, 100, elem, n-1);
+                }
+            }
+
+            function init() {
+                loopList[0].scale = .8;
+                loopList[0].fps = 120;
+            }
+
+            function getLabel(dx, dy, attack, oldLabel) {
+                var label;
+                if(dx < 0) {
+                    label = "LEFT";
+                } else if(dx > 0) {
+                    label = "RIGHT";
+                } else if(dy < 0) {
+                    label = "UP";
+                } else if(dy > 0) {
+                    label = "DOWN";
+                } else {
+                    label = oldLabel || "DOWN";
+                }
+                if(attack && label.indexOf("ATTACK")<0) {
+                    label += "ATTACK";
+                }
+                return label;
+            }
+
+            function noAttack(label) {
+                return label ? label.split("ATTACK")[0] : null;
+            }
+
+            function onLabelDone(elf) {
+                elf.label = noAttack(elf.label);
+                elf.onLabelDone = null;
+                lastKeyCode2 = getUniqueArrowDown();
+            }
+
+            function attacking(label) {
+                return label && label.indexOf("ATTACK") >= 0;
+            }
+
+            var inited = false;
+            function refreshMap() {
+                if(!inited) {
+                    inited = true;
+                    init();
+                }
+                var elf = loopList[0];
+                var dx = 0, dy = 0, attack = false;
+                switch(lastKeyCode2) {
+                    case 37:
+                        dx--;
+                        break;
+                    case 38:
+                        dy--;
+                        break;
+                    case 39:
+                        dx++;
+                        break;
+                    case 40:
+                        dy++;
+                        break;
+                    case 32:
+                        attack = true;
+                        break;
+                }
+                if(attacking(elf.label)) {
+                    dx = dy = 0;
+                    attack = true;
+                }
+
+                dx *= 2.5;
+                dy *= 2.5;
+
+                elf.label = getLabel(dx, dy, attack, elf.label);
+
+                elf.position[0] += dx;
+                elf.position[1] += dy;
+                elf.animate = dx||dy||attack;
+                elf.onLabelDone = attack ? onLabelDone : null;
+            }
+
+            window.focus();
+            var keyboard = [];
+            var lastKeyCode2 = 0;
+            function func(e) {
+                var allowDefault = false;
+//                console.log(e.keyCode);
+                switch(e.keyCode) {
+                    case 37:
+                    case 38:
+                    case 39:
+                    case 40:
+                    case 32:
+                        lastKeyCode2 = e.type === "keydown"
+                            ? e.keyCode
+                            : e.keyCode === lastKeyCode2
+                            ? 0
+                            : lastKeyCode2;
+                        keyboard[e.keyCode] = e.type === "keydown";
+                        break;
+                    default:
+                        allowDefault = true;
+                }
+                if(!allowDefault) {
+                    e.preventDefault();
+                }
+            }
+            addEventListener("keydown", func);
+            addEventListener("keyup", func);
+
+        </script>
+    </body>
+</html>

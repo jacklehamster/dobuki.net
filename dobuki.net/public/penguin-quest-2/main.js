@@ -710,7 +710,6 @@ function(THREE, DOK) {
             height: range,
         },
         function(x,y) {
-            //console.log(x,y);
             cells.length = 0;
             var cellType = getCellType(x,y);
             var objectType = getDynamicObjectType(x,y);
@@ -1420,7 +1419,9 @@ function(THREE, DOK) {
             spriteRenderer.display(bigfaceOverlay.sprite);
             spriteRenderer.display(bigfaceOverlay.shadow);
             spriteRenderer.updateGraphics();
+//            engine.renderer.render(engine.scene, camera);
         });
+        console.log(engine.renderer, engine.scene, camera);
     }
 
 //    document.addEventListener("DOMContentLoaded",initialize);
