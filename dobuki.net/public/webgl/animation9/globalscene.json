@@ -1,17 +1,251 @@
 {
-	"fps": 30,
+	"fps": 20,
 	"elements": [
 		{
 			"position": [
-				291.6,
-				307.35
+				405.35,
+				346.15
 			],
 			"name": "elfie1",
 			"frame": 1,
 			"type": "elfie"
+		},
+		{
+			"position": [
+				253.65,
+				247.2
+			],
+			"name": "squid2",
+			"frame": 1,
+			"type": "squid"
+		},
+		{
+			"position": [
+				318.3,
+				112.8
+			],
+			"name": "squid3",
+			"frame": 1,
+			"type": "squid"
+		},
+		{
+			"position": [
+				115.65,
+				66.15
+			],
+			"name": "tree4",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				115.65,
+				138.45
+			],
+			"name": "tree5",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				115.65,
+				210.75
+			],
+			"name": "tree6",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				115.65,
+				283.05
+			],
+			"name": "tree7",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				38.55,
+				66.15
+			],
+			"name": "tree8",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				38.55,
+				138.45
+			],
+			"name": "tree9",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				38.55,
+				210.75
+			],
+			"name": "tree10",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				38.55,
+				283.05
+			],
+			"name": "tree11",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				115.65,
+				443.85
+			],
+			"name": "tree12",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				38.55,
+				443.85
+			],
+			"name": "tree13",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				269.85,
+				443.85
+			],
+			"name": "tree14",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				192.75,
+				443.85
+			],
+			"name": "tree15",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				424.05,
+				443.85
+			],
+			"name": "tree16",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				346.95,
+				443.85
+			],
+			"name": "tree17",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				578.25,
+				443.85
+			],
+			"name": "tree18",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				501.15,
+				443.85
+			],
+			"name": "tree19",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				578.25,
+				282.5
+			],
+			"name": "tree20",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				501.15,
+				282.5
+			],
+			"name": "tree21",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				578.25,
+				210.75
+			],
+			"name": "tree22",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				501.15,
+				210.75
+			],
+			"name": "tree23",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				578.25,
+				138.45
+			],
+			"name": "tree24",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				501.15,
+				138.45
+			],
+			"name": "tree25",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				578.25,
+				66.15
+			],
+			"name": "tree26",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				501.15,
+				66.15
+			],
+			"name": "tree27",
+			"frame": 1,
+			"type": "tree"
 		}
 	],
-	"backgroundColor": "#3366",
+	"backgroundColor": "#ffcc99",
 	"size": [
 		600,
 		450

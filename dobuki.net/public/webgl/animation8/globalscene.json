@@ -3,10 +3,19 @@
 	"elements": [
 		{
 			"position": [
-				291.6,
+				405.6,
 				307.35
 			],
 			"name": "elfie1",
+			"frame": 1,
+			"type": "elfie"
+		},
+		{
+			"position": [
+				249.9,
+				250.6
+			],
+			"name": "elfie2",
 			"frame": 1,
 			"type": "elfie"
 		}
