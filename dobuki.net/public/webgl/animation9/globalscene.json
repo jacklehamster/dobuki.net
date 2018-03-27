@@ -12,8 +12,8 @@
 		},
 		{
 			"position": [
-				253.65,
-				247.2
+				839.35,
+				227.85
 			],
 			"name": "squid2",
 			"frame": 1,
@@ -21,8 +21,8 @@
 		},
 		{
 			"position": [
-				318.3,
-				112.8
+				989.7,
+				153.45
 			],
 			"name": "squid3",
 			"frame": 1,
@@ -40,27 +40,9 @@
 		{
 			"position": [
 				115.65,
-				138.45
-			],
-			"name": "tree5",
-			"frame": 1,
-			"type": "tree"
-		},
-		{
-			"position": [
-				115.65,
-				210.75
-			],
-			"name": "tree6",
-			"frame": 1,
-			"type": "tree"
-		},
-		{
-			"position": [
-				115.65,
 				283.05
 			],
-			"name": "tree7",
+			"name": "tree5",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -69,7 +51,7 @@
 				38.55,
 				66.15
 			],
-			"name": "tree8",
+			"name": "tree6",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -78,7 +60,7 @@
 				38.55,
 				138.45
 			],
-			"name": "tree9",
+			"name": "tree7",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -87,7 +69,7 @@
 				38.55,
 				210.75
 			],
-			"name": "tree10",
+			"name": "tree8",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -96,7 +78,7 @@
 				38.55,
 				283.05
 			],
-			"name": "tree11",
+			"name": "tree9",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -105,7 +87,7 @@
 				115.65,
 				443.85
 			],
-			"name": "tree12",
+			"name": "tree10",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -114,7 +96,7 @@
 				38.55,
 				443.85
 			],
-			"name": "tree13",
+			"name": "tree11",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -123,7 +105,7 @@
 				269.85,
 				443.85
 			],
-			"name": "tree14",
+			"name": "tree12",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -132,7 +114,7 @@
 				192.75,
 				443.85
 			],
-			"name": "tree15",
+			"name": "tree13",
 			"frame": 1,
 			"type": "tree"
 		},
@@ -141,13 +123,31 @@
 				424.05,
 				443.85
 			],
-			"name": "tree16",
+			"name": "tree14",
 			"frame": 1,
 			"type": "tree"
 		},
 		{
 			"position": [
 				346.95,
+				443.85
+			],
+			"name": "tree15",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				582.25,
+				443.85
+			],
+			"name": "tree16",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				501.15,
 				443.85
 			],
 			"name": "tree17",
@@ -157,7 +157,7 @@
 		{
 			"position": [
 				578.25,
-				443.85
+				282.5
 			],
 			"name": "tree18",
 			"frame": 1,
@@ -166,7 +166,7 @@
 		{
 			"position": [
 				501.15,
-				443.85
+				282.5
 			],
 			"name": "tree19",
 			"frame": 1,
@@ -175,7 +175,7 @@
 		{
 			"position": [
 				578.25,
-				282.5
+				210.75
 			],
 			"name": "tree20",
 			"frame": 1,
@@ -184,7 +184,7 @@
 		{
 			"position": [
 				501.15,
-				282.5
+				210.75
 			],
 			"name": "tree21",
 			"frame": 1,
@@ -193,7 +193,7 @@
 		{
 			"position": [
 				578.25,
-				210.75
+				138.45
 			],
 			"name": "tree22",
 			"frame": 1,
@@ -202,7 +202,7 @@
 		{
 			"position": [
 				501.15,
-				210.75
+				138.45
 			],
 			"name": "tree23",
 			"frame": 1,
@@ -211,7 +211,7 @@
 		{
 			"position": [
 				578.25,
-				138.45
+				66.15
 			],
 			"name": "tree24",
 			"frame": 1,
@@ -220,7 +220,7 @@
 		{
 			"position": [
 				501.15,
-				138.45
+				66.15
 			],
 			"name": "tree25",
 			"frame": 1,
@@ -228,21 +228,588 @@
 		},
 		{
 			"position": [
-				578.25,
-				66.15
+				21.55,
+				-44.45
 			],
-			"name": "tree26",
+			"name": "fireball26",
+			"frame": 1,
+			"type": "fireball"
+		},
+		{
+			"position": [
+				86.6,
+				-44.45
+			],
+			"name": "fireball27",
+			"frame": 1,
+			"type": "fireball"
+		},
+		{
+			"position": [
+				146.6,
+				-44.45
+			],
+			"name": "fireball28",
+			"frame": 1,
+			"type": "fireball"
+		},
+		{
+			"position": [
+				206.6,
+				-44.45
+			],
+			"name": "fireball29",
+			"frame": 1,
+			"type": "fireball"
+		},
+		{
+			"position": [
+				-38.55,
+				70.15
+			],
+			"name": "tree30",
 			"frame": 1,
 			"type": "tree"
 		},
 		{
 			"position": [
-				501.15,
-				66.15
+				-38.55,
+				142.45
 			],
-			"name": "tree27",
+			"name": "tree31",
 			"frame": 1,
 			"type": "tree"
+		},
+		{
+			"position": [
+				-38.55,
+				214.75
+			],
+			"name": "tree32",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-38.55,
+				287.05
+			],
+			"name": "tree33",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-115.65,
+				70.15
+			],
+			"name": "tree34",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-115.65,
+				142.45
+			],
+			"name": "tree35",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-115.65,
+				214.75
+			],
+			"name": "tree36",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-38.55,
+				447.85
+			],
+			"name": "tree37",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-115.65,
+				447.85
+			],
+			"name": "tree38",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-192.75,
+				70.15
+			],
+			"name": "tree39",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-192.75,
+				142.45
+			],
+			"name": "tree40",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-269.85,
+				70.15
+			],
+			"name": "tree41",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-346.95,
+				70.15
+			],
+			"name": "tree42",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-424.05,
+				70.15
+			],
+			"name": "tree43",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-501.15,
+				70.15
+			],
+			"name": "tree44",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-501.15,
+				142.45
+			],
+			"name": "tree45",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-578.25,
+				66.15
+			],
+			"name": "tree46",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-578.25,
+				138.45
+			],
+			"name": "tree47",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-578.25,
+				210.75
+			],
+			"name": "tree48",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-578.25,
+				283.05
+			],
+			"name": "tree49",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-578.25,
+				423.1
+			],
+			"name": "tree50",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-578.25,
+				354.8
+			],
+			"name": "tree51",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-501.15,
+				447.85
+			],
+			"name": "tree52",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-501.15,
+				379.55
+			],
+			"name": "tree53",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-269.85,
+				451.85
+			],
+			"name": "tree54",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-346.95,
+				447.85
+			],
+			"name": "tree55",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-424.05,
+				447.85
+			],
+			"name": "tree56",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				-192.75,
+				451.85
+			],
+			"name": "tree57",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				269.85,
+				68.9
+			],
+			"name": "tree58",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				192.75,
+				68.9
+			],
+			"name": "tree59",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				346.95,
+				68.9
+			],
+			"name": "tree60",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				424.05,
+				66.15
+			],
+			"name": "tree61",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				659.35,
+				70.15
+			],
+			"name": "tree62",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				659.35,
+				142.45
+			],
+			"name": "tree63",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				659.35,
+				214.75
+			],
+			"name": "tree64",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				659.35,
+				287.05
+			],
+			"name": "tree65",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				659.35,
+				427.1
+			],
+			"name": "tree66",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				736.45,
+				70.15
+			],
+			"name": "tree67",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				736.45,
+				427.1
+			],
+			"name": "tree68",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				813.55,
+				70.15
+			],
+			"name": "tree69",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				813.55,
+				427.1
+			],
+			"name": "tree70",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				890.65,
+				70.15
+			],
+			"name": "tree71",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				890.65,
+				427.1
+			],
+			"name": "tree72",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1199.05,
+				70.15
+			],
+			"name": "tree73",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1199.05,
+				214.75
+			],
+			"name": "tree74",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1199.05,
+				287.05
+			],
+			"name": "tree75",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1199.05,
+				355.35
+			],
+			"name": "tree76",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1199.05,
+				427.1
+			],
+			"name": "tree77",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				967.75,
+				70.15
+			],
+			"name": "tree78",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1044.85,
+				70.15
+			],
+			"name": "tree79",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1121.95,
+				70.15
+			],
+			"name": "tree80",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				967.75,
+				427.1
+			],
+			"name": "tree81",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1044.85,
+				427.1
+			],
+			"name": "tree82",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				1121.95,
+				427.1
+			],
+			"name": "tree83",
+			"frame": 1,
+			"type": "tree"
+		},
+		{
+			"position": [
+				507.55,
+				27.35
+			],
+			"name": "heartholder84",
+			"frame": 1,
+			"type": "heartholder"
+		},
+		{
+			"position": [
+				446.8,
+				27.85
+			],
+			"name": "heart85",
+			"frame": 1,
+			"type": "heart"
+		},
+		{
+			"position": [
+				486.8,
+				27.85
+			],
+			"name": "heart86",
+			"frame": 1,
+			"type": "heart"
+		},
+		{
+			"position": [
+				526.8,
+				27.85
+			],
+			"name": "heart87",
+			"frame": 1,
+			"type": "heart"
+		},
+		{
+			"position": [
+				566.8,
+				27.85
+			],
+			"name": "heart88",
+			"frame": 1,
+			"type": "heart"
+		},
+		{
+			"position": [
+				357.55,
+				-41.65
+			],
+			"name": "swordmissile89",
+			"frame": 1,
+			"type": "swordmissile"
+		},
+		{
+			"position": [
+				-420.5,
+				225.9
+			],
+			"name": "rock90",
+			"frame": 1,
+			"type": "rock"
 		}
 	],
 	"backgroundColor": "#ffcc99",

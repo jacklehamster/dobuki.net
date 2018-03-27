@@ -266,11 +266,16 @@ class DokRouter implements Router {
             case 'signup':
             case 'recover':
             case 'check':
-                return false;
             case 'upload':
+            case 'youtube':
                 return false;
         }
         return true;
+    }
+
+    private function handle_youtube() {
+        include_once 'youtube.php';
+        return $this->create_response($videos);
     }
 
     private function api($command) {
@@ -303,6 +308,9 @@ class DokRouter implements Router {
                     break;
                 case 'upload':
                     $this->handle_upload($this->server->get_request());
+                    break;
+                case 'youtube':
+                    $this->handle_youtube();
                     break;
             }
         }

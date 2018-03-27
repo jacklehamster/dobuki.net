@@ -33,7 +33,7 @@
                         var videoBlob = this.response;
                         var vid = URL.createObjectURL(videoBlob);
                         video.src = vid;
-                        console.log(vid);
+                        //console.log(vid);
                     }
                 };
                 req.onerror = function() {
@@ -119,6 +119,7 @@
             ]);
 
             var projection = mat4.create();
+            viewMatrix = identity;
 
             function getQueryVariable(variable) {
                 var query = window.location.search.substring(1);
@@ -142,10 +143,14 @@
             var globalData = {};
             var loopList = [];
             var sprites = {};
+            var spritesPerType = {};
             //var overlay = document.createElement("canvas");
             var beginningOfTime = 0;
             var loadsInProgress = {};
             var shaderProgram;
+            var viewMatrix;
+            var shiftX, shiftY;
+            var actualShiftX, actualShiftY;
 
             function paused() {
                 for(var i in loadsInProgress) {
@@ -350,8 +355,7 @@
                 gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
                 gl.vertexAttribPointer(textureCoordinateAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
-                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "viewMatrix"), false, identity);
-//                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "modelMatrix"), false, rotation);
+                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "viewMatrix"), false, viewMatrix);
             }
 
             var matrix = mat4.create();
@@ -366,12 +370,8 @@
                 }
                 gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
                 for(var i=0; i<rect.length; i++) {
-//                    var x = 1+ 2*(2 * (rect[i][0] * scale + 0*xPos) / globalCanvas.width)-1;
-//                    var y = -1+2*(1 - 2 * (rect[i][1] * scale + 0*yPos) / globalCanvas.height)-1;
-                    var x = (rect[i][0]  + 0*xPos);
-                    var y = (rect[i][1]  + 0*yPos);
-                    vertexArray[i*3] = x;
-                    vertexArray[i*3 + 1] = y;
+                    vertexArray[i*3] = rect[i][0];
+                    vertexArray[i*3 + 1] = rect[i][1];
                 }
 
                 mat4.identity(matrix);
@@ -461,6 +461,10 @@
                 };
                 loopList.push(sprite);
                 sprites[name] = sprite;
+                if(!spritesPerType[data.type]) {
+                    spritesPerType[data.type] = [];
+                }
+                spritesPerType[data.type].push(sprite);
             }
 
             function checkSize() {
@@ -477,18 +481,34 @@
                     if(keyboard[k] && k !== "32") {
                         if(!key) {
                             key = parseInt(k);
-                            console.log(">", key);
+                            //console.log(">", key);
                         } else {
-                            console.log(k);
+                            //console.log(k);
                             return 0;
                         }
                     }
                 }
-                console.log("!", key);
+                //console.log("!", key);
                 return key;
             }
 
+            function setHeart(value) {
+                var hearts = spritesPerType['heart'];
+                hearts.sort(function(a, b) {
+                    return - a.position[0] + b.position[0];
+                });
+                hearts.forEach(function(heart, index) {
+                    heart.hidden = value <= index;
+                });
+            }
+
             function compareSprite(a, b) {
+                if(!a.ui && b.ui) {
+                    return -1;
+                } else if(a.ui && !b.ui) {
+                    return 1;
+                }
+
                 return a.position[1] < b.position[1] ? -1 : a.position[1] > b.position[1] ? 1 : 0;
             }
 
@@ -496,45 +516,79 @@
                 loopList.sort(compareSprite);
             }
 
+            function refreshShift() {
+                if(actualShiftX !== shiftX) {
+                    actualShiftX += (shiftX - actualShiftX) / 10;
+                    if(Math.abs(actualShiftX - shiftX) < 1) {
+                        actualShiftX = shiftX;
+                    }
+                }
+                if(actualShiftY !== shiftY) {
+                    actualShiftY += (shiftY - actualShiftY) / 10;
+                    if(Math.abs(actualShiftY - shiftY) < 1) {
+                        actualShiftY = shiftY;
+                    }
+                }
+            }
+
+            function onScreen(obj) {
+                var xPos = obj.position[0];
+                var yPos = obj.position[1];
+                if(!obj.ui) {
+                    xPos += actualShiftX;
+                    yPos += actualShiftY;
+                }
+                return xPos > -100 && xPos < 700 && yPos > -100 && yPos < 550;
+            }
+
             var globalCanvas = document.getElementById('canvas');
             function refresh(time) {
                 if(!paused()) {
+                    refreshShift();
                     var timeDeltaSec = (time - beginningOfTime)/1000;
                     checkSize();
                     refreshMap(timeDeltaSec);
                     var globalFrame = Math.floor(timeDeltaSec * globalData.fps);
 
                     loopList.forEach(function(obj, index) {
-                        if(!obj.hidden) {
-                            var frame = !obj.fps ? globalFrame : Math.floor(timeDeltaSec * obj.fps);
-                            var frameShift = obj.animate ? frame : 0;
-                            if (obj.label !== obj.previousLabel) {
-                                obj.previousLabel = obj.label;
-                                obj.frameStart = frameShift;
-                            }
-                            if(obj.animate) {
-                                frameShift -= obj.frameStart;
-                            }
+                        var frame = !obj.fps ? globalFrame : Math.floor(timeDeltaSec * obj.fps);
+                        var frameShift = obj.animate ? frame : 0;
+                        if (obj.label !== obj.previousLabel) {
+                            obj.previousLabel = obj.label;
+                            obj.frameStart = frameShift;
+                        }
+                        if(obj.animate) {
+                            frameShift -= obj.frameStart;
+                        }
 
-                            var labelData = obj.label ? obj.labelData[obj.label] : null;
-                            var frameIndex = labelData ? labelData.index :  1;
-                            var frameCount = labelData ? labelData.count : obj.data.frameCount;
-                            if (frameShift >= frameCount-1) {
-                                if(obj.onLabelDone) {
-                                    console.log(frameShift, frameCount);
-                                    obj.onLabelDone(obj);
-                                    console.log(obj.label);
-                                }
+                        var labelData = obj.label ? obj.labelData[obj.label] : null;
+                        var frameIndex = labelData ? labelData.index :  1;
+                        var frameCount = labelData ? labelData.count : obj.data.frameCount;
+                        if (frameShift >= frameCount-1) {
+                            if(obj.onLabelDone) {
+                                //console.log(frameShift, frameCount);
+                                obj.onLabelDone(obj);
+                                //console.log(obj.label);
                             }
-                            frameShift %= frameCount;
-                            var frameId = frameIndex + frameShift;
+                        }
+                        frameShift %= frameCount;
+                        var frameId = frameIndex + frameShift;
 
 
-                            var frameObject = obj.frameIdToFrame[frameId];
+                        var frameObject = obj.frameIdToFrame[frameId];
+                        if(onScreen(obj)) {
                             var xPos = obj.position[0];
                             var yPos = obj.position[1];
-                            if(display(gl, xPos, yPos, obj.data, globalCanvas, frameObject, obj.frameIdToLabel, time, obj.flip, obj.scale, obj.rotation)) {
+                            if(!obj.ui) {
+                                xPos += actualShiftX;
+                                yPos += actualShiftY;
+                            }
+                            if(!obj.hidden && display(gl, xPos, yPos, obj.data, globalCanvas, frameObject, obj.frameIdToLabel, time, obj.flip, obj.scale, obj.rotation)) {
                                 obj.lastFrameIndex = frameObject.frame;
+                            }
+                        } else {
+                            if(obj.ko) {
+                                initObj(obj);
                             }
                         }
                     });
@@ -542,10 +596,10 @@
                 requestAnimationFrame(refresh);
             }
 
-            function handleFollower(obj, timeSec) {
+            function handleFollower(obj, ai, timeSec) {
                 var elf = sprites.elfie1;
-                if(obj.ai.time < timeSec) {
-                    obj.ai.time = timeSec + obj.ai.period;
+                if(ai.time < timeSec) {
+                    ai.time = timeSec + ai.period;
                     var dx = obj.position[0] - elf.position[0];
                     var dy = obj.position[1] - elf.position[1];
                     if(Math.abs(dx) > Math.abs(dy)) {
@@ -554,7 +608,8 @@
                         obj.label = dy > 0 ? "UP" : "DOWN";
                     }
                 }
-                var speed = .5;
+                var inShock = (timeSec - obj.lastHit < 1);
+                var speed = inShock ? 0 : .5;
                 switch(obj.label) {
                     case "LEFT":
                         obj.position[0]-= speed;
@@ -569,15 +624,115 @@
                         obj.position[1]+= speed;
                         break;
                 }
+                if(obj.org) {
+                    obj.org[0] = obj.position[0];
+                    obj.org[1] = obj.position[1];
+                }
+            }
+
+            function getFree(type, timeSec, lifetime) {
+                var elems = spritesPerType[type];
+                var elem = null;
+                for(var i=0; i<elems.length; i++) {
+                    if(elems[i].hidden) {
+                        elem = elems[i];
+                        break;
+                    }
+                }
+                if(!elem)
+                    elem = elems[0];
+                elem.created = timeSec;
+                elem.lifetime = lifetime;
+                return elem;
+            }
+
+            function throwSword(elf, timeSec) {
+                var label = noAttack(elf.label);
+                switch(label) {
+                    case 'LEFT':
+                        throwItem('swordmissile', elf.position[0], elf.position[1]-10,
+                            -1, 0, label, timeSec, elf.lives >= 4 ? 5 : 0.1);
+                        break;
+                    case 'RIGHT':
+                        throwItem('swordmissile', elf.position[0], elf.position[1]-10,
+                            +1, 0, label, timeSec, elf.lives >= 4 ? 5 : 0.1);
+                        break;
+                    case 'UP':
+                        throwItem('swordmissile', elf.position[0], elf.position[1]-10,
+                            0, -1, label, timeSec, elf.lives >= 4 ? 5 : 0.1);
+                        break;
+                    case 'DOWN':
+                        throwItem('swordmissile', elf.position[0], elf.position[1]-10,
+                            0, +1, label, timeSec, elf.lives >= 4 ? 5 : 0.1);
+                        break;
+                }
+            }
+
+            function throwItem(type, posX, posY, movX, movY, label, timeSec, lifetime) {
+                var item = getFree(type, timeSec, lifetime);
+                item.position[0] = posX;
+                item.position[1] = posY;
+                item.hidden = false;
+                item.mov[0] = movX;
+                item.mov[1] = movY;
+                if(label) {
+                    item.label = label;
+                }
+            }
+
+            function handleFireballer(obj, ai, timeSec) {
+                if(ai.time < timeSec) {
+                    ai.time = timeSec + ai.period;
+                } else {
+                    return;
+                }
+
+                switch(obj.label) {
+                    case "LEFT":
+                        throwItem('fireball', obj.position[0], obj.position[1]-10,
+                            -1, 0, null, timeSec, 5);
+                        break;
+                    case "RIGHT":
+                        throwItem('fireball', obj.position[0], obj.position[1]-10,
+                            +1, 0, null, timeSec, 5);
+                        break;
+                    case "UP":
+                        throwItem('fireball', obj.position[0], obj.position[1]-10,
+                            0, -1, null, timeSec, 5);
+                        break;
+                    case "DOWN":
+                        throwItem('fireball', obj.position[0], obj.position[1]-10,
+                            0, +1, null, timeSec, 5);
+                        break;
+                }
+            }
+
+            function handleMissile(sprite, ai, timeSec) {
+                //console.log(sprite.lifetime);
+                if(timeSec - sprite.created > sprite.lifetime) {
+                    sprite.hidden = true;
+                } else {
+                    sprite.position[0] += sprite.mov[0] * ai.speed;
+                    sprite.position[1] += sprite.mov[1] * ai.speed;
+                }
             }
 
             function updateFoes(timeSec) {
                 loopList.forEach(function(obj, index) {
-                    if(obj.ai) {
-                        switch(obj.ai.type) {
-                            case 'follower':
-                                handleFollower(obj, timeSec);
-                                break;
+                    if(obj.ai && !obj.hidden && !obj.ko && onScreen(obj)) {
+                        for(var i=0; i<obj.ai.length; i++) {
+                            var ai = obj.ai[i];
+                            switch(ai.type) {
+                                case 'follower':
+                                    handleFollower(obj, ai, timeSec);
+                                    break;
+                                case 'fireballer':
+                                    handleFireballer(obj, ai, timeSec);
+                                    break;
+                                case 'missile':
+                                    handleMissile(obj, ai, timeSec);
+                                    break;
+                            }
                         }
                     }
                 });
@@ -604,41 +759,105 @@
             });
 
             function shake(elem, n) {
-                if(n===undefined) {
+                if (n===undefined) {
                     n = 10;
                 }
-                if(!elem.org) {
+                if (!elem.org) {
                     elem.org = [elem.position[0], elem.position[1]];
                 }
-                elem.position[0] = elem.org[0] + n * (Math.random()-.5);
-                elem.position[1] = elem.org[1] + n * (Math.random()-.5);
-                if(n > 0) {
-                    setTimeout(shake, 100, elem, n-1);
+                elem.position[0] = elem.org[0] + n * (Math.random()-.5) * 2;
+                elem.position[1] = elem.org[1] + n * (Math.random()-.5) * 2;
+                if (n > 0) {
+                    setTimeout(shake, 30, elem, n-1);
+                }
+            }
+
+            function initObj(sprite) {
+                if(!sprite.origin) {
+                    sprite.origin = [sprite.position[0], sprite.position[1]];
+                }
+                switch(sprite.data.type) {
+                    case 'elfie':
+                        sprite.scale = .8;
+                        sprite.fps = 120;
+                        sprite.lives = 4;
+                        sprite.lastHit = -1000;
+                        setHeart(sprite.lives);
+                        sprite.ko = false;
+                        sprite.hasSword = false;
+                        sprite.ai = [
+                            {
+                                type: "item_collector",
+                                target: ["rock"],
+                            }
+                        ];
+                        break;
+                    case 'heartholder':
+                    case 'heart':
+                        sprite.static = true;
+                        sprite.ui = true;
+                        break;
+                    case 'swordmissile':
+                        sprite.hidden = true;
+                        sprite.mov = [0,0];
+                        sprite.ai = [
+                            {
+                                type: "missile",
+                                target: ["squid", "tree"],
+                                speed: 10,
+                            }
+                        ];
+                        sprite.created = 0;
+                        break;
+                    case 'tree':
+                        sprite.static = true;
+                        break;
+                    case 'squid':
+                        sprite.fps = 140;
+                        sprite.animate = true;
+                        sprite.lives = 2;
+                        sprite.lastHit = -1000;
+                        sprite.ai = [
+                            {
+                                type: "follower",
+                                period: 2,
+                                time: 0,
+                            },
+                            {
+                                type: "fireballer",
+                                period: 3,
+                                time: 5,
+                            }
+                        ];
+                        sprite.rotation = 0;
+                        sprite.label = "DOWN";
+                        sprite.ko = false;
+                        sprite.hidden = false;
+                        sprite.position[0] = sprite.origin[0];
+                        sprite.position[1] = sprite.origin[1];
+                        break;
+                    case 'fireball':
+                        sprite.hidden = true;
+                        sprite.mov = [0,0];
+                        sprite.ai = [
+                            {
+                                type: "missile",
+                                target: ["elfie", "tree"],
+                                speed: 4,
+                            }
+                        ];
+                        sprite.created = 0;
+                        break;
+                    case 'rock':
+                        sprite.static = true;
+                        break;
                 }
             }
 
             function init() {
-                sprites.elfie1.scale = .8;
-                sprites.elfie1.fps = 120;
-
-                loopList.forEach(function(sprite) {
-                    switch(sprite.data.type) {
-                        case 'tree':
-                            sprite.static = true;
-                            break;
-                        case 'squid':
-                            sprite.fps = 140;
-                            sprite.animate = true;
-                            sprite.ai = {
-                                type: "follower",
-                                period: 3,
-                                time: 0,
-                            };
-                            sprite.rotation = 0;
-                            sprite.label = "DOWN";
-                            break;
-                    }
-                });
+                shiftX = shiftY = 0;
+                actualShiftX = actualShiftY = 0;
+                loopList.forEach(initObj);
 
 /*                sprites.squid3.animate = true;
                 sprites.squid3.fps = 140;
@@ -646,7 +865,7 @@
                 sprites.squid4.fps = 140;*/
             }
 
-            function getLabel(dx, dy, attack, oldLabel) {
+            function getLabel(dx, dy, attack, oldLabel, hasSword) {
                 var label;
                 if(dx < 0) {
                     label = "LEFT";
@@ -659,7 +878,11 @@
                 } else {
                     label = oldLabel || "DOWN";
                 }
-                if(attack && label.indexOf("ATTACK")<0) {
+                if(!hasSword) {
+                    if(label.indexOf('_SWORDLESS')<0) {
+                        label += "_SWORDLESS";
+                    }
+                } else if(attack && label.indexOf("ATTACK")<0) {
                     label += "ATTACK";
                 }
                 return label;
@@ -679,8 +902,7 @@
                 return label && label.indexOf("ATTACK") >= 0;
             }
 
-            function refreshElf() {
-                var elf = sprites.elfie1;
+            function refreshElf(elf, timeSec) {
                 var dx = 0, dy = 0, attack = false;
                 switch(lastKeyCode2) {
                     case 37:
@@ -696,7 +918,12 @@
                         dy++;
                         break;
                     case 32:
-                        attack = true;
+                        if(elf.hasSword) {
+                            if (!attacking(elf.label)) {
+                                throwSword(elf, timeSec);
+                            }
+                            attack = true;
+                        }
                         break;
                 }
                 if(attacking(elf.label)) {
@@ -707,12 +934,29 @@
                 dx *= 2.5;
                 dy *= 2.5;
 
-                elf.label = getLabel(dx, dy, attack, elf.label);
+                elf.label = getLabel(dx, dy, attack, elf.label, elf.hasSword);
+                elf.fps = attack ? 150 : 120;
 
                 elf.position[0] += dx;
                 elf.position[1] += dy;
+                if(elf.org) {
+                    elf.org[0] = elf.position[0];
+                    elf.org[1] = elf.position[1];
+                }
                 elf.animate = dx||dy||attack;
                 elf.onLabelDone = attack ? onLabelDone : null;
+                elf.hidden = (timeSec - elf.lastHit < 3) && Math.random()<.5;
+
+                if(elf.position[0] + shiftX < 0) {
+                    shiftX += 600;
+                } else if(elf.position[0] + shiftX > 600) {
+                    shiftX -= 600;
+                }
+                if(elf.position[1] + shiftY < 0) {
+                    shiftY += 450;
+                } else if(elf.position[1] + shiftY > 450) {
+                    shiftY -= 450;
+                }
             }
 
             var inited = false;
@@ -721,31 +965,106 @@
                     inited = true;
                     init();
                 }
-                refreshElf();
+                refreshElf(sprites.elfie1, timeSec);
                 updateFoes(timeSec);
                 reorder();
-                applyCollisions();
+                applyCollisions(timeSec);
             }
 
-            function applyCollisions() {
+            function vanish(obj) {
+                obj.hidden = true;
+                obj.onLabelDone = null;
+            }
+
+            function canBlock(elf, missile) {
+                switch(elf.label) {
+                    case 'LEFT':
+                        return missile.mov[1]===0 && missile.mov[0] > 0;
+                        break;
+                    case 'RIGHT':
+                        return missile.mov[1]===0 && missile.mov[0] < 0;
+                        break;
+                    case 'UP':
+                        return missile.mov[0]===0 && missile.mov[1] > 0;
+                        break;
+                    case 'DOWN':
+                        return missile.mov[0]===0 && missile.mov[1] < 0;
+                        break;
+                }
+            }
+
+            function onCollect(sprite, item) {
+                if(!sprite.hasSword) {
+                    sprite.hasSword = true;
+                    item.label = "NOSWORD";
+                }
+            }
+
+            function onCollision(sprite, ai, target, timeSec) {
+                if(ai) {
+                    for(var i=0; i<ai.length; i++) {
+                        if(ai[i].type==='missile') {
+                            if(ai[i].target.indexOf(target.data.type) >= 0) {
+                                var blocked = target.data.type==='elfie' && canBlock(target, sprite);
+                                if(target.lives) {
+                                    if(timeSec - target.lastHit > 3) {
+                                        if(!blocked) {
+                                            target.lastHit = timeSec;
+                                            target.lives--;
+                                            if(target.data.type === 'elfie') {
+                                                setHeart(target.lives);
+                                            } else if(target.lives<=0) {
+                                                target.label = "KO";
+                                                target.ko = true;
+                                                target.fps = 20;
+                                                target.onLabelDone = vanish;
+                                            }
+                                        }
+                                    }
+                                }
+                                sprite.hidden = true;
+                                shake(target, blocked ? 5 : 10);
+                            }
+                            return true;
+                        }
+                        if(ai[i].type==='item_collector') {
+                            if(ai[i].target.indexOf(target.data.type) >= 0) {
+                                onCollect(sprite, target);
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function applyCollisions(timeSec) {
                 for(var i=0; i<loopList.length; i++) {
                     var spriteA = loopList[i];
+                    if(spriteA.hidden) {
+                        continue;
+                    }
                     for(var j=0; j<loopList.length; j++) {
-                        if (i !== j && !loopList[j].static) {
-                            var spriteB = loopList[j];
-                            var dx = spriteA.position[0] - spriteB.position[0];
-                            var dy = spriteA.position[1] - spriteB.position[1];
-                            if(Math.abs(dx) < 50 && Math.abs(dy) < 50) {
-                                if(Math.abs(dx) > Math.abs(dy)) {
-                                    spriteB.position[0] -= dx/10;
-                                    if(!spriteA.static) {
-                                        spriteA.position[0] += dx/10;
-                                    }
-                                } else {
-                                    spriteB.position[1] -= dy/10;
-                                    if(!spriteA.static) {
-                                        spriteA.position[1] += dy/10;
-                                    }
+                        var spriteB = loopList[j];
+                        if (i === j || spriteB.static || spriteB.hidden) {
+                            continue;
+                        }
+                        var dx = spriteA.position[0] - spriteB.position[0];
+                        var dy = spriteA.position[1] - spriteB.position[1];
+                        if(Math.abs(dx) < 50 && Math.abs(dy) < 50) {
+                            if(onCollision(spriteB, spriteB.ai, spriteA, timeSec)
+                            || onCollision(spriteA, spriteA.ai, spriteB, timeSec)) {
+                                continue;
+                            }
+
+                            if(Math.abs(dx) > Math.abs(dy)) {
+                                spriteB.position[0] -= dx/10;
+                                if(!spriteA.static) {
+                                    spriteA.position[0] += dx/10;
+                                }
+                            } else {
+                                spriteB.position[1] -= dy/10;
+                                if(!spriteA.static) {
+                                    spriteA.position[1] += dy/10;
                                 }
                             }
                         }

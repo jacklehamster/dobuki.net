@@ -2,6 +2,9 @@ const TABS = [null, {
     id: 'games',
     label: 'Games'
 }, {
+    id: 'videos',
+    label: 'Videos'
+}, {
     id: 'projects',
     label: 'Projects'
 }];

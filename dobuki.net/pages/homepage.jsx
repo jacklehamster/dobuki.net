@@ -5,10 +5,15 @@ const TABS = [
         label: 'Games',
     },
     {
+        id: 'videos',
+        label: 'Videos',
+    },
+    {
         id: 'projects',
         label: 'Projects',
     },
 ];
+
 
 class Homepage extends Page {
     constructor(props) {
