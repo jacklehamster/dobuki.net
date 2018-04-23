@@ -10,16 +10,30 @@
     <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0,minimum-scale=1.0"/>
     <meta name="theme-color" content="#d5f97a" />
 </head>
-<body>
+<body style="margin: 0">
 <div style="display:flex; flex-direction: row;">
-    <canvas class="animation" id="canvas" style="background-image: url(texture.png)">
+    <canvas class="animation" id="canvas" style="background-image: url(zombie1.png)">
     </canvas>
     <div id="score" style='position: absolute; color: white;
         font-size: 100pt; left: 250px; top: 100px;
         font-family: "Roboto", "Helvetica", "Arial", sans-serif;
          text-shadow: 2px 2px black;'>
     </div>
+    <div id="overscore" style='position: absolute; color: white;
+            left: 15px; top: 15px;
+        font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+         text-shadow: 2px 2px black;'></div>
 </div>
+<script>
+    var src2 = new Image();
+    src2.src = "texture.png";
+    var audio1 = new Audio();
+    audio1.loop = true;
+    audio1.addEventListener("canplaythrough", function(e) {
+        audio1.play();
+    });
+    audio1.src="garange.m4a"
+</script>
 
 <script>
     var audioLoaded = false;
@@ -99,6 +113,9 @@ void main() {
             }
         }
         if(!audioLoaded) {
+            return true;
+        }
+        if(!introDone) {
             return true;
         }
         return false;
@@ -504,9 +521,6 @@ void main() {
         if(gameOver) {
             loopList[1].hidden = true;
             loopList[4].hidden = true;
-            if(canRestart && keyboard[32]) {
-                init();
-            }
             return;
         }
         if(!scored) {
@@ -574,6 +588,7 @@ void main() {
                     if(ballSpeed > 10 && kicker === -1) {
                         if(!monster.zombie) {
                             monster.zombie = true;
+                            kicker = index;
                         } else {
                             monster.dead = true;
                         }
@@ -606,13 +621,15 @@ void main() {
                     if(!scored) {
                         theScore = 0;
                         document.getElementById('score').innerText = "GAME\nOVER";
+                        document.getElementById('overscore').innerText = "You lasted "+ Math.floor((performance.now()-time)/1000) + " seconds.";;
+
                     }
                     canRestart = true;
                 },1000);
             }
             if(monster.y > loopList[4].y + 200) {
                 monster.y = loopList[4].y - 600-Math.random()*300;
-                monster.x = Math.random()*800-400 + 200;
+                monster.x = Math.random()*800-400 + loopList[4].x;
                 if(monster.dead) {
                     monster.dead = false;
                     monster.hidden = false;
@@ -630,6 +647,7 @@ void main() {
             scored = true;
             theScore++;
             document.getElementById('score').innerText = theScore + " - 0\nYOU WIN";
+            document.getElementById('overscore').innerText = "It took you "+ Math.floor((performance.now()-time)/1000) + " seconds.";;
         }
 
 
@@ -654,6 +672,14 @@ void main() {
 
     function keyDown(e) {
         keyboard[e.keyCode] = e.type==="keydown";
+        if(e.type==="keyup") {
+            if(!introDone) {
+                introDone = true;
+            }
+            if(canRestart) {
+                init();
+            }
+        }
 //        console.log(keyboard);
         e.preventDefault();
     }
@@ -661,9 +687,13 @@ void main() {
     var audioPlaying = false;
     var ordered = [];
     function init() {
+        document.getElementById('overscore').innerText = theScore + " - " + 0;
+        time = performance.now();
+        canvas.style.backgroundImage = "url(" + src2.src + ")";
         if(!audioPlaying) {
             audioPlaying = true;
             audio.play();
+            audio1.pause();
         }
         monsters.length = 0;
         for(var i=0; i<10; i++) {
@@ -703,9 +733,11 @@ void main() {
         ];
         document.getElementById('score').innerText = "";
         canRestart = false;
+        hasBall = true;
     }
     var cheat =false;// true;//false;
-
+    var introDone =false;
+    var time = 0;
 
     var crazy = false;
 //    setInterval(function() { crazy = !crazy }, 10000);
