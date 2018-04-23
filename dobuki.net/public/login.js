@@ -92,6 +92,12 @@ class Api {
                 session_key: Api.getSessionKey(),
             }, callback);
     }
+
+    youtube(callback) {
+        this.performCall(
+            'GET', '/api/youtube', {
+        }, callback);
+    }
 }
 
 const api = new Api();

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Home Ex Machina</title>
+        <title>Animation</title>
         <meta name="google" content="notranslate"/>
         <meta charset="UTF-8"/>
         <meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1"/>
@@ -15,26 +15,30 @@
     <body style="background-color: black; color: whitesmoke" onload="init2()">
         <canvas style="position: absolute" class="animation" id="canvas">
         </canvas>
-        <video style="width: 600px; height: 450px" id="vid">
+        <video style="width: 600px; height: 450px; display:none" id="vid">
         </video>
+        <audio id="main" src="sounds/zilda.mp3"  loop>
+        </audio>
         <audio id="audio" src="sounds/intro_01.mp3" autoplay loop>
         </audio>
 
 
         <script>
-            document.getElementById("audio").volume = .2;
+            document.getElementById("audio").volume = .3;
 
             function loadVideo(video) {
                 var req = new XMLHttpRequest();
-                req.open('GET', 'test.mov', true);
+                var url = 'video/gamecontrol.mp4';
+                req.open('GET', url, true);
                 req.responseType = 'blob';
-
+                loadsInProgress[url] = true;
                 req.onload = function() {
                     if (this.status === 200) {
                         var videoBlob = this.response;
                         var vid = URL.createObjectURL(videoBlob);
                         video.src = vid;
-                        console.log(vid);
+                        delete loadsInProgress[url];
+                        //console.log(vid);
                     }
                 };
                 req.onerror = function() {
@@ -42,28 +46,38 @@
                 req.send();
             }
             var lastKeycode = 0;
+            var video = document.getElementById("vid");
+            var limit = 0;
             function init2() {
-                var video = document.getElementById("vid");
-                //loadVideo(video);
-                var limit = 0;
+                loadVideo(video);
+                var anchorTime = 0;
                 addEventListener("keydown", function(e) {
                     if (lastKeycode !== e.keyCode) {
+                        console.log(e.keyCode);
+                        if(spritesPerType.elfie[0].label==='RAISESWORD') {
+                            e.preventDefault();
+                            return;
+                        }
                         switch(e.keyCode) {
                             case 38:
-                                video.currentTime = 4.95;
-                                limit = 5.2;
+                                video.currentTime = 2.2;
+                                anchorTime = 2.8;
+                                limit = 3;
                                 break;
                             case 37:
-                                video.currentTime = 3.4;
-                                limit = 3.7;
+                                video.currentTime = 18;
+                                limit = 18.8;
+                                anchorTime = 18.7;
                                 break;
                             case 39:
-                                video.currentTime = 9.3;
-                                limit = 9.8;
+                                video.currentTime = 24.2;
+                                limit = 25;
+                                anchorTime = 24.9;
                                 break;
                             case 40:
-                                video.currentTime = 6.4;
-                                limit = 6.7;
+                                video.currentTime = 10.5;
+                                limit = 11.2;
+                                anchorTime = 11;
                                 break;
                         }
                         lastKeycode = e.keyCode;
@@ -72,15 +86,22 @@
                     e.preventDefault();
                 });
                 addEventListener("keyup", function(e) {
+                    if(spritesPerType.elfie[0].label==='RAISESWORD') {
+                        e.preventDefault();
+                        return;
+                    }
                     if (e.keyCode === lastKeycode) {
                         lastKeycode = 0;
+                        anchorTime = 0;
+                        limit = 1.5;
                     }
                     e.preventDefault();
                 });
                 video.addEventListener("timeupdate", function(e) {
                     if(video.currentTime>limit) {
-                        limit = 0;
-                        video.pause();
+                        video.currentTime = anchorTime;
+//                        limit = 0;
+//                        video.pause();
                     }
                 });
             }
@@ -120,6 +141,7 @@
             ]);
 
             var projection = mat4.create();
+            viewMatrix = identity;
 
             function getQueryVariable(variable) {
                 var query = window.location.search.substring(1);
@@ -132,7 +154,7 @@
                 }
             }
 
-            var url = "introscene.json";
+            var url = "compiled-globalscene.json";
 
             var gl = null;
             var canvasMap = {};
@@ -143,12 +165,21 @@
             var globalData = {};
             var loopList = [];
             var sprites = {};
+            var spritesPerType = {};
             //var overlay = document.createElement("canvas");
             var beginningOfTime = 0;
             var loadsInProgress = {};
             var shaderProgram;
+            var viewMatrix;
+            var shiftX, shiftY;
+            var actualShiftX, actualShiftY;
+            var gameStarted = false;
+
 
             function paused() {
+                if(gameOver) {
+                    return true;
+                }
                 for(var i in loadsInProgress) {
                     if(loadsInProgress[i]) {
                         return true;
@@ -160,7 +191,7 @@
 
             function loadImage(tag, canvas) {
                 var image = new Image();
-                image.src = "assets2/" + tag + ".png";
+                image.src = "assets/" + tag + ".png";
                 loadsInProgress[image.src] = image;
                 image.addEventListener("load", function() {
                     for(var w=1; w<image.naturalWidth;w<<=1) {
@@ -174,6 +205,9 @@
         //            document.body.appendChild(canvas);
                     delete loadsInProgress[image.src];
                     image = null;
+                    if(!paused()) {
+                        gameLoaded();
+                    }
                 });
             }
 
@@ -182,7 +216,7 @@
                     var data = globalData.sprites[sprite.name];
                     startAnimation(gl, data, sprite.position, sprite.name);
                 } else {
-                    var filename = "json2/" + sprite.name + ".json";
+                    var filename = "json/" + sprite.name + ".json";
                     var oReq = new XMLHttpRequest();
                     oReq.addEventListener("load", function() {
                         var data = JSON.parse(this.responseText);
@@ -225,9 +259,8 @@
 
                     canvas.style.width = (canvas.width)/2 + "px";
                     canvas.style.height = (canvas.height)/2 + "px";
-                    canvas.style.backgroundColor = globalData.backgroundColor;
 
-                    mat4.ortho(projection, data.size[0], 0, data.size[1], 0, -1.0, 100);
+                    mat4.ortho(projection, 0, data.size[0], data.size[1], 0, -1.0, 100);
                     gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "projectionMatrix"), false, projection);
 
 
@@ -257,7 +290,7 @@
             }
 
             function uploadTexture(imageCanvas, index, texture) {
-                gl.activeTexture(gl["TEXTURE"+index]);
+                gl.activeTexture(gl["TEXTURE"+game]);
                 gl.bindTexture(gl.TEXTURE_2D, texture);
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageCanvas);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -274,32 +307,32 @@
                     textureTag = sprite[0];
                     var index = null;
                     if(textureCacheMap[textureTag] !== undefined) {
-                        index = textureCacheMap[textureTag];
+                        game = textureCacheMap[textureTag];
                     } else {
                         var texture;
                         if (textureCaches.length < 16) {
-                            index = textureCaches.length;
+                            game = textureCaches.length;
                             texture = gl.createTexture();
-                            uploadTexture(imageCanvas, index, texture);
-                            textureCacheMap[textureTag] = index;
+                            uploadTexture(imageCanvas, game, texture);
+                            textureCacheMap[textureTag] = game;
                             textureCaches.push({
-                                index: index,
+                                index: game,
                                 tag: textureTag,
                                 texture: texture,
                                 time: time,
                             });
                         } else {
                             var textureObj = getOldestTextureObj(textureCaches);
-                            index = textureObj.index;
+                            game = textureObj.index;
                             texture = textureObj.texture;
-                            uploadTexture(imageCanvas, index, texture);
+                            uploadTexture(imageCanvas, game, texture);
                             delete textureCacheMap[textureObj.tag];
-                            textureCacheMap[textureTag] = index;
+                            textureCacheMap[textureTag] = game;
                             textureObj.tag = textureTag;
                         }
                     }
-                    gl.uniform1i(gl.getUniformLocation(shaderProgram, 'uSampler'), index);
-                    textureCaches[index].time = time;
+                    gl.uniform1i(gl.getUniformLocation(shaderProgram, 'uSampler'), game);
+                    textureCaches[game].time = time;
                 }
                 gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
 
@@ -352,8 +385,7 @@
                 gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
                 gl.vertexAttribPointer(textureCoordinateAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
-                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "viewMatrix"), false, identity);
-//                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "modelMatrix"), false, rotation);
+                gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "viewMatrix"), false, viewMatrix);
             }
 
             var matrix = mat4.create();
@@ -361,29 +393,29 @@
                 gl, xPos, yPos,
                 vertextPositionBuffer,
                 vertexArray,
-                rect, imageCanvas, globalCanvas, scale
+                rect, imageCanvas, globalCanvas, scale, rotation
             ) {
                 if(!scale) {
                     scale = 1;
                 }
                 gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
                 for(var i=0; i<rect.length; i++) {
-//                    var x = 1+ 2*(2 * (rect[i][0] * scale + 0*xPos) / globalCanvas.width)-1;
-//                    var y = -1+2*(1 - 2 * (rect[i][1] * scale + 0*yPos) / globalCanvas.height)-1;
-                    var x = (rect[i][0]  + 0*xPos);
-                    var y = (rect[i][1]  + 0*yPos);
-                    vertexArray[i*3] = x;
-                    vertexArray[i*3 + 1] = y;
+                    vertexArray[i*3] = rect[i][0];
+                    vertexArray[i*3 + 1] = rect[i][1];
                 }
 
                 mat4.identity(matrix);
-                var scaleVector = vec3.create();
-                vec3.set(scaleVector, scale, scale, scale);
-                mat4.scale(matrix, matrix, scaleVector);
+
                 var translation = vec3.create();
                 vec3.set (translation, xPos, yPos, 0);
                 mat4.translate (matrix, matrix, translation);
-//                mat4.rotateZ(matrix, matrix, -Math.PI/2);
+
+                var scaleVector = vec3.create();
+                vec3.set(scaleVector, scale, scale, scale);
+                mat4.scale(matrix, matrix, scaleVector);
+                if(rotation) {
+                    mat4.rotateZ(matrix, matrix, rotation);
+                }
 
 
                 gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
@@ -393,13 +425,13 @@
             var info = document.createElement('div');
             document.body.appendChild(info);
 
-            function display(gl, xPos, yPos, data, globalCanvas, frameObject, frameIdToLabel, time, flip, scale) {
+            function display(gl, xPos, yPos, data, globalCanvas, frameObject, frameIdToLabel, time, flip, scale, rotation) {
                 var tag = data.sprites[frameObject.tag][0];
                 var imageCanvas = canvasMap[tag];
                 if(imageCanvas && readyCanvas[tag]) {
                     refreshTexture(gl, imageCanvas, data.sprites[frameObject.tag], time, flip);
                     setPosition(gl, xPos, yPos, vertexPositionBuffer, vertexArray,
-                        frameObject.rect, imageCanvas, globalCanvas, scale);
+                        frameObject.rect, imageCanvas, globalCanvas, scale, rotation);
                     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
                     return true;
                 }
@@ -456,10 +488,13 @@
                     fps: globalData.fps,
                     frameStart: 0,
                     previousLabel: null,
-                    animate: true,
                 };
                 loopList.push(sprite);
                 sprites[name] = sprite;
+                if(!spritesPerType[data.type]) {
+                    spritesPerType[data.type] = [];
+                }
+                spritesPerType[data.type].push(sprite);
             }
 
             function checkSize() {
@@ -476,56 +511,118 @@
                     if(keyboard[k] && k !== "32") {
                         if(!key) {
                             key = parseInt(k);
-                            console.log(">", key);
+                            //console.log(">", key);
                         } else {
-                            console.log(k);
+                            //console.log(k);
                             return 0;
                         }
                     }
                 }
-                console.log("!", key);
+                //console.log("!", key);
                 return key;
+            }
+
+            function setHeart(value) {
+                var hearts = spritesPerType['heart'];
+                hearts.sort(function(a, b) {
+                    return - a.position[0] + b.position[0];
+                });
+                hearts.forEach(function(heart, index) {
+                    heart.hidden = value <= index;
+                });
+            }
+
+            function compareSprite(a, b) {
+                if(a.ui !== b.ui) {
+                    return a.ui - b.ui;
+                }
+
+                if(a.position[1] !== b.position[1]) {
+                    return a.position[1] - b.position[1];
+                }
+                return a.position[0] - b.position[0];
+            }
+
+            function reorder() {
+                loopList.sort(compareSprite);
+            }
+
+            function refreshShift() {
+                if(actualShiftX !== shiftX) {
+                    actualShiftX += (shiftX - actualShiftX) / 10;
+                    if(Math.abs(actualShiftX - shiftX) < 1) {
+                        actualShiftX = shiftX;
+                    }
+                }
+                if(actualShiftY !== shiftY) {
+                    actualShiftY += (shiftY - actualShiftY) / 10;
+                    if(Math.abs(actualShiftY - shiftY) < 1) {
+                        actualShiftY = shiftY;
+                    }
+                }
+            }
+
+            function onScreen(obj) {
+                var xPos = obj.position[0];
+                var yPos = obj.position[1];
+                if(obj.ui === 0) {
+                    xPos += actualShiftX;
+                    yPos += actualShiftY;
+                }
+                return xPos > -100 && xPos < 700 && yPos > -100 && yPos < 550;
             }
 
             var globalCanvas = document.getElementById('canvas');
             function refresh(time) {
                 if(!paused()) {
-                    checkSize();
-                    refreshMap();
-                    updateFoes();
+                    if(gameStarted) {
+                        refreshShift();
+                    }
+
                     var timeDeltaSec = (time - beginningOfTime)/1000;
+                    checkSize();
+                    refreshMap(timeDeltaSec);
                     var globalFrame = Math.floor(timeDeltaSec * globalData.fps);
+
                     loopList.forEach(function(obj, index) {
-                        if(!obj.hidden) {
-                            var frame = !obj.fps ? globalFrame : Math.floor(timeDeltaSec * obj.fps);
-                            var frameShift = obj.animate ? frame : 0;
-                            if (obj.label !== obj.previousLabel) {
-                                obj.previousLabel = obj.label;
-                                obj.frameStart = frameShift;
-                            }
-                            if(obj.animate) {
-                                frameShift -= obj.frameStart;
-                            }
+                        var frame = !obj.fps ? globalFrame : Math.floor(timeDeltaSec * obj.fps);
+                        var frameShift = obj.animate ? frame : 0;
+                        if (obj.label !== obj.previousLabel) {
+                            obj.previousLabel = obj.label;
+                            obj.frameStart = frameShift;
+                        }
+                        if(obj.animate) {
+                            frameShift -= obj.frameStart;
+                        }
 
-                            var labelData = obj.label ? obj.labelData[obj.label] : null;
-                            var frameIndex = labelData ? labelData.index :  1;
-                            var frameCount = labelData ? labelData.count : obj.data.frameCount;
-                            if (frameShift >= frameCount-1) {
-                                if(obj.onLabelDone) {
-                                    console.log(frameShift, frameCount);
-                                    obj.onLabelDone(obj);
-                                    console.log(obj.label);
-                                }
+                        var labelData = obj.label ? obj.labelData[obj.label] : null;
+                        var frameIndex = labelData ? labelData.index :  1;
+                        var frameCount = labelData ? labelData.count : obj.data.frameCount;
+                        if (frameShift >= frameCount-1) {
+                            if(obj.onLabelDone) {
+                                //console.log(frameShift, frameCount);
+                                obj.onLabelDone(obj);
+                                //console.log(obj.label);
                             }
-                            frameShift %= frameCount;
-                            var frameId = frameIndex + frameShift;
+                        }
+                        frameShift %= frameCount;
+                        var frameId = frameIndex + frameShift;
 
 
-                            var frameObject = obj.frameIdToFrame[frameId];
+                        var frameObject = obj.frameIdToFrame[frameId];
+                        if(onScreen(obj)) {
                             var xPos = obj.position[0];
                             var yPos = obj.position[1];
-                            if(display(gl, xPos, yPos, obj.data, globalCanvas, frameObject, obj.frameIdToLabel, time, obj.flip, obj.scale)) {
+                            if(!obj.ui) {
+                                xPos += actualShiftX;
+                                yPos += actualShiftY;
+                            }
+                            if(!obj.hidden && display(gl, xPos, yPos, obj.data, globalCanvas, frameObject, obj.frameIdToLabel, time, obj.flip, obj.scale, obj.rotation)) {
                                 obj.lastFrameIndex = frameObject.frame;
+                            }
+                        } else {
+                            if(obj.ko) {
+                                initObj(obj);
                             }
                         }
                     });
@@ -533,9 +630,149 @@
                 requestAnimationFrame(refresh);
             }
 
-            function updateFoes() {
-                loopList.forEach(function(obj, index) {
+            function handleFollower(obj, ai, timeSec) {
+                var elf = spritesPerType.elfie[0];
+                if(ai.time < timeSec) {
+                    ai.time = timeSec + ai.period;
+                    var dx = obj.position[0] - elf.position[0];
+                    var dy = obj.position[1] - elf.position[1];
+                    if(Math.abs(dx) > Math.abs(dy)) {
+                        obj.label = dx > 0 ? "LEFT" : "RIGHT";
+                    } else {
+                        obj.label = dy > 0 ? "UP" : "DOWN";
+                    }
+                }
+                var inShock = (timeSec - obj.lastHit < 1);
+                var speed = inShock ? 0 : .5;
+                switch(obj.label) {
+                    case "LEFT":
+                        obj.position[0]-= speed;
+                        break;
+                    case "RIGHT":
+                        obj.position[0]+= speed;
+                        break;
+                    case "UP":
+                        obj.position[1]-= speed;
+                        break;
+                    case "DOWN":
+                        obj.position[1]+= speed;
+                        break;
+                }
+                if(obj.org) {
+                    obj.org[0] = obj.position[0];
+                    obj.org[1] = obj.position[1];
+                }
+            }
 
+            function getFree(type, timeSec, lifetime) {
+                var elems = spritesPerType[type];
+                var elem = null;
+                for(var i=0; i<elems.length; i++) {
+                    if(elems[i].hidden) {
+                        elem = elems[i];
+                        break;
+                    }
+                }
+                if(!elem)
+                    elem = elems[0];
+                elem.created = timeSec;
+                elem.lifetime = lifetime;
+                return elem;
+            }
+
+            function throwSword(elf, timeSec) {
+                var label = noAttack(elf.label);
+                switch(label) {
+                    case 'LEFT':
+                        throwItem('swordmissile', elf.position[0], elf.position[1]-10,
+                            -1, 0, label, timeSec, elf.lives >= 4 ? 5 : 0.1);
+                        break;
+                    case 'RIGHT':
+                        throwItem('swordmissile', elf.position[0], elf.position[1]-10,
+                            +1, 0, label, timeSec, elf.lives >= 4 ? 5 : 0.1);
+                        break;
+                    case 'UP':
+                        throwItem('swordmissile', elf.position[0], elf.position[1]-10,
+                            0, -1, label, timeSec, elf.lives >= 4 ? 5 : 0.1);
+                        break;
+                    case 'DOWN':
+                        throwItem('swordmissile', elf.position[0], elf.position[1]-10,
+                            0, +1, label, timeSec, elf.lives >= 4 ? 5 : 0.1);
+                        break;
+                }
+                video.currentTime = 36.8;
+                limit = 38;
+                anchorTime = 37.9;
+
+            }
+
+            function throwItem(type, posX, posY, movX, movY, label, timeSec, lifetime) {
+                var item = getFree(type, timeSec, lifetime);
+                item.position[0] = posX;
+                item.position[1] = posY;
+                item.hidden = false;
+                item.mov[0] = movX;
+                item.mov[1] = movY;
+                if(label) {
+                    item.label = label;
+                }
+            }
+
+            function handleFireballer(obj, ai, timeSec) {
+                if(ai.time < timeSec) {
+                    ai.time = timeSec + ai.period;
+                } else {
+                    return;
+                }
+
+                switch(obj.label) {
+                    case "LEFT":
+                        throwItem('fireball', obj.position[0], obj.position[1]-10,
+                            -1, 0, null, timeSec, 5);
+                        break;
+                    case "RIGHT":
+                        throwItem('fireball', obj.position[0], obj.position[1]-10,
+                            +1, 0, null, timeSec, 5);
+                        break;
+                    case "UP":
+                        throwItem('fireball', obj.position[0], obj.position[1]-10,
+                            0, -1, null, timeSec, 5);
+                        break;
+                    case "DOWN":
+                        throwItem('fireball', obj.position[0], obj.position[1]-10,
+                            0, +1, null, timeSec, 5);
+                        break;
+                }
+            }
+
+            function handleMissile(sprite, ai, timeSec) {
+                //console.log(sprite.lifetime);
+                if(timeSec - sprite.created > sprite.lifetime) {
+                    sprite.hidden = true;
+                } else {
+                    sprite.position[0] += sprite.mov[0] * ai.speed;
+                    sprite.position[1] += sprite.mov[1] * ai.speed;
+                }
+            }
+
+            function updateFoes(timeSec) {
+                loopList.forEach(function(obj, index) {
+                    if(obj.ai && !obj.hidden && !obj.ko && onScreen(obj)) {
+                        for(var i=0; i<obj.ai.length; i++) {
+                            var ai = obj.ai[i];
+                            switch(ai.type) {
+                                case 'follower':
+                                    handleFollower(obj, ai, timeSec);
+                                    break;
+                                case 'fireballer':
+                                    handleFireballer(obj, ai, timeSec);
+                                    break;
+                                case 'missile':
+                                    handleMissile(obj, ai, timeSec);
+                                    break;
+                            }
+                        }
+                    }
                 });
             }
 
@@ -559,16 +796,385 @@
                 loadAnimation(url, document.getElementById("canvas"));
             });
 
-            function init() {
+            function shake(elem, n) {
+                if (n===undefined) {
+                    n = 10;
+                }
+                if (!elem.org) {
+                    elem.org = [elem.position[0], elem.position[1]];
+                }
+                elem.position[0] = elem.org[0] + n * (Math.random()-.5) * 2;
+                elem.position[1] = elem.org[1] + n * (Math.random()-.5) * 2;
+                if (n > 0) {
+                    setTimeout(shake, 30, elem, n-1);
+                }
             }
 
+            function initObj(sprite) {
+                if(!sprite.origin) {
+                    sprite.origin = [sprite.position[0], sprite.position[1]];
+                }
+                sprite.ui = 0;
+                switch(sprite.data.type) {
+                    case 'elfie':
+                        sprite.scale = .8;
+                        sprite.fps = 120;
+                        sprite.lives = 4;
+                        sprite.lastHit = -1000;
+                        setHeart(sprite.lives);
+                        sprite.ko = false;
+                        sprite.hasSword = false;
+                        sprite.ai = [
+                            {
+                                type: "item_collector",
+                                target: ["rock", "potion", "exit"],
+                            }
+                        ];
+                        break;
+                    case 'heartholder':
+                    case 'heart':
+                        sprite.static = true;
+                        sprite.ui = 1;
+                        sprite.hidden = true;
+                        break;
+                    case 'outer':
+                        sprite.static = true;
+                        sprite.ui = -1;
+                        break;
+                    case 'swordmissile':
+                        sprite.hidden = true;
+                        sprite.mov = [0,0];
+                        sprite.ai = [
+                            {
+                                type: "missile",
+                                target: ["squid", "tree"],
+                                speed: 10,
+                            }
+                        ];
+                        sprite.created = 0;
+                        break;
+                    case 'rock':
+                    case 'rock2':
+                    case 'tree':
+                    case 'mountain':
+                    case 'potion':
+                    case 'exit':
+                        sprite.static = true;
+                        break;
+                    case 'squid':
+                        sprite.fps = 140;
+                        sprite.animate = true;
+                        sprite.lives = 2;
+                        sprite.lastHit = -1000;
+                        sprite.ai = [
+                            {
+                                type: "follower",
+                                period: 2,
+                                time: 0,
+                            },
+                            {
+                                type: "fireballer",
+                                period: 3,
+                                time: 5,
+                            }
+                        ];
+                        sprite.rotation = 0;
+                        sprite.label = "DOWN";
+                        sprite.ko = false;
+                        sprite.hidden = false;
+                        sprite.position[0] = sprite.origin[0];
+                        sprite.position[1] = sprite.origin[1];
+                        break;
+                    case 'fireball':
+                        sprite.hidden = true;
+                        sprite.animate = true;
+                        sprite.mov = [0,0];
+                        sprite.ai = [
+                            {
+                                type: "missile",
+                                target: ["elfie", "tree"],
+                                speed: 4,
+                            }
+                        ];
+                        sprite.created = 0;
+                        break;
+                    case 'title':
+                    case 'start':
+                    case 'waterfall':
+                        sprite.animate = true;
+                        break;
+                }
+            }
 
+            function init() {
+                shiftX = shiftY = 0;
+                actualShiftX = actualShiftY = 0;
+                loopList.forEach(initObj);
+
+/*                sprites.squid3.animate = true;
+                sprites.squid3.fps = 140;
+                sprites.squid4.animate = true;
+                sprites.squid4.fps = 140;*/
+            }
+
+            function getLabel(dx, dy, attack, oldLabel, hasSword) {
+                var label;
+                if(dx < 0) {
+                    label = "LEFT";
+                } else if(dx > 0) {
+                    label = "RIGHT";
+                } else if(dy < 0) {
+                    label = "UP";
+                } else if(dy > 0) {
+                    label = "DOWN";
+                } else {
+                    label = oldLabel || "DOWN";
+                }
+                if(!hasSword) {
+                    if(label.indexOf('_SWORDLESS')<0) {
+                        label += "_SWORDLESS";
+                    }
+                } else if(attack && label.indexOf("ATTACK")<0) {
+                    label += "ATTACK";
+                }
+                return label;
+            }
+
+            function noAttack(label) {
+                return label ? label.split("ATTACK")[0] : null;
+            }
+
+            function onLabelDone(elf) {
+                elf.label = noAttack(elf.label);
+                elf.onLabelDone = null;
+                lastKeyCode2 = getUniqueArrowDown();
+            }
+
+            function attacking(label) {
+                return label && label.indexOf("ATTACK") >= 0;
+            }
+
+            function startObj(sprite) {
+                switch(sprite.data.type) {
+                    case 'heartholder':
+                    case 'heart':
+                        sprite.hidden = false;
+                        break;
+                }
+            }
+
+            function gameLoaded() {
+                video.style.display = "";
+            }
+
+            function startGame() {
+                document.getElementById('audio').pause();
+                document.getElementById('main').play();
+                loopList.forEach(startObj);
+                gameStarted = true;
+            }
+
+            function refreshElf(elf, timeSec) {
+                if(!gameStarted) {
+                    if(lastKeyCode2===32) {
+                        gameStarted = true;
+                        startGame();
+                    }
+                    return;
+                }
+
+
+                var dx = 0, dy = 0, attack = false;
+                switch(lastKeyCode2) {
+                    case 37:
+                        dx--;
+                        break;
+                    case 38:
+                        dy--;
+                        break;
+                    case 39:
+                        dx++;
+                        break;
+                    case 40:
+                        dy++;
+                        break;
+                    case 32:
+                        if(elf.hasSword) {
+                            if (!attacking(elf.label)) {
+                                throwSword(elf, timeSec);
+                            }
+                            attack = true;
+                        }
+                        break;
+                }
+                if(elf.label==='RAISESWORD') {
+                    dx = dy = 0;
+                }
+                if(attacking(elf.label)) {
+                    dx = dy = 0;
+                    attack = true;
+                }
+
+                dx *= 2.5;
+                dy *= 2.5;
+
+                elf.label = getLabel(dx, dy, attack, elf.label, elf.hasSword);
+                elf.fps = attack ? 150 : 120;
+
+                elf.position[0] += dx;
+                elf.position[1] += dy;
+                if(elf.org) {
+                    elf.org[0] = elf.position[0];
+                    elf.org[1] = elf.position[1];
+                }
+                elf.animate = dx||dy||attack||elf.label==='RAISESWORD';
+                elf.onLabelDone = elf.label==='RAISESWORD' ? elf.onLabelDone : attack ? onLabelDone : null;
+                elf.hidden = (timeSec - elf.lastHit < 3) && Math.random()<.5;
+
+                if(elf.position[0] + shiftX < 0) {
+                    shiftX += 600;
+                } else if(elf.position[0] + shiftX > 600) {
+                    shiftX -= 600;
+                }
+                if(elf.position[1] + shiftY < 0) {
+                    shiftY += 450;
+                } else if(elf.position[1] + shiftY > 450) {
+                    shiftY -= 450;
+                }
+            }
 
             var inited = false;
-            function refreshMap() {
+            function refreshMap(timeSec) {
                 if(!inited) {
                     inited = true;
                     init();
+                }
+                refreshElf(spritesPerType.elfie[0], timeSec);
+                updateFoes(timeSec);
+                reorder();
+                applyCollisions(timeSec);
+            }
+
+            function vanish(obj) {
+                obj.hidden = true;
+                obj.onLabelDone = null;
+            }
+
+            function canBlock(elf, missile) {
+                switch(elf.label) {
+                    case 'LEFT':
+                        return missile.mov[1]===0 && missile.mov[0] > 0;
+                        break;
+                    case 'RIGHT':
+                        return missile.mov[1]===0 && missile.mov[0] < 0;
+                        break;
+                    case 'UP':
+                        return missile.mov[0]===0 && missile.mov[1] > 0;
+                        break;
+                    case 'DOWN':
+                        return missile.mov[0]===0 && missile.mov[1] < 0;
+                        break;
+                }
+            }
+
+            function onCollect(sprite, item) {
+                if(item.data.type==='rock' && !sprite.hasSword) {
+                    sprite.hasSword = true;
+                    item.label = "NOSWORD";
+                    sprite.label = "RAISESWORD";
+                    sprite.onLabelDone = function(sprite) {
+                        sprite.label = "DOWN";
+                        sprite.onLabelDone=  null;
+                    };
+
+                    video.currentTime = 31;
+                    limit = 34;
+                    anchorTime = 0;
+
+                }
+                if(item.data.type==='potion') {
+                    item.hidden = true;
+                    sprite.lives = Math.min(sprite.lives+1, 4);
+                    setHeart(sprite.lives);
+                }
+                if(item.data.type==='exit') {
+                    sprite.hidden = true;
+                    gameOver = true;
+                    window.location = "end.html";
+                }
+            }
+
+            var gameOver = false;
+
+            function onCollision(sprite, ai, target, timeSec) {
+                if(ai) {
+                    for(var i=0; i<ai.length; i++) {
+                        if(ai[i].type==='missile') {
+                            if(ai[i].target.indexOf(target.data.type) >= 0) {
+                                var blocked = target.data.type==='elfie' && canBlock(target, sprite);
+                                if(target.lives) {
+                                    if(timeSec - target.lastHit > 3) {
+                                        if(!blocked) {
+                                            target.lastHit = timeSec;
+                                            target.lives--;
+                                            if(target.data.type === 'elfie') {
+                                                setHeart(target.lives);
+                                            } else if(target.lives<=0) {
+                                                target.label = "KO";
+                                                target.ko = true;
+                                                target.fps = 20;
+                                                target.onLabelDone = vanish;
+                                            }
+                                        }
+                                    }
+                                }
+                                sprite.hidden = true;
+                                shake(target, blocked ? 5 : 10);
+                            }
+                            return true;
+                        }
+                        if(ai[i].type==='item_collector') {
+                            if(ai[i].target.indexOf(target.data.type) >= 0) {
+                                onCollect(sprite, target);
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function applyCollisions(timeSec) {
+                for(var i=0; i<loopList.length; i++) {
+                    var spriteA = loopList[i];
+                    if(spriteA.hidden || spriteA.ui) {
+                        continue;
+                    }
+                    for(var j=0; j<loopList.length; j++) {
+                        var spriteB = loopList[j];
+                        if (i === j || spriteA.ui || spriteB.static || spriteB.hidden) {
+                            continue;
+                        }
+                        var dx = spriteA.position[0] - spriteB.position[0];
+                        var dy = spriteA.position[1] - spriteB.position[1];
+                        if(Math.abs(dx) < 50 && Math.abs(dy) < 50) {
+                            if(onCollision(spriteB, spriteB.ai, spriteA, timeSec)
+                            || onCollision(spriteA, spriteA.ai, spriteB, timeSec)) {
+                                continue;
+                            }
+
+                            if(Math.abs(dx) > Math.abs(dy)) {
+                                spriteB.position[0] -= dx/10;
+                                if(!spriteA.static) {
+                                    spriteA.position[0] += dx/10;
+                                }
+                            } else {
+                                spriteB.position[1] -= dy/10;
+                                if(!spriteA.static) {
+                                    spriteA.position[1] += dy/10;
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -579,8 +1185,17 @@
                 var allowDefault = false;
 //                console.log(e.keyCode);
                 switch(e.keyCode) {
+                    case 37:
+                    case 38:
+                    case 39:
+                    case 40:
                     case 32:
-                        window.location = "game.html";
+                        lastKeyCode2 = e.type === "keydown"
+                            ? e.keyCode
+                            : e.keyCode === lastKeyCode2
+                            ? 0
+                            : lastKeyCode2;
+                        keyboard[e.keyCode] = e.type === "keydown";
                         break;
                     default:
                         allowDefault = true;

@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Animation</title>
+    <meta name="google" content="notranslate"/>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1"/>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0,minimum-scale=1.0"/>
+    <meta name="theme-color" content="#d5f97a" />
+</head>
+<body>
+<div style="display:flex; flex-direction: row;">
+    <canvas class="animation" id="canvas" style="background-image: url(texture.png)">
+    </canvas>
+    <div id="score" style='position: absolute; color: white;
+        font-size: 100pt; left: 250px; top: 100px;
+        font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+         text-shadow: 2px 2px black;'>
+    </div>
+</div>
+
+<script>
+    var audioLoaded = false;
+    var audio = new Audio();
+    audio.loop = true;
+    audio.addEventListener("canplaythrough", function(e) {
+        audioLoaded = true;
+    });
+    audio.src = "test.m4a";
+</script>
+
+
+<script id="vertexShader" type="x-shader/x-vertex">
+attribute vec4 position;
+attribute vec2 textureCoordinate;
+varying vec2 ftextureCoordinate;
+
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+
+void main() {
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;
+    ftextureCoordinate = textureCoordinate;
+}
+</script>
+
+<script id="fragmentShader" type="x-shader/x-fragment">
+precision mediump float;
+uniform sampler2D uSampler;
+varying vec2 ftextureCoordinate;
+
+void main() {
+   gl_FragColor = texture2D(uSampler, ftextureCoordinate);
+}
+    </script>
+
+<script>
+    var identity = new Float32Array([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]);
+
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            if (decodeURIComponent(pair[0]) === variable) {
+                return decodeURIComponent(pair[1]);
+            }
+        }
+    }
+
+    var url = "compiled-globalscene.json";
+
+    var canvas = document.getElementById('canvas');
+    var gl = null;
+    var canvasMap = {};
+    var readyCanvas = {};
+    var vertexPositionBuffer, textureCoordinatesBuffer;
+    var vertexArray, texArray;
+    var currentFilename = null;
+    var globalData = {};
+    var loopList = [];
+    var overlay = document.createElement("canvas");
+    var beginningOfTime = 0;
+    var loadsInProgress = {};
+    var shaderProgram;
+
+    function paused() {
+        for(var i in loadsInProgress) {
+            if(loadsInProgress[i]) {
+                return true;
+            }
+        }
+        if(!audioLoaded) {
+            return true;
+        }
+        return false;
+    }
+
+
+    function loadImage(tag, canvas) {
+        var image = new Image();
+        image.src = "assets/" + tag + ".png";
+        loadsInProgress[image.src] = image;
+        image.addEventListener("load", function() {
+            for(var w=1; w<image.naturalWidth;w<<=1) {
+            }
+            for(var h=1; h<image.naturalHeight;h<<=1) {
+            }
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(image,0,0);
+            readyCanvas[tag] = true;
+//            document.body.appendChild(canvas);
+            delete loadsInProgress[image.src];
+            image = null;
+        });
+    }
+
+    function loadSprite(gl, sprite, globalData) {
+        if(globalData.sprites && globalData.sprites[sprite.name]) {
+            var data = globalData.sprites[sprite.name];
+            startAnimation(gl, data, sprite.position);
+        } else {
+            var filename = "json/" + sprite.name + ".json";
+            var oReq = new XMLHttpRequest();
+            oReq.addEventListener("load", function() {
+                var data = JSON.parse(this.responseText);
+                startAnimation(gl, data, sprite.position);
+
+            });
+            oReq.open("GET", filename, true);
+            oReq.send();
+        }
+    }
+
+    function loadAnimation(filename, canvas) {
+        gl = canvas.getContext('webgl');
+        var vertexShader = getAndCompileShader(gl, 'vertexShader', 'vertex');
+        var fragmentShader = getAndCompileShader(gl, 'fragmentShader', 'fragment');
+
+        shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertexShader);
+        gl.attachShader(shaderProgram, fragmentShader);
+        gl.linkProgram(shaderProgram);
+
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+            console.log('Could not link shaders');
+        }
+        gl.useProgram(shaderProgram);
+
+        prepareBuffers(gl, shaderProgram);
+
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable ( gl.BLEND ) ;
+
+        currentFilename = filename.split("/").pop();
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", function() {
+            var data = JSON.parse(this.responseText);
+            globalData = data;
+            canvas.width = data.size[0]*2;
+            canvas.height = data.size[1]*2;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+
+            canvas.style.width = (canvas.width)/2 + "px";
+            canvas.style.height = (canvas.height)/2 + "px";
+            canvas.style.backgroundColor = data.backgroundColor;
+            //document.body.appendChild(overlay);
+            overlay.style.position = "absolute";
+            overlay.style.zIndex = 2;
+            overlay.width = canvas.width;
+            overlay.height = canvas.height;
+            overlay.style.width = canvas.style.width;
+            overlay.style.height = canvas.style.height;
+            overlay.style.top = canvas.offsetTop + "px";
+            overlay.style.left = canvas.offsetLeft + "px";
+            var ctx = overlay.getContext("2d");
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = "2";
+            ctx.rect(1,1,overlay.width-2,overlay.height-2);
+            ctx.stroke();
+            console.log(overlay);
+
+            data.elements.forEach(
+                function(sprite) {
+                    loadSprite(gl, sprite, globalData);
+                }
+            );
+
+
+            //console.log(data);
+            /*
+            data = json;
+            var tagCount = 0;
+            json.sprites.forEach(function(sprite) {
+                var tag = sprite[0];
+                if (!canvasMap[tag]) {
+                    var canvas = document.createElement('canvas');
+                    canvas.ready = false;
+                    loadImage(tag, canvas);
+                    canvasMap[tag] = canvas;
+                    tagCount++;
+                }
+            });
+
+            startAnimation(data);
+            */
+            requestAnimationFrame(refresh);
+
+        });
+        oReq.open("GET", filename, true);
+        oReq.send();
+    }
+
+    function getOldestTextureObj(textureCaches) {
+        var oldTime = Number.MAX_VALUE;
+        var textureObj = null;
+        textureCaches.forEach(function(obj) {
+            if(oldTime > obj.time) {
+                oldTime = obj.time;
+                textureObj = obj;
+            }
+        });
+        return textureObj;
+    }
+
+    function uploadTexture(imageCanvas, index, texture) {
+        gl.activeTexture(gl["TEXTURE"+index]);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageCanvas);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+
+    var textureCaches = [];
+    var textureCacheMap = {};
+    var textureTag = null;
+    function refreshTexture(gl, imageCanvas, sprite, time) {
+        if(textureTag !== sprite[0]) {
+            textureTag = sprite[0];
+            var index = null;
+            if(textureCacheMap[textureTag] !== undefined) {
+                index = textureCacheMap[textureTag];
+            } else {
+                var texture;
+                if (textureCaches.length < 16) {
+                    index = textureCaches.length;
+                    texture = gl.createTexture();
+                    uploadTexture(imageCanvas, index, texture);
+                    textureCacheMap[textureTag] = index;
+                    textureCaches.push({
+                        index: index,
+                        tag: textureTag,
+                        texture: texture,
+                        time: time,
+                    });
+                } else {
+                    var textureObj = getOldestTextureObj(textureCaches);
+                    index = textureObj.index;
+                    texture = textureObj.texture;
+                    uploadTexture(imageCanvas, index, texture);
+                    delete textureCacheMap[textureObj.tag];
+                    textureCacheMap[textureTag] = index;
+                    textureObj.tag = textureTag;
+                }
+            }
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'uSampler'), index);
+            textureCaches[index].time = time;
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
+
+        texArray[0] = texArray[6] = sprite[1] / imageCanvas.width;
+        texArray[1] = texArray[3] = (sprite[2] + sprite[4]) / imageCanvas.height;
+        texArray[2] = texArray[4] = (sprite[1] + sprite[3]) / imageCanvas.width;
+        texArray[5] = texArray[7] = sprite[2] / imageCanvas.height;
+        gl.bufferData(gl.ARRAY_BUFFER, texArray, gl.STATIC_DRAW);
+    }
+
+    function prepareBuffers(gl, shaderProgram) {
+        vertexPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+        vertexArray = new Float32Array([
+            -1, -1, 0,
+            1, -1, 0,
+            1,  1, 0,
+            -1,  1, 0
+        ]);
+        gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+
+        textureCoordinatesBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
+        texArray = new Float32Array([
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0
+        ]);
+        gl.bufferData(gl.ARRAY_BUFFER, texArray, gl.STATIC_DRAW);
+
+        var vertexIndicesBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexIndicesBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,0,2,3]), gl.STATIC_DRAW);
+
+        var positionAttributeLocation = gl.getAttribLocation(shaderProgram, 'position');
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+        gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+
+        var textureCoordinateAttributeLocation = gl.getAttribLocation(shaderProgram, 'textureCoordinate');
+        gl.enableVertexAttribArray(textureCoordinateAttributeLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBuffer);
+        gl.vertexAttribPointer(textureCoordinateAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "projectionMatrix"), false, identity);
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "modelMatrix"), false, identity);
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "viewMatrix"), false, identity);
+    }
+
+    function setPosition(gl, xPos, yPos, vertextPositionBuffer, vertexArray, rect, imageCanvas, globalCanvas, obj) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+        var scale = obj.index===7 ? 4 : obj.index===6 ? 10 : .5;
+        for(var i=0; i<rect.length; i++) {
+            var x = 2*(2 * (rect[i][0]*scale + xPos) / globalCanvas.width)-1;
+            var y = 2*(1 - 2 * (rect[i][1]*scale + yPos) / globalCanvas.height)-1;
+            vertexArray[i*3] = x;
+            vertexArray[i*3 + 1] = y;
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+    }
+
+    var info = document.createElement('div');
+    document.body.appendChild(info);
+
+    function display(gl, xPos, yPos, data, globalCanvas, frameObject, frameIdToLabel, time,obj) {
+        var tag = data.sprites[frameObject.tag][0];
+        var imageCanvas = canvasMap[tag];
+        if(imageCanvas && readyCanvas[tag]) {
+            refreshTexture(gl, imageCanvas, data.sprites[frameObject.tag], time);
+            setPosition(gl, xPos, yPos, vertexPositionBuffer, vertexArray,
+                frameObject.rect, imageCanvas, globalCanvas,obj);
+            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+            return true;
+        }
+        return false;
+    }
+
+    function startAnimation(gl, data, position) {
+        //  loadImages
+        var tagCount = 0;
+        data.sprites.forEach(function(sprite) {
+            var tag = sprite[0];
+            if (!canvasMap[tag]) {
+                var canvas = document.createElement('canvas');
+                canvas.ready = false;
+                loadImage(tag, canvas);
+                canvasMap[tag] = canvas;
+                tagCount++;
+            }
+        });
+
+        // prepare animation
+        var frameIdToFrame = [];
+        var frameIdToLabel = [];
+        var lastFrameIndex = -1;
+        var label = null;
+        for(var i=1; i <= data.frameCount; i++) {
+            var nextFrameIndex = lastFrameIndex+1;
+            var nextFrame = data.frames[nextFrameIndex];
+            if(nextFrame && i>= nextFrame.frame) {
+                lastFrameIndex = nextFrameIndex;
+            }
+
+            if(data.frames[lastFrameIndex].label) {
+                label = data.frames[lastFrameIndex].label;
+            }
+            frameIdToFrame[i] = data.frames[lastFrameIndex];
+            frameIdToLabel[i] = label;
+        }
+
+/*        var canvas = document.getElementById('canvas');
+        canvas.width = 600;//data.size[0];
+        canvas.height = 900;//data.size[1];
+        canvas.style.width = (canvas.width / 2) + "px";
+        canvas.style.height = (canvas.height / 2) + "px";
+        */
+
+        loopList.push({
+            data: data,
+            frameIdToFrame: frameIdToFrame,
+            frameIdToLabel: frameIdToLabel,
+            position: position,
+        });
+    }
+
+    var heroX=0, heroY=0;
+
+    function checkSize() {
+        if(canvas.width !== canvas.offsetWidth*2 || canvas.height !== canvas.offsetHeight*2) {
+            canvas.width = canvas.offsetWidth*2;
+            canvas.height = canvas.offsetHeight*2;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+    }
+
+    var monsters = [];
+
+    var shiftX = 0, shiftY = 0;
+    var globalCanvas = document.getElementById('canvas');
+    function refresh(time) {
+        if(!paused()) {
+            checkSize();
+            refreshMap(heroX, heroY);
+            var globalFrame = Math.floor((time - beginningOfTime) * globalData.fps / 1000);
+            ordered.forEach(function(obj) {
+                var index = obj.index;
+                var frameId = 1 + globalFrame % obj.data.frameCount;
+                var frameObject = obj.frameIdToFrame[frameId];
+
+                if(index===0 || index===3 || index===8) {
+                    monsters.forEach(monster => {
+                        if(monster.hidden) {
+                            return;
+                        }
+                        if(index===0 && !monster.dead || index===3 && monster.dead
+                        || index===8 && !monster.zombie) {
+                            var xPos = monster.x - shiftX;
+                            var yPos = monster.y - shiftY;
+                            if(display(gl, xPos, yPos, obj.data, globalCanvas, frameObject, obj.frameIdToLabel, time, obj)) {
+                                obj.lastFrameIndex = frameObject.frame;
+                            }
+                        }
+                    });
+                    return;
+                }
+
+
+                if(!obj.hidden) {
+                    var xPos = obj.x - shiftX;
+                    var yPos = obj.y - shiftY;
+                    if(display(gl, xPos, yPos, obj.data, globalCanvas, frameObject, obj.frameIdToLabel, time, obj)) {
+                        obj.lastFrameIndex = frameObject.frame;
+                    }
+                }
+            });
+        }
+        requestAnimationFrame(refresh);
+    }
+
+    function getAndCompileShader(gl, id, shaderType) {
+        var shaderElement = document.getElementById(id);
+        var shaderText = shaderElement.text.trim();
+        var shader = gl.createShader(
+            shaderType==='vertex' ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER
+        );
+        gl.shaderSource(shader, shaderText);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.log(gl.getShaderInfoLog(shader));
+            return true;
+        }
+        return shader;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadAnimation(url, document.getElementById("canvas"));
+    });
+
+    function shake(elem, n) {
+        if(n===undefined) {
+            n = 10;
+        }
+        if(!elem.org) {
+            elem.org = [elem.position[0], elem.position[1]];
+        }
+        elem.position[0] = elem.org[0] + n * (Math.random()-.5)*3;
+        elem.position[1] = elem.org[1] + n * (Math.random()-.5)*3;
+        if(n > 0) {
+            setTimeout(shake, 100, elem, n-1);
+        }
+    }
+
+    var theScore = 0;
+    var scored = false;
+    var inited = false;
+    var canRestart = false;
+    function refreshMap(x,y) {
+        if(!inited) {
+            inited = true;
+            init();
+        }
+        var speed =  hasBall ? 5 : 7, dx=0, dy=0;
+        if(gameOver) {
+            loopList[1].hidden = true;
+            loopList[4].hidden = true;
+            if(canRestart && keyboard[32]) {
+                init();
+            }
+            return;
+        }
+        if(!scored) {
+            if(keyboard[37]) {
+                dx--;
+            }
+            if(keyboard[39]) {
+                dx++;
+            }
+            if(keyboard[38]) {
+                dy--;
+            }
+            if(keyboard[40]) {
+                dy++;
+            }
+
+            if(keyboard[32] && hasBall) {
+                ballDy = -30;
+                ballDx = dx * 20;
+                loopList[2].y = loopList[4].y - 100;
+                hasBall = false;
+                kicker = -1;
+            }
+        }
+
+
+        var dist = Math.sqrt(dx*dx+dy*dy);
+        if(dist) {
+            loopList[4].x += speed*dx/dist;
+            loopList[4].y += speed*dy/dist;
+        }
+        loopList[4].hidden = dx || dy;
+        loopList[1].hidden = !loopList[4].hidden || gameOver;
+        loopList[1].x = loopList[4].x;
+        loopList[1].y = loopList[4].y;
+        if(!hasBall) {
+            loopList[2].x += ballDx;
+            loopList[2].y += ballDy;
+            ballDx *= .9;
+            ballDy *= .9;
+        } else {
+            loopList[2].x += (loopList[4].x - loopList[2].x)/5;
+            loopList[2].y += (loopList[4].y-70 - loopList[2].y)/5;
+        }
+
+        if(Math.abs(loopList[2].x - loopList[4].x) < 25
+        && Math.abs(loopList[2].y - (loopList[4].y-50)) < 25) {
+            hasBall = true;
+            kicker = -2;
+        }
+
+        var ballSpeed = Math.sqrt(ballDx*ballDx + ballDy*ballDy);
+        monsters.forEach((monster, index) => {
+            var dx = loopList[4].x - monster.x;
+            var dy = loopList[4].y - monster.y;
+            var dist = Math.sqrt(dx*dx + dy*dy);
+
+
+
+            if(!monster.dead) {
+                var bx = monster.x - loopList[2].x;
+                var by = monster.y - loopList[2].y;
+                var bdist = Math.sqrt(bx*bx + by*by);
+                if(bdist < 40) {
+                    if(ballSpeed > 10 && kicker === -1) {
+                        if(!monster.zombie) {
+                            monster.zombie = true;
+                        } else {
+                            monster.dead = true;
+                        }
+                    }
+                    var n = monster.dead ? 10 : Math.random()*10 + 100;
+                    ballDx = -ballDx;
+                    ballDy = -ballDy;
+                    ballDx -= bx/dist * n;
+                    ballDy -= bx/dist * n;
+                    if(monster.dead) {
+                        kicker = index;
+                    }
+                }
+            }
+
+
+            if(!monster.dead) {
+                monster.x += dx/dist * monster.speed;
+                monster.y += dy/dist * monster.speed;
+            }
+            if(dist < 30 && !monster.dead && !cheat) {
+                monster.hidden = true;
+                loopList[5].hidden = false;
+                loopList[5].x = loopList[4].x;
+                loopList[5].y = loopList[4].y;
+                loopList[1].hidden = true;
+                loopList[0].hidden = true;
+                gameOver = true;
+                setTimeout(function() {
+                    if(!scored) {
+                        theScore = 0;
+                        document.getElementById('score').innerText = "GAME\nOVER";
+                    }
+                    canRestart = true;
+                },1000);
+            }
+            if(monster.y > loopList[4].y + 200) {
+                monster.y = loopList[4].y - 600-Math.random()*300;
+                monster.x = Math.random()*800-400 + 200;
+                if(monster.dead) {
+                    monster.dead = false;
+                    monster.hidden = false;
+                    monster.speed = Math.random()*4 + 1;
+                    monster.zombie = Math.random()>.1;
+                } else {
+                    monster.speed *= 1.2;
+                }
+            }
+        });
+
+        if(loopList[2].x > 120 && loopList[2].x < 985
+            && loopList[2].y > -4142 && loopList[2].y <
+            -3742 && !scored) {
+            scored = true;
+            theScore++;
+            document.getElementById('score').innerText = theScore + " - 0\nYOU WIN";
+        }
+
+
+        var sX = loopList[4].x - (shiftX+400);
+        var sY = loopList[4].y - (shiftY+500);
+        shiftX += sX/5;
+        shiftY += sY/5;
+
+        canvas.style.backgroundPositionX = -shiftX + "px";
+        canvas.style.backgroundPositionY = -shiftY + "px";
+        //background-position: right 20px bottom 10px;
+    }
+    var ballDx = 0, ballDy = 0, hasBall = true;
+    var kicker = -2;
+
+    var gameOver = false;
+
+    window.focus();
+    var keyboard = {};
+    addEventListener("keydown", keyDown);
+    addEventListener("keyup", keyDown);
+
+    function keyDown(e) {
+        keyboard[e.keyCode] = e.type==="keydown";
+//        console.log(keyboard);
+        e.preventDefault();
+    }
+
+    var audioPlaying = false;
+    var ordered = [];
+    function init() {
+        if(!audioPlaying) {
+            audioPlaying = true;
+            audio.play();
+        }
+        monsters.length = 0;
+        for(var i=0; i<10; i++) {
+            monsters.push({
+                x: Math.random()*800-400 + 200,
+                y: Math.random()*800-600,
+                speed: Math.random()*4 + 1,
+                dead: true,
+                hidden: true,
+                zombie: i!==8,
+            });
+        }
+
+        gameOver = false;
+        scored = false;
+
+        loopList.forEach((elem, index)=> {
+            elem.x = elem.position[0];
+            elem.y = elem.position[1];
+            elem.index = index;
+        });
+        loopList[5].hidden = true;
+        loopList[6].x -= 200;
+        loopList[6].y -= 800 + 1500;
+        loopList[7].x += 380;
+        loopList[7].y = -2450 - 1500;
+        ordered = [
+            loopList[6],
+            loopList[5],
+            loopList[3],
+            loopList[2],
+            loopList[1],
+            loopList[0],
+            loopList[4],
+            loopList[7],
+            loopList[8],
+        ];
+        document.getElementById('score').innerText = "";
+        canRestart = false;
+    }
+    var cheat =false;// true;//false;
+
+
+    var crazy = false;
+//    setInterval(function() { crazy = !crazy }, 10000);
+
+</script>
+</body>

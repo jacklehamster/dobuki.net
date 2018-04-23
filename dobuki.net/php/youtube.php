@@ -25,7 +25,8 @@ function playlistItemsListByPlaylistId($service, $part, $params) {
         }
         if ($item['snippet']['resourceId']['kind']=='youtube#video') {
             $result []= [
-                'url' => $item['snippet']['thumbnails']['standard']['url'],
+                'thumbnail' => $item['snippet']['thumbnails'],
+                'url' => $item['snippet']['thumbnails']['medium']['url'] ?? $item['snippet']['thumbnails']['default']['url'],
                 'title' => $item['snippet']['title'],
                 'description' => $item['snippet']['description'],
                 'id' => $item['snippet']['resourceId']['videoId'],
@@ -40,7 +41,7 @@ function getVideos($service, $playlist_id) {
     return playlistItemsListByPlaylistId($service,
         'snippet',
         [
-            'maxResults' => 25,
+            'maxResults' => 48,
             'playlistId' => $playlist_id,
         ]
     );

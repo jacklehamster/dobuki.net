@@ -1,0 +1,91 @@
+{
+	"fps": 40,
+	"elements": [
+		{
+			"position": [
+				415.65,
+				189.2
+			],
+			"name": "zombiewalk1",
+			"frame": 1,
+			"type": "zombiewalk"
+		},
+		{
+			"position": [
+				362.75,
+				382.2
+			],
+			"name": "run2",
+			"frame": 1,
+			"type": "run"
+		},
+		{
+			"position": [
+				534.4,
+				158.4
+			],
+			"name": "ball3",
+			"frame": 1,
+			"type": "ball"
+		},
+		{
+			"position": [
+				201.45,
+				189.2
+			],
+			"name": "zombiedead4",
+			"frame": 1,
+			"type": "zombiedead"
+		},
+		{
+			"position": [
+				142.75,
+				382.2
+			],
+			"name": "stand5",
+			"frame": 1,
+			"type": "stand"
+		},
+		{
+			"position": [
+				542.85,
+				361.2
+			],
+			"name": "gameover6",
+			"frame": 1,
+			"type": "gameover"
+		},
+		{
+			"position": [
+				626.1,
+				270.5
+			],
+			"name": "terrain7",
+			"frame": 1,
+			"type": "terrain"
+		},
+		{
+			"position": [
+				168.1,
+				511.8
+			],
+			"name": "cage8",
+			"frame": 1,
+			"type": "cage"
+		},
+		{
+			"position": [
+				643.2,
+				146.4
+			],
+			"name": "zombiedead9",
+			"frame": 1,
+			"type": "zombiedead"
+		}
+	],
+	"backgroundColor": "#9933",
+	"size": [
+		800,
+		600
+	]
+}

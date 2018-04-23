@@ -854,6 +854,7 @@ class LoginDialog extends React.Component {
         switch(mode) {
             case 'games':
             case 'projects':
+            case 'videos':
                 return false;
         }
         return true;

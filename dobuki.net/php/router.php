@@ -249,6 +249,7 @@ class DokRouter implements Router {
             case 'profile':
             case 'games':
             case 'projects':
+            case 'videos':
                 $this->session->ensure_session();
                 $this->show_homepage();
                 break;

@@ -1,0 +1,104 @@
+<div>
+    Welcome to DODGE the CLICKER
+</div>
+<br>
+<div>
+    Made for <a href="http://www.onehourgamejam.com">#ONEHOURGAMEJAM</a>.
+<div>
+<div>
+    Theme: Combine two incompatible genres
+
+</div>
+<div>
+    This game is a mix between cookie clicker and dodging games
+<div>
+</div>
+<div>
+    Clicker: Click on the button to increase your score
+</div>
+<div>
+    Dodger: Dodge the button or you lose
+</div>
+    <br>
+    <div id="highscore">HIGH SCORE: 0</div>
+<span id="score">SCORE: 0</span>
+<script>
+    var messages =[
+        "",
+        "",
+        ". YOU WIN!",
+        ". YOU WIN!",
+        ". YOU WIN!",
+        ". YOU REALLY WIN!",
+        ". YOU REALLY WIN!",
+        ". YOU REALLY WIN!",
+        ". YOU REALLY REALLY WIN!",
+        ". HOW ARE YOU WINNING?",
+        ". WOW, YOU REALLY ARE... A WINNER!",
+        ". AREN'T YOU SICK OF... WINNING!",
+        ". AFTER ALL, WE'RE ALL WINNERS!",
+        ". ladies and gentlemen, WE GOT A WINNER!",
+        "<div style=\"width:100%;height:0;padding-bottom:78%;position:relative;\"><iframe src=\"https://giphy.com/embed/sHytgXD2vlNVC\" width=\"100%\" height=\"100%\" style=\"position:absolute\" frameBorder=\"0\" class=\"giphy-embed\" allowFullScreen></iframe></div><p><a href=\"https://giphy.com/gifs/wow-deal-with-it-doge-sHytgXD2vlNVC\">via GIPHY</a></p>",
+    ];
+
+    var speed = 3;
+    var dx = speed, dy = speed;
+    var button = document.body.appendChild(document.createElement('button'));
+    button.style.width = 100;
+    button.style.height = 80;
+    button.style.position = "absolute";
+    button.style.top = "300px";
+    button.style.left = "300px";
+    button.innerText = "CLICK TO INCREASE SCORE";
+    button.style.border = "2px dotted red";
+//    button.style.borderStyle = "dotted";
+    button.addEventListener("mouseover", function(e) {
+        alert("YOU LOSE");
+        location.reload();
+    });
+
+    var highScore = 0;
+    var score = 0;
+    button.addEventListener("click", function(e) {
+        score++;
+        e.preventDefault();
+    });
+    var actualScore = 0;
+
+    var x = 300, y = 300;
+    function loop(time) {
+        x += dx;
+        y += dy;
+        if(x > window.innerWidth-100) {
+            dx = -speed;
+        }
+        if(y > window.innerHeight-80) {
+            dy = -speed;
+        }
+        if(x < 0) {
+            dx = speed;
+        }
+        if(y < 0) {
+            dy = speed;
+        }
+        button.style.left = x + "px";
+        button.style.top = y + "px";
+        if(actualScore < score) {
+            actualScore = Math.ceil(score*.5 + actualScore*.5);
+            highScore = Math.max(actualScore, highScore);
+            document.getElementById("highscore").innerHTML = "HIGH SCORE: " + actualScore;
+            document.getElementById("score").innerHTML = "SCORE: " + actualScore
+                + messages[Math.min(Math.floor(Math.log(score)), messages.length-1)];
+
+            button.style.backgroundColor = "red";
+            setTimeout(clickA, 100);
+        }
+        requestAnimationFrame(loop);
+    }
+    loop();
+    function clickA() {
+        button.style.backgroundColor = "white";
+    }
+
+
+</script>

@@ -16,7 +16,8 @@ class Homepage extends Page {
         this.state = {
             tip: null,
             showTip: false,
-            selectedTab: Homepage.getSelectedTab()
+            selectedTab: Homepage.getSelectedTab(),
+            videos: []
         };
 
         this.hideTip = this.hideTip.bind(this);
@@ -49,11 +50,30 @@ class Homepage extends Page {
         return TABS[this.state.selectedTab || 1].id === id;
     }
 
+    loadYoutube() {
+        api.youtube(response => {
+            this.setState({
+                videos: response
+            });
+        });
+    }
+
     componentDidUpdate(prevProps, prevState) {
         if (prevState.selectedTab !== this.state.selectedTab) {
             const tab = TABS[this.state.selectedTab || 1];
             history.pushState({ tab: tab.id }, tab.label, `/${tab.id}`);
         }
+    }
+
+    componentDidMount() {
+        document.addEventListener("DOMContentLoaded", () => {
+            this.loadYoutube();
+        });
+    }
+
+    openYoutube(id) {
+        window.open(`https://www.youtube.com/watch?v=${id}`);
+        console.log(id);
     }
 
     render() {
@@ -271,6 +291,50 @@ class Homepage extends Page {
             React.createElement(
                 'div',
                 { style: {
+                        display: this.shouldShowTab('videos') ? 'flex' : 'none',
+                        textAlign: 'center',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    } },
+                React.createElement('iframe', { style: {
+                        height: 60,
+                        width: 180,
+                        border: 0
+                    }, src: '/youtube-button/' })
+            ),
+            React.createElement(
+                'div',
+                { style: {
+                        borderTop: "1px solid #E0ECEF",
+                        padding: '5px 150px',
+                        display: this.shouldShowTab('videos') ? 'flex' : 'none',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        flexWrap: 'wrap'
+                    } },
+                this.state.videos.map(video => {
+                    return React.createElement(
+                        'div',
+                        { className: 'youtubeThumbnail',
+                            style: {
+                                fontFamily
+                            } },
+                        React.createElement('div', { className: 'youtubeImage',
+                            onClick: e => this.openYoutube(video.id),
+                            style: {
+                                backgroundImage: `url(${video.url})`
+                            } }),
+                        React.createElement(
+                            'div',
+                            null,
+                            video.title
+                        )
+                    );
+                })
+            ),
+            React.createElement(
+                'div',
+                { style: {
                         display: this.shouldShowTab('games') ? 'flex' : 'none',
                         fontFamily,
                         alignItems: 'center',
@@ -306,6 +370,27 @@ class Homepage extends Page {
                     React.createElement(
                         'a',
                         { target: '_blank', href: 'https://github.com/jacklehamster?tab=repositories' },
+                        'here'
+                    )
+                )
+            ),
+            React.createElement(
+                'div',
+                { style: {
+                        display: this.shouldShowTab('videos') ? 'flex' : 'none',
+                        fontFamily,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        verticalAlign: 'middle'
+                    } },
+                React.createElement(
+                    'h2',
+                    null,
+                    'More videos ',
+                    React.createElement(
+                        'a',
+                        { target: '_blank', href: 'https://youtube.com/vincentlequang2' },
                         'here'
                     )
                 )

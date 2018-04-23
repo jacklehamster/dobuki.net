@@ -201,6 +201,28 @@ i[down] {
     font-size: 12px;
 }
 
+.youtubeImage {
+    width: 150px;
+    height: 90px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+.youtubeThumbnail {
+    width: 150px;
+    height: 150px;
+    font-size: 10pt;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.youtubeThumbnail:hover {
+    color: dodgerblue;
+    margin: 0;
+    border: solid 5px dodgerblue;
+}
+
 @media screen and (min-width: 500px) {
     .popdialog {
         margin-top: 10px;

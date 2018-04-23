@@ -23,6 +23,7 @@ class Homepage extends Page {
             tip: null,
             showTip: false,
             selectedTab: Homepage.getSelectedTab(),
+            videos: [],
         };
 
         this.hideTip = this.hideTip.bind(this);
@@ -55,11 +56,30 @@ class Homepage extends Page {
         return TABS[this.state.selectedTab||1].id === id;
     }
 
+    loadYoutube() {
+        api.youtube(response => {
+            this.setState({
+                videos: response,
+            });
+        });
+    }
+
     componentDidUpdate(prevProps, prevState) {
         if (prevState.selectedTab !== this.state.selectedTab) {
             const tab = TABS[this.state.selectedTab||1];
             history.pushState({tab:tab.id}, tab.label, `/${tab.id}`);
         }
+    }
+    
+    componentDidMount() {
+        document.addEventListener("DOMContentLoaded", () => {
+            this.loadYoutube();
+        });
+    }
+
+    openYoutube(id) {
+        window.open(`https://www.youtube.com/watch?v=${id}`);
+        console.log(id);
     }
 
     render() {
@@ -223,6 +243,46 @@ class Homepage extends Page {
             </div>
 
             <div style={{
+                display: this.shouldShowTab('videos') ? 'flex' : 'none',
+                textAlign: 'center',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}>
+                <iframe style={{
+                    height: 60,
+                    width: 180,
+                    border: 0,
+                }} src="/youtube-button/">
+                </iframe>
+            </div>
+
+            <div style={{
+                borderTop: "1px solid #E0ECEF",
+                padding: '5px 150px',
+                display: this.shouldShowTab('videos') ? 'flex' : 'none',
+                justifyContent: 'center',
+                textAlign: 'center',
+                flexWrap: 'wrap',
+            }}>
+                {
+                    this.state.videos.map((video) => {
+                        return <div className="youtubeThumbnail"
+                                style={{
+                                    fontFamily,
+                                }}>
+                            <div className="youtubeImage"
+                                onClick={e => this.openYoutube(video.id)}
+                                style={{
+                                    backgroundImage: `url(${video.url})`,
+                                }}>
+                            </div>
+                            <div>{video.title}</div>
+                        </div>;
+                    })
+                }
+            </div>
+
+            <div style={{
                 display: this.shouldShowTab('games') ? 'flex' : 'none',
                 fontFamily,
                 alignItems: 'center',
@@ -242,6 +302,17 @@ class Homepage extends Page {
                 verticalAlign: 'middle',
             }}>
                 <h2>More projects <a target="_blank" href="https://github.com/jacklehamster?tab=repositories">here</a></h2>
+            </div>
+
+            <div style={{
+                display: this.shouldShowTab('videos') ? 'flex' : 'none',
+                fontFamily,
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+            }}>
+                <h2>More videos <a target="_blank" href="https://youtube.com/vincentlequang2">here</a></h2>
             </div>
 
             <div style={{
