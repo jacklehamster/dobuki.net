@@ -201,12 +201,40 @@ class DokRouter implements Router {
         $this->create_response($result);
     }
 
+    private function check_referer($action) {
+        $need_check = false;
+        switch($action) {
+            case 'cache-grab';
+                $need_check = true;
+                break;
+        }
+        if($need_check) {
+            $host = parse_url($this->server->get_referer())['host'] ?? null;
+            switch($host) {
+                case 'localhost':
+                case 'www.dobuki.net':
+                case 'v6p9d9t4.ssl.hwcdn.net':
+                    return true;
+                    break;
+                default:
+                    echo "Host denied. $host";
+            }
+            return false;
+        }
+        return true;
+    }
+
     private function check_split($chunks, $path) {
         switch($chunks[1]) {
             case 'cache-grab':
+                if(!$this->check_referer($chunks[1])) {
+                    $this->handled = true;
+                    return;
+                }
+                $url = $this->server->get_request_uri();
+                $chunks = explode('/', $url);
                 $url = implode('/', array_slice($chunks, 2));
                 $result = $this->cache->get_url($url);
-
                 $last_modified_header = 'Last-Modified: ' . @$_SERVER['HTTP_IF_MODIFIED_SINCE'];
                 $etag_header = 'ETag: ' . @$_SERVER['HTTP_IF_NONE_MATCH'];
 

@@ -6,6 +6,8 @@ interface Server {
     public function get_path();
     public function get_method();
     public function get_request();
+    public function get_request_uri();
+    public function get_referer();
 }
 
 class DokServer implements Server {
@@ -16,6 +18,8 @@ class DokServer implements Server {
     private $method;
     private $path;
     private $request;
+    private $request_uri;
+    private $referer;
 
     public function __construct(string $brand, array $server, array $request) {
         $this->brand = $brand;
@@ -32,11 +36,13 @@ class DokServer implements Server {
             $this->subdomain = $matches['subdomain'];
             $this->extension = $matches['extension'];
         }
+        $this->request_uri = $server['REQUEST_URI'];
         $this->path = $server['REQUEST_URI'];
         if (preg_match('/^(?P<path>\/[^?]*)\??/', $server['REQUEST_URI'], $matches)) {
             $this->path = $matches['path'];
         }
         $this->method = $server['REQUEST_METHOD'];
+        $this->referer = $server['HTTP_REFERER'] ?? null;
     }
 
     public function get_subdomain() {
@@ -53,5 +59,13 @@ class DokServer implements Server {
 
     public function get_request() {
         return $this->request;
+    }
+
+    public function get_request_uri() {
+        return $this->request_uri;
+    }
+
+    public function get_referer() {
+        return $this->referer;
     }
 }

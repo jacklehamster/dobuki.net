@@ -14,8 +14,8 @@
 <div style="display:flex; flex-direction: row;">
     <canvas class="animation" id="canvas" style="background-image: url(zombie1.png)">
     </canvas>
-    <div id="score" style='position: absolute; color: white;
-        font-size: 100pt; left: 250px; top: 100px;
+    <div id="score" style='text-align: center; position: absolute; color: white;
+        font-size: 60pt; left: 250px; top: 150px;
         font-family: "Roboto", "Helvetica", "Arial", sans-serif;
          text-shadow: 2px 2px black;'>
     </div>
@@ -24,6 +24,7 @@
         font-family: "Roboto", "Helvetica", "Arial", sans-serif;
          text-shadow: 2px 2px black;'></div>
 </div>
+<iframe id="gt" style="display:none"></iframe>
 <script>
     var src2 = new Image();
     src2.src = "texture.png";
@@ -32,7 +33,29 @@
     audio1.addEventListener("canplaythrough", function(e) {
         audio1.play();
     });
-    audio1.src="garange.m4a"
+    audio1.src="garange.m4a";
+
+    var ballsounds = [
+        "soccer1.m4a",
+        "soccer2.m4a",
+        "soccer1.m4a",
+        "soccer2.m4a",
+        "soccer1.m4a",
+        "soccer2.m4a",
+    ].map(src => {
+        var audio = new Audio();
+        audio.src = src;
+        return audio;
+    });
+
+    var zombieSound = new Audio();
+    zombieSound.loop = true;
+    zombieSound.src = "zombieat.m4a";
+    var scream = new Audio();
+    scream.src = "scream.m4a";
+    var clap = new Audio();
+    clap.loop = true;
+    clap.src = "clap.ogg";
 </script>
 
 <script>
@@ -43,6 +66,7 @@
         audioLoaded = true;
     });
     audio.src = "test.m4a";
+    audio.volume = .6;
 </script>
 
 
@@ -430,6 +454,7 @@ void main() {
         }
     }
 
+    var deaths = 0;
     var monsters = [];
 
     var shiftX = 0, shiftY = 0;
@@ -508,6 +533,15 @@ void main() {
         }
     }
 
+    function handicap() {
+        return .5 + theScore * .25;
+    }
+
+    function ballSound() {
+        var audio = ballsounds[Math.floor(Math.random()*ballsounds.length)];
+        audio.play();
+    }
+
     var theScore = 0;
     var scored = false;
     var inited = false;
@@ -517,7 +551,8 @@ void main() {
             inited = true;
             init();
         }
-        var speed =  hasBall ? 5 : 7, dx=0, dy=0;
+
+        var speed =  hasBall ? 5 : 8, dx=0, dy=0;
         if(gameOver) {
             loopList[1].hidden = true;
             loopList[4].hidden = true;
@@ -542,6 +577,7 @@ void main() {
                 ballDx = dx * 20;
                 loopList[2].y = loopList[4].y - 100;
                 hasBall = false;
+                ballSound();
                 kicker = -1;
             }
         }
@@ -556,7 +592,7 @@ void main() {
         loopList[1].hidden = !loopList[4].hidden || gameOver;
         loopList[1].x = loopList[4].x;
         loopList[1].y = loopList[4].y;
-        if(!hasBall) {
+        if(!hasBall && !ballReturn) {
             loopList[2].x += ballDx;
             loopList[2].y += ballDy;
             ballDx *= .9;
@@ -569,6 +605,7 @@ void main() {
         if(Math.abs(loopList[2].x - loopList[4].x) < 25
         && Math.abs(loopList[2].y - (loopList[4].y-50)) < 25) {
             hasBall = true;
+            ballReturn = false;
             kicker = -2;
         }
 
@@ -591,6 +628,8 @@ void main() {
                             kicker = index;
                         } else {
                             monster.dead = true;
+                            ballReturn = true;
+                            knocked++;
                         }
                     }
                     var n = monster.dead ? 10 : Math.random()*10 + 100;
@@ -598,6 +637,7 @@ void main() {
                     ballDy = -ballDy;
                     ballDx -= bx/dist * n;
                     ballDy -= bx/dist * n;
+                    ballSound();
                     if(monster.dead) {
                         kicker = index;
                     }
@@ -606,10 +646,15 @@ void main() {
 
 
             if(!monster.dead) {
-                monster.x += dx/dist * monster.speed;
-                monster.y += dy/dist * monster.speed;
+                if(scored) {
+                    monster.x -= dx/dist * monster.speed;
+                    monster.y -= dy/dist * monster.speed;
+                } else {
+                    monster.x += dx/dist * monster.speed;
+                    monster.y += dy/dist * monster.speed;
+                }
             }
-            if(dist < 30 && !monster.dead && !cheat) {
+            if(dist < 30 && !monster.dead && !cheat && !scored) {
                 monster.hidden = true;
                 loopList[5].hidden = false;
                 loopList[5].x = loopList[4].x;
@@ -617,12 +662,19 @@ void main() {
                 loopList[1].hidden = true;
                 loopList[0].hidden = true;
                 gameOver = true;
+                zombieSound.play();
+                scream.play();
+                deaths++;
                 setTimeout(function() {
                     if(!scored) {
-                        theScore = 0;
+                        //theScore = 0;
+                        //level = 1;
+                        var msg = "You lasted "+ Math.floor((performance.now()-time)/1000) + " seconds. ";
                         document.getElementById('score').innerText = "GAME\nOVER";
-                        document.getElementById('overscore').innerText = "You lasted "+ Math.floor((performance.now()-time)/1000) + " seconds.";;
-
+                        document.getElementById('overscore').innerText = msg;
+                        document.getElementById('score').style.display = "";
+                        document.getElementById('overscore').style.display = "";
+                        speak("GAME OVER. " + msg);
                     }
                     canRestart = true;
                 },1000);
@@ -633,10 +685,10 @@ void main() {
                 if(monster.dead) {
                     monster.dead = false;
                     monster.hidden = false;
-                    monster.speed = Math.random()*4 + 1;
-                    monster.zombie = Math.random()>.1;
+                    monster.speed = (Math.random()*4 + 1) * handicap();
+                    monster.zombie = !theScore || (Math.random()*handicap()>.1);
                 } else {
-                    monster.speed *= 1.2;
+                    monster.speed *= (1 + 0.2 * handicap());
                 }
             }
         });
@@ -646,8 +698,19 @@ void main() {
             -3742 && !scored) {
             scored = true;
             theScore++;
-            document.getElementById('score').innerText = theScore + " - 0\nYOU WIN";
-            document.getElementById('overscore').innerText = "It took you "+ Math.floor((performance.now()-time)/1000) + " seconds.";;
+            clap.play();
+            //level++;
+
+            setTimeout(function() {
+                var msg = "It took you "+ Math.floor((performance.now()-time)/1000) + " seconds. "
+                    + "You knocked out " + knocked + " zombies.";
+                document.getElementById('score').innerText = theScore + " - " + deaths + "\nYOU\nSCORED!";
+                document.getElementById('overscore').innerText = msg;
+                document.getElementById('score').style.display = "";
+                document.getElementById('overscore').style.display = "";
+                canRestart = true;
+                speak("Congratulations! " + msg);
+            },1000);
         }
 
 
@@ -660,7 +723,7 @@ void main() {
         canvas.style.backgroundPositionY = -shiftY + "px";
         //background-position: right 20px bottom 10px;
     }
-    var ballDx = 0, ballDy = 0, hasBall = true;
+    var ballDx = 0, ballDy = 0, hasBall = false, ballReturn = true;
     var kicker = -2;
 
     var gameOver = false;
@@ -686,9 +749,35 @@ void main() {
 
     var audioPlaying = false;
     var ordered = [];
+    //var level = 1;
+
+    var levels = [
+        "NOVICE",
+        "AMATEUR",
+        "PRO",
+        "CHAMPION",
+        "<img src='chow.png'>",
+        "<img src='final.png'>",
+    ];
+
+    var levelMessage = [
+        ". NOVICE.",
+        ". AMATEUR.",
+        ". PRO.",
+        ". CHAMPION.",
+        ". STEPHEN CHOW.",
+        ". The developer did not think anyone could reach this level.",
+    ];
+
     function init() {
-        document.getElementById('overscore').innerText = theScore + " - " + 0;
+
+        zombieSound.pause();
+        clap.pause();
+
+        document.getElementById('overscore').innerText = theScore + " - " + deaths;
+        document.getElementById('overscore').style.display = "";
         time = performance.now();
+        knocked = 0;
         canvas.style.backgroundImage = "url(" + src2.src + ")";
         if(!audioPlaying) {
             audioPlaying = true;
@@ -731,13 +820,39 @@ void main() {
             loopList[7],
             loopList[8],
         ];
-        document.getElementById('score').innerText = "";
+
+
+        speak("level" + (theScore+1) + levelMessage[Math.min(theScore, levelMessage.length-1)]);
+        document.getElementById('score').innerHTML
+            = "LEVEL " + (theScore+1) + "<br>\n"
+            + (theScore<levels.length
+                ? levels[theScore]
+                : "???");
+        setTimeout(function() {
+            document.getElementById('score').innerHTML = "";
+            document.getElementById('score').style.display = "none";
+        }, 3000);
+
+//        document.getElementById('score').innerText = "";
+//        document.getElementById('score').style.display = "none";
         canRestart = false;
-        hasBall = true;
+        hasBall = false;
+        ballReturn = true;
+
+
+
+//        level = 1;
     }
+
+    function speak(msg) {
+        console.log(msg);
+        document.getElementById('gt').src = ("https://www.dobuki.net/cache-grab/https://translate.google.com/translate_tts?client=tw-ob&tl=en&q=" + encodeURIComponent(msg));
+    }
+
     var cheat =false;// true;//false;
     var introDone =false;
     var time = 0;
+    var knocked = 0;
 
     var crazy = false;
 //    setInterval(function() { crazy = !crazy }, 10000);
