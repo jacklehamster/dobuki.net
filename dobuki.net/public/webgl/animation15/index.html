@@ -25,7 +25,204 @@
          text-shadow: 2px 2px black;'></div>
 </div>
 <iframe id="gt" style="display:none"></iframe>
+<script src="newgroundsio.min.js"></script>
 <script>
+//    NG.connect("47631:bGKPfFTz","NS70RYj44ib3yMjUxiQTZO4jbCqXOGgI");
+    var ngio = new Newgrounds.io.core("47631:bGKPfFTz", "pLhSUweho6EZVSXtJ+fERg==");
+    ngio.callComponent("Gateway.getDatetime", {}, function(result) {
+        if (result.success) {
+            console.log('The current date/time on the Newgrounds.io server is '+result.datetime);
+        } else {
+            console.log('ERROR!', result.error.message);
+        }
+    });
+
+function onLoggedIn() {
+    console.log("Welcome " + ngio.user.name + "!");
+
+    ngio.queueComponent("Medal.getList", {}, onMedalsLoaded);
+    ngio.queueComponent("ScoreBoard.getBoards", {}, onScoreboardsLoaded);
+    ngio.executeQueue();
+}
+
+function onLoginFailed() {
+    console.log("There was a problem logging in: " . ngio.login_error.message );
+}
+
+function onLoginCancelled() {
+    console.log("The user cancelled the login.");
+}
+
+/*
+ * Before we do anything, we need to get a valid Passport session.  If the player
+ * has previously logged in and selected 'remember me', we may have a valid session
+ * already saved locally.
+ */
+function initSession() {
+    ngio.getValidSession(function() {
+        if (ngio.user) {
+            /*
+             * If we have a saved session, and it has not expired,
+             * we will also have a user object we can access.
+             * We can go ahead and run our onLoggedIn handler here.
+             */
+            onLoggedIn();
+        } else {
+            console.log("Not logged in")
+            /*
+             * If we didn't have a saved session, or it has expired
+             * we should have been given a new one at this point.
+             * This is where you would draw a 'sign in' button and
+             * have it execute the following requestLogin function.
+             */
+            var button = document.body.appendChild(document.createElement("button"));
+            button.style.left = "340px";
+            button.style.top = "270px";
+            button.style.width = "120px";
+            button.style.height = "50px";
+            button.style.position = "absolute";
+            button.innerText = "Log in";
+            button.addEventListener("click", function(e) {
+                button.style.display = "none";
+                requestLogin();
+            });
+            buttonsToHide.push(button);
+        }
+
+    });
+}
+
+var buttonsToHide = [];
+
+/*
+ * Call this when the user clicks a 'sign in' button from your game.  It MUST be called from
+ * a mouse-click event or pop-up blockers will prevent the Newgrounds Passport page from loading.
+ */
+function requestLogin() {
+    ngio.requestLogin(onLoggedIn, onLoginFailed, onLoginCancelled);
+    /* you should also draw a 'cancel login' buton here */
+}
+
+/*
+ * Call this when the user clicks a 'cancel login' button from your game.
+ */
+function cancelLogin() {
+    /*
+     * This cancels the login request made in the previous function.
+     * This will also trigger your onLoginCancelled callback.
+     */
+    ngio.cancelLoginRequest();
+}
+
+/*
+ * If your user is logged in, you should also draw a 'sign out' button for them
+ * and have it call this.
+ */
+function logOut() {
+    ngio.logOut(function() {
+        /*
+         * Because we have to log the player out on the server, you will want
+         * to handle any post-logout stuff in this function, wich fires after
+         * the server has responded.
+         */
+    });
+}
+setTimeout(initSession, 100);
+
+var gotMedals = {};
+    /* You could use this function to draw the medal notification on-screen */
+    function onMedalUnlocked(medal) {
+        if(!gotMedals[medal.name]) {
+            console.log('MEDAL GET:', medal.name);
+            gotMedals[medal.name] = true;
+
+            setTimeout(function() {
+                document.getElementById('overscore').innerText += ". You unlocked a new medal: " + medal.name;
+                document.getElementById('overscore').style.display = "";
+                speak("You unlocked a new medal: " + medal.name);
+            }, 2000);
+        }
+    }
+    function postScore(board_name, score_value) {
+
+        /* If there is no user attached to our ngio object, it means the user isn't logged in and we can't post anything */
+        if (!ngio.user) return;
+
+        for (var i = 0; i < scoreboards.length; i++) {
+
+            var scoreboard = scoreboards[i];
+            console.log(board_name , scoreboard.name);
+            if(board_name === scoreboard.name) {
+                var scores = {id:scoreboard.id, value:score_value};
+                console.log(scores);
+                ngio.callComponent('ScoreBoard.postScore', scores);
+            }
+        }
+    }
+
+    function postTime(level, millisec) {
+        console.log(">", level, millisec);
+        postScore(level===4
+            ? "Fastest goal on Champion"
+            : level===5
+            ? "Fastest goal on Insane"
+            : level===3
+            ? "Fastest goal on Pro"
+            : level===2
+            ? "Fastest goal on Amateur"
+            : null,
+            millisec
+        )
+    }
+
+    /* vars to record any medals and scoreboards that get loaded */
+    var medals, scoreboards;
+
+    /* handle loaded medals */
+    function onMedalsLoaded(result) {
+        if (result.success) {
+            medals = result.medals;
+            console.log(medals);
+
+
+            var maxUnlocked = 0;
+            medals.forEach(medal => {
+                if(medal.unlocked) {
+                    maxUnlocked = Math.max(maxUnlocked, medal_names.indexOf(medal.name));
+                }
+            });
+
+            if(maxUnlocked) {
+                var button = document.body.appendChild(document.createElement("button"));
+                button.style.left = "600px";
+                button.style.top = "500px";
+                button.style.width = "150px";
+                button.style.height = "50px";
+                button.style.position = "absolute";
+                button.innerText = "Skip to level " + (maxUnlocked+2);
+                button.addEventListener("click", function(e) {
+                    button.style.display = "none";
+                    theScore = maxUnlocked+1;
+                    if(!introDone) {
+                        introDone = true;
+                    }
+                    if(canRestart) {
+                        init();
+                    }
+                });
+                buttonsToHide.push(button);
+            }
+        }
+    }
+
+    /* handle loaded scores */
+    function onScoreboardsLoaded(result) {
+        if (result.success) scoreboards = result.scoreboards;
+    }
+
+    /* load our medals and scoreboards from the server */
+
+
     var src2 = new Image();
     src2.src = "texture.png";
     var audio1 = new Audio();
@@ -693,16 +890,30 @@ void main() {
             }
         });
 
+        if(loopList[2].y > -1000
+            && loopList[4].x > 120
+            && loopList[4].x < 985
+            && loopList[4].y > -4142
+            && loopList[4].y < -3742
+            && !scored)
+        {
+            unlockMedal("Not the ball");
+        }
+
         if(loopList[2].x > 120 && loopList[2].x < 985
             && loopList[2].y > -4142 && loopList[2].y <
             -3742 && !scored) {
             scored = true;
+
+            var millisec = performance.now()-time;
+            postTime(theScore+1, millisec);
+
             theScore++;
             clap.play();
             //level++;
 
             setTimeout(function() {
-                var msg = "It took you "+ Math.floor((performance.now()-time)/1000) + " seconds. "
+                var msg = "It took you "+ Math.floor(millisec/1000) + " seconds. "
                     + "You knocked out " + knocked + " zombies.";
                 document.getElementById('score').innerText = theScore + " - " + deaths + "\nYOU\nSCORED!";
                 document.getElementById('overscore').innerText = msg;
@@ -710,6 +921,7 @@ void main() {
                 document.getElementById('overscore').style.display = "";
                 canRestart = true;
                 speak("Congratulations! " + msg);
+
             },1000);
         }
 
@@ -769,7 +981,59 @@ void main() {
         ". The developer did not think anyone could reach this level.",
     ];
 
+    var medal_names = [
+        "Novice Player",
+        "Amateur Player",
+        "Pro Player",
+        "Champion Player",
+        "Stephen Chow"
+    ];
+
+    function unlockMedal(medal_name) {
+        console.log("Medal? " + medal_name);
+
+
+        /* If there is no user attached to our ngio object, it means the user isn't logged in and we can't unlock anything */
+        if (!ngio.user) return;
+
+        var medal;
+
+        for (var i = 0; i < medals.length; i++) {
+
+            medal = medals[i];
+
+            /* look for a matching medal name */
+            if (medal.name === medal_name) {
+
+                console.log("Unlocking medal: " + medal_name);
+
+                /* we can skip unlocking a medal that's already been earned */
+                if (!medal.unlocked) {
+
+                    /* unlock the medal from the server */
+                    ngio.callComponent('Medal.unlock', {id:medal.id}, function(result) {
+
+                        if (result.success) {
+                            onMedalUnlocked(result.medal);
+                        }
+                    });
+                }
+                return;
+            }
+        }
+    }
+
+    function unlock(level) {
+        if(level-1 < medal_names.length) {
+            unlockMedal(medal_names[level-1]);
+        }
+    }
+
     function init() {
+
+        buttonsToHide.forEach(button => {
+            button.style.display = "none";
+        });
 
         zombieSound.pause();
         clap.pause();
@@ -822,6 +1086,11 @@ void main() {
         ];
 
 
+        var gotMedal = false;
+        if(maxLevel < theScore) {
+            maxLevel = theScore;
+            unlock(maxLevel);
+        }
         speak("level" + (theScore+1) + levelMessage[Math.min(theScore, levelMessage.length-1)]);
         document.getElementById('score').innerHTML
             = "LEVEL " + (theScore+1) + "<br>\n"
@@ -843,6 +1112,7 @@ void main() {
 
 //        level = 1;
     }
+    var maxLevel = 0;
 
     function speak(msg) {
         console.log(msg);

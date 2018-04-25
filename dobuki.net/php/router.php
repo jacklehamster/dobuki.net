@@ -214,6 +214,7 @@ class DokRouter implements Router {
                 case 'localhost':
                 case 'www.dobuki.net':
                 case 'v6p9d9t4.ssl.hwcdn.net':
+                case 'uploads.ungrounded.net':
                     return true;
                     break;
                 default:
