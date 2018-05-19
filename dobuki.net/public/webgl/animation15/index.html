@@ -144,7 +144,7 @@ var gotMedals = {};
         }
     }
     function postScore(board_name, score_value) {
-
+        console.log(board_name, score_value, scoreboards);
         /* If there is no user attached to our ngio object, it means the user isn't logged in and we can't post anything */
         if (!ngio.user) return;
 
@@ -909,6 +909,7 @@ void main() {
             postTime(theScore+1, millisec);
 
             theScore++;
+            postScore("Top Score", theScore);
             clap.play();
             //level++;
 
@@ -1089,6 +1090,7 @@ void main() {
         var gotMedal = false;
         if(maxLevel < theScore) {
             maxLevel = theScore;
+            postScore("Top Score", theScore);
             unlock(maxLevel);
         }
         speak("level" + (theScore+1) + levelMessage[Math.min(theScore, levelMessage.length-1)]);
