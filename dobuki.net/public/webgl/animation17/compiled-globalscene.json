@@ -1,0 +1,2443 @@
+{
+	"fps": 30,
+	"sprites": {
+		"ground46": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground39": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground23": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"poulet54": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-35.25,
+							32.4
+						],
+						[
+							35.25,
+							32.4
+						],
+						[
+							35.25,
+							-32.4
+						],
+						[
+							-35.25,
+							-32.4
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"poulet",
+					0,
+					0,
+					141,
+					129
+				]
+			],
+			"frameCount": 2
+		},
+		"ground27": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground5": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground48": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground24": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground1": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground45": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground31": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground26": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground19": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground25": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground37": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground15": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground20": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground8": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground22": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground21": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground34": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"cracky53": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-30.45,
+							40.25
+						],
+						[
+							30.45,
+							40.25
+						],
+						[
+							30.45,
+							-40.25
+						],
+						[
+							-30.45,
+							-40.25
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"cracky",
+					0,
+					0,
+					121,
+					161
+				]
+			],
+			"frameCount": 2
+		},
+		"ugo52": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-35,
+							47.3
+						],
+						[
+							35,
+							47.3
+						],
+						[
+							35,
+							-47.25
+						],
+						[
+							-35,
+							-47.25
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ugo",
+					0,
+					0,
+					140,
+					189
+				]
+			],
+			"frameCount": 2
+		},
+		"ground14": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground2": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground10": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground3": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground4": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground42": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"barkley51": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-39.1,
+							33.65
+						],
+						[
+							39.1,
+							33.65
+						],
+						[
+							39.1,
+							-33.65
+						],
+						[
+							-39.1,
+							-33.65
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"barkley",
+					0,
+					0,
+					156,
+					134
+				]
+			],
+			"frameCount": 2
+		},
+		"ground35": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground18": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground7": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground6": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground44": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground47": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground41": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground29": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground40": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground17": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground43": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground12": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground11": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground36": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground28": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground16": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"shade50": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-39.4,
+							34.1
+						],
+						[
+							39.4,
+							34.1
+						],
+						[
+							39.4,
+							-34.1
+						],
+						[
+							-39.4,
+							-34.1
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"shade",
+					0,
+					0,
+					157,
+					136
+				]
+			],
+			"frameCount": 2
+		},
+		"ground33": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground9": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"gunda49": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"label": "NORMAL",
+					"rect": [
+						[
+							-26.55,
+							41.35
+						],
+						[
+							26.55,
+							41.35
+						],
+						[
+							26.55,
+							-41.5
+						],
+						[
+							-26.55,
+							-41.5
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"gunda",
+					0,
+					0,
+					106,
+					165
+				]
+			],
+			"frameCount": 19
+		},
+		"ground30": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground32": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground13": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		},
+		"ground38": {
+			"frames": [
+				{
+					"tag": 0,
+					"frame": 1,
+					"rect": [
+						[
+							-38,
+							38
+						],
+						[
+							38,
+							38
+						],
+						[
+							38,
+							-38
+						],
+						[
+							-38,
+							-38
+						]
+					]
+				}
+			],
+			"sprites": [
+				[
+					"ground",
+					760,
+					912,
+					152,
+					152
+				]
+			],
+			"frameCount": 2
+		}
+	},
+	"elements": [
+		{
+			"position": [
+				37.5,
+				38.4
+			],
+			"name": "ground1",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				112.5,
+				38.4
+			],
+			"name": "ground2",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				37.5,
+				113.4
+			],
+			"name": "ground3",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				112.5,
+				113.4
+			],
+			"name": "ground4",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				37.5,
+				188.4
+			],
+			"name": "ground5",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				112.5,
+				188.4
+			],
+			"name": "ground6",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				37.5,
+				263.4
+			],
+			"name": "ground7",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				112.5,
+				263.4
+			],
+			"name": "ground8",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				37.5,
+				338.4
+			],
+			"name": "ground9",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				112.5,
+				338.4
+			],
+			"name": "ground10",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				37.5,
+				413.4
+			],
+			"name": "ground11",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				112.5,
+				413.4
+			],
+			"name": "ground12",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				187.5,
+				38.4
+			],
+			"name": "ground13",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				262.5,
+				38.4
+			],
+			"name": "ground14",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				187.5,
+				113.4
+			],
+			"name": "ground15",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				262.5,
+				113.4
+			],
+			"name": "ground16",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				187.5,
+				188.4
+			],
+			"name": "ground17",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				262.5,
+				188.4
+			],
+			"name": "ground18",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				187.5,
+				263.4
+			],
+			"name": "ground19",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				262.5,
+				263.4
+			],
+			"name": "ground20",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				187.5,
+				338.4
+			],
+			"name": "ground21",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				262.5,
+				338.4
+			],
+			"name": "ground22",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				187.5,
+				413.4
+			],
+			"name": "ground23",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				262.5,
+				413.4
+			],
+			"name": "ground24",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				337.5,
+				38.4
+			],
+			"name": "ground25",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				412.5,
+				38.4
+			],
+			"name": "ground26",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				337.5,
+				113.4
+			],
+			"name": "ground27",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				412.5,
+				113.4
+			],
+			"name": "ground28",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				337.5,
+				188.4
+			],
+			"name": "ground29",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				412.5,
+				188.4
+			],
+			"name": "ground30",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				337.5,
+				263.4
+			],
+			"name": "ground31",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				412.5,
+				263.4
+			],
+			"name": "ground32",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				337.5,
+				338.4
+			],
+			"name": "ground33",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				412.5,
+				338.4
+			],
+			"name": "ground34",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				337.5,
+				413.4
+			],
+			"name": "ground35",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				412.5,
+				413.4
+			],
+			"name": "ground36",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				487.5,
+				38.4
+			],
+			"name": "ground37",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				562.5,
+				38.4
+			],
+			"name": "ground38",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				487.5,
+				113.4
+			],
+			"name": "ground39",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				562.5,
+				113.4
+			],
+			"name": "ground40",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				487.5,
+				188.4
+			],
+			"name": "ground41",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				562.5,
+				188.4
+			],
+			"name": "ground42",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				487.5,
+				263.4
+			],
+			"name": "ground43",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				562.5,
+				263.4
+			],
+			"name": "ground44",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				487.5,
+				338.4
+			],
+			"name": "ground45",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				562.5,
+				338.4
+			],
+			"name": "ground46",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				487.5,
+				413.4
+			],
+			"name": "ground47",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				562.5,
+				413.4
+			],
+			"name": "ground48",
+			"frame": 1,
+			"type": "ground"
+		},
+		{
+			"position": [
+				145.6,
+				125.4
+			],
+			"name": "gunda49",
+			"frame": 1,
+			"type": "gunda"
+		},
+		{
+			"position": [
+				119.2,
+				144.45
+			],
+			"name": "shade50",
+			"frame": 1,
+			"type": "shade"
+		},
+		{
+			"position": [
+				169.5,
+				171
+			],
+			"name": "barkley51",
+			"frame": 1,
+			"type": "barkley"
+		},
+		{
+			"position": [
+				448.6,
+				131.15
+			],
+			"name": "ugo52",
+			"frame": 1,
+			"type": "ugo"
+		},
+		{
+			"position": [
+				480.45,
+				165.9
+			],
+			"name": "cracky53",
+			"frame": 1,
+			"type": "cracky"
+		},
+		{
+			"position": [
+				406.6,
+				165.1
+			],
+			"name": "poulet54",
+			"frame": 1,
+			"type": "poulet"
+		}
+	],
+	"backgroundColor": "#333333",
+	"size": [
+		600,
+		450
+	]
+}

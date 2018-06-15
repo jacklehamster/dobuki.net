@@ -194,6 +194,7 @@ class DokCache implements Cache {
     public function get(string $key) {
         $filename = urlencode($key);
         $tmp_path = self::get_temp_path();
+        /** @noinspection PhpIncludeInspection */
         @include "$tmp_path/$filename";
         if(isset($expire) && $expire < time()) {
             return false;
