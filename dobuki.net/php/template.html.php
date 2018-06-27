@@ -20,7 +20,7 @@
     <meta name="twitter:image:alt" content="Dobuki Family">
     <meta name="twitter:site" content="@dobukistudio">
 
-    <link href="https://fonts.googleapis.com/css?family=Concert+One|Fredoka+One" rel="stylesheet" media="none" onload="if(media!='all')media='all'">
+    <link href="https://fonts.googleapis.com/css?family=Concert+One|Fredoka+One" rel="stylesheet" media="none" onload="if(media!='all')media='all'" />
     <link rel="prefetch"  href="/assets/dobuki.png" as "image"/>
     <link rel="prefetch" href="/assets/login.svg" as "image"/>
     <link rel="shortcut icon" href="<?= $this->favicon ?>" />
